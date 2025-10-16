@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -33,7 +33,7 @@ public class VerificationToken {
 
     @NotNull
     @Column(name = "expiry_date", nullable = false, updatable = false)
-    private LocalDateTime expiryDate;
+    private Instant expiryDate;
 
     @NotNull
     @Column(name = "used", nullable = false)

@@ -14,7 +14,8 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.MailSendException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,7 +48,7 @@ public class VerificationTokenService {
                 .builder()
                 .user(user)
                 .token(UUID.randomUUID().toString())
-                .expiryDate(LocalDateTime.now().plusHours(24)) // TODO move plusHours to configuration
+                .expiryDate(Instant.now().plus(24, ChronoUnit.HOURS)) // TODO move plusHours to configuration
                 .build();
 
         VerificationToken savedToken = verificationTokenRepository.save(token);
@@ -64,7 +65,7 @@ public class VerificationTokenService {
             throw new IllegalArgumentException(VerificationTokenMessages.VERIFICATION_TOKEN_ALREADY_USED);
         }
 
-        if (verificationToken.getExpiryDate().isBefore(LocalDateTime.now())) {
+        if (verificationToken.getExpiryDate().isBefore(Instant.now())) {
             throw new IllegalArgumentException(VerificationTokenMessages.VERIFICATION_TOKEN_EXPIRED);
         }
 
