@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.childignoredfund;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,8 +14,10 @@ import java.util.UUID;
 @Embeddable
 public class ChildIgnoredFundId {
 
+    @Column(name = "child_id")
     private UUID childId;
 
+    @Column(name = "fund_id")
     private UUID fundId;
 
 }
