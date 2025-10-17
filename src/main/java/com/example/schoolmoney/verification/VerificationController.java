@@ -1,7 +1,6 @@
 package com.example.schoolmoney.verification;
 
 import com.example.schoolmoney.common.constants.messages.EmailMessages;
-import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +38,8 @@ public class VerificationController {
                     responseCode = "200",
                     description = "Account verified successfully",
                     content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = MessageResponseDto.class)
+                            mediaType = "text/html",
+                            schema = @Schema(implementation = String.class)
                     )
             ),
             @ApiResponse(
@@ -52,12 +52,20 @@ public class VerificationController {
             )
     })
     @GetMapping("/verify")
-    public ResponseEntity<MessageResponseDto> verifyUser(@RequestParam String token) {
+    public ResponseEntity<String> verifyUser(@RequestParam String token) {
         verificationTokenService.verifyUser(token);
+
+        String html = "<html>" +
+                "<head><title>Account verification complete</title></head>" +
+                "<body>" +
+                "<h1>Your account is now verified, welcome to SchoolMoney!</h1>" +
+                "</body>" +
+                "</html>";
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new MessageResponseDto(UserMessages.ACCOUNT_VERIFIED_SUCCESSFULLY));
+                .contentType(MediaType.TEXT_HTML)
+                .body(html);
     }
 
     @Operation(
@@ -91,7 +99,7 @@ public class VerificationController {
     })
     @PostMapping("/resend-verification")
     public ResponseEntity<MessageResponseDto> resendVerificationEmail(@RequestParam String email) {
-        verificationTokenService.resendVerificationEmail(email);
+        verificationTokenService.sendVerificationEmail(email);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

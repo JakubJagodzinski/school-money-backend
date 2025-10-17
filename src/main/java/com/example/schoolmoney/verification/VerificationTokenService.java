@@ -6,6 +6,7 @@ import com.example.schoolmoney.common.constants.messages.VerificationTokenMessag
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.User;
 import com.example.schoolmoney.user.UserRepository;
+import com.example.schoolmoney.utils.RandomBase64TokenGenerator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,6 +29,10 @@ public class VerificationTokenService {
     private final UserRepository userRepository;
 
     private final EmailService emailService;
+
+    private final VerificationTokenProperties verificationTokenProperties;
+
+    private final VerificationLinkService verificationLinkService;
 
     private void markExistingTokensAsUsed(User user) {
         List<VerificationToken> tokens = verificationTokenRepository.findAllByUser_UserIdAndUsedFalse(user.getUserId());
@@ -47,8 +51,8 @@ public class VerificationTokenService {
         VerificationToken token = VerificationToken
                 .builder()
                 .user(user)
-                .token(UUID.randomUUID().toString())
-                .expiryDate(Instant.now().plus(24, ChronoUnit.HOURS)) // TODO move plusHours to configuration
+                .token(RandomBase64TokenGenerator.generate(verificationTokenProperties.getTokenLength()))
+                .expiryDate(Instant.now().plus(verificationTokenProperties.getExpiryHours(), ChronoUnit.HOURS))
                 .build();
 
         VerificationToken savedToken = verificationTokenRepository.save(token);
@@ -78,7 +82,7 @@ public class VerificationTokenService {
     }
 
     @Transactional
-    public void resendVerificationEmail(String email) throws EntityNotFoundException, MailException {
+    public void sendVerificationEmail(String email) throws EntityNotFoundException, MailException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException(UserMessages.USER_NOT_FOUND));
 
@@ -86,10 +90,12 @@ public class VerificationTokenService {
             throw new IllegalArgumentException(UserMessages.ACCOUNT_ALREADY_VERIFIED);
         }
 
-        String newToken = createVerificationToken(user);
+        String verificationToken = createVerificationToken(user);
+
+        String verificationLink = verificationLinkService.buildLink(verificationToken);
 
         try {
-            emailService.sendRegistrationEmail(user.getEmail(), user.getEmail(), user.getRole(), newToken);
+            emailService.sendVerificationEmail(user.getEmail(), user.getEmail(), verificationLink);
         } catch (Exception e) {
             throw new MailSendException(EmailMessages.FAILED_TO_SEND_VERIFICATION_EMAIL, e);
         }

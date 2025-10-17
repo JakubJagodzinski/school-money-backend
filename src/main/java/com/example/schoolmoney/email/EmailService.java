@@ -1,8 +1,7 @@
 package com.example.schoolmoney.email;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
-import com.example.schoolmoney.email.contentproviders.RegistrationEmailContentProvider;
-import com.example.schoolmoney.user.Role;
+import com.example.schoolmoney.email.contentproviders.VerificationEmailContentProvider;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +18,6 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    private String generateVerificationLink(String verificationToken) {
-        // TODO move address to configuration
-        return "http://localhost:8090/api/v1/auth/verify?token=" + verificationToken;
-    }
-
     @Async
     public void sendEmail(String to, String subject, EmailContentProvider contentProvider) throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
@@ -36,10 +30,9 @@ public class EmailService {
         mailSender.send(message);
     }
 
-    public void sendRegistrationEmail(String to, String firstName, Role role, String verificationToken) throws MessagingException {
-        String verificationLink = generateVerificationLink(verificationToken);
-        EmailContentProvider contentProvider = new RegistrationEmailContentProvider(firstName, role, verificationLink);
-        sendEmail(to, "Complete your registration process", contentProvider);
+    public void sendVerificationEmail(String to, String firstName, String verificationLink) throws MessagingException {
+        EmailContentProvider contentProvider = new VerificationEmailContentProvider(firstName, verificationLink);
+        sendEmail(to, "Verify your account", contentProvider);
     }
 
 }

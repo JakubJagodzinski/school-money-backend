@@ -9,12 +9,10 @@ import com.example.schoolmoney.auth.dto.request.RegisterRequestDto;
 import com.example.schoolmoney.auth.dto.response.AuthenticationResponseDto;
 import com.example.schoolmoney.auth.dto.response.RefreshTokenResponseDto;
 import com.example.schoolmoney.auth.jwt.JwtService;
-import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.TokenMessages;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.wallet.WalletService;
-import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.Role;
 import com.example.schoolmoney.user.User;
 import com.example.schoolmoney.user.UserRepository;
@@ -22,8 +20,6 @@ import com.example.schoolmoney.verification.VerificationTokenService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.MailException;
-import org.springframework.mail.MailSendException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -48,8 +44,6 @@ public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
 
-    private final EmailService emailService;
-
     private final WalletService walletService;
 
     private final VerificationTokenService verificationTokenService;
@@ -72,7 +66,7 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public void register(RegisterRequestDto registerRequestDto) throws IllegalArgumentException, MailException {
+    public void register(RegisterRequestDto registerRequestDto) throws IllegalArgumentException {
         if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
             throw new IllegalArgumentException(UserMessages.EMAIL_IS_ALREADY_TAKEN);
         }
@@ -86,13 +80,7 @@ public class AuthenticationService {
 
         walletService.createWallet(savedUser.getUserId());
 
-        String verificationToken = verificationTokenService.createVerificationToken(savedUser);
-
-        try {
-            emailService.sendRegistrationEmail(savedUser.getEmail(), savedUser.getFirstName(), savedUser.getRole(), verificationToken);
-        } catch (Exception e) {
-            throw new MailSendException(EmailMessages.FAILED_TO_SEND_VERIFICATION_EMAIL);
-        }
+        verificationTokenService.sendVerificationEmail(savedUser.getEmail());
     }
 
     private Role parseRole(String role) throws IllegalArgumentException {

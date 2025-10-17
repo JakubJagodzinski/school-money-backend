@@ -41,6 +41,11 @@ spring:
           starttls:
             enable: true
 
+  verification:
+    token:
+      expiry-hours: 24
+      token-length: 36
+
 management:
   endpoints:
     web:
