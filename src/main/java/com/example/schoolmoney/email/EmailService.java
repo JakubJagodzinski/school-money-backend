@@ -21,7 +21,7 @@ public class EmailService {
 
     private String generateVerificationLink(String verificationToken) {
         // TODO move address to configuration
-        return "localhost:8090/api/v1/auth/verify?token=" + verificationToken;
+        return "http://localhost:8090/api/v1/auth/verify?token=" + verificationToken;
     }
 
     @Async

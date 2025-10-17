@@ -13,6 +13,7 @@ import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.TokenMessages;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.wallet.WalletService;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.Role;
 import com.example.schoolmoney.user.User;
@@ -49,6 +50,8 @@ public class AuthenticationService {
 
     private final EmailService emailService;
 
+    private final WalletService walletService;
+
     private final VerificationTokenService verificationTokenService;
 
     private AuthenticationResponseDto generateUserToken(User user) {
@@ -80,6 +83,8 @@ public class AuthenticationService {
         populateCommonUserFields(user, registerRequestDto);
 
         User savedUser = userRepository.save(user);
+
+        walletService.createWallet(savedUser.getUserId());
 
         String verificationToken = verificationTokenService.createVerificationToken(savedUser);
 
