@@ -35,7 +35,7 @@ public class WalletOperation {
     @NotNull
     @Min(1)
     @Column(name = "amount_in_cents", nullable = false, updatable = false)
-    private Long amountInCents;
+    private long amountInCents;
 
     @NotNull
     @Builder.Default

@@ -1,0 +1,10 @@
+package com.example.schoolmoney.common.constants.messages;
+
+public class WalletMessages {
+
+    public static final String WALLET_ALREADY_EXISTS = "Wallet already exists";
+    public static final String WITHDRAWAL_IBAN_SET_SUCCESSFULLY = "Withdrawal IBAN set successfully";
+    public static final String WITHDRAWAL_IBAN_CLEARED_SUCCESSFULLY = "Withdrawal IBAN cleared successfully";
+    public static final String INSUFFICIENT_WALLET_BALANCE = "Insufficient wallet balance";
+
+}

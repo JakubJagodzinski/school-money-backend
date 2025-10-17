@@ -31,10 +31,10 @@ public class Wallet {
     @NotNull
     @Min(0)
     @Column(name = "balance_in_cents", nullable = false)
-    private Long balanceInCents;
+    private long balanceInCents;
 
     @Size(max = 34)
     @Column(name = "withdrawal_iban", length = 34)
-    private String withdrawalIBAN;
+    private String withdrawalIban;
 
 }
