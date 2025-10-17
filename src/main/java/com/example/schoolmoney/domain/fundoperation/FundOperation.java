@@ -47,9 +47,9 @@ public class FundOperation {
     private Wallet wallet;
 
     @NotNull
-    @Min(1)
+    @Min(0)
     @Column(name = "amount_in_cents", nullable = false, updatable = false)
-    private Long amountInCents;
+    private long amountInCents;
 
     @NotNull
     @Enumerated(EnumType.STRING)
