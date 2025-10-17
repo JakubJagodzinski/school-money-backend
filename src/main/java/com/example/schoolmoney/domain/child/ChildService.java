@@ -14,6 +14,8 @@ import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,6 +96,18 @@ public class ChildService {
         log.info("Child assigned to school class {}", child);
 
         log.debug("Exit assignChildToSchoolClass");
+    }
+
+    public Page<ChildResponseDto> getChildren(Pageable pageable) {
+        log.debug("Enter getChildren");
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        Page<Child> childPage = childRepository.findAllByParent_UserId(userId, pageable);
+
+        log.debug("Exit getChildren");
+
+        return childPage.map(childMapper::toDto);
     }
 
 }

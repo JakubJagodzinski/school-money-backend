@@ -6,6 +6,10 @@ import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +39,17 @@ public class ChildController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(ChildMessages.CHILD_ADDED_TO_SCHOOL_CLASS));
+    }
+
+    @GetMapping("/children")
+    public ResponseEntity<Page<ChildResponseDto>> getChildren(
+            @PageableDefault(size = 20, sort = "birthDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ChildResponseDto> childResponseDtoPage = childService.getChildren(pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(childResponseDtoPage);
     }
 
 }
