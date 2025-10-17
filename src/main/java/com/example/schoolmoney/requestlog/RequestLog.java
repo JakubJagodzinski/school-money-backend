@@ -1,4 +1,4 @@
-package com.example.schoolmoney.logger;
+package com.example.schoolmoney.requestlog;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -52,8 +52,5 @@ public class RequestLog {
 
     @Column(name = "trace_id")
     private String traceId;
-
-    @Column(name = "type")
-    private String type;
 
 }

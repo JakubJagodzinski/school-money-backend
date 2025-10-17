@@ -1,7 +1,7 @@
 package com.example.schoolmoney.interceptor;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.logger.AsyncRequestLogger;
+import com.example.schoolmoney.requestlog.AsyncRequestLogger;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -61,8 +61,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
                 status,
                 userId,
                 duration,
-                traceId,
-                "ACCESS"
+                traceId
         );
     }
 
