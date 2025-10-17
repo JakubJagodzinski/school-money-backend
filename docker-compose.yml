@@ -10,6 +10,7 @@ services:
     restart: unless-stopped
 
   school-money-app:
+    image: school-money-app:latest
     build:
       context: .
       dockerfile: Dockerfile
