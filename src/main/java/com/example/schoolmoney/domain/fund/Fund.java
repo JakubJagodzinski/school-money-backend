@@ -59,7 +59,7 @@ public class Fund {
     @NotNull
     @Min(0) // allow "free" funds
     @Column(name = "amount_per_child_in_cents", nullable = false, updatable = false)
-    private Long amountPerChildInCents;
+    private long amountPerChildInCents;
 
     @NotBlank
     @Size(max = 34)

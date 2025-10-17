@@ -1,14 +1,42 @@
 package com.example.schoolmoney.domain.fund;
 
+import com.example.schoolmoney.common.constants.messages.FundMessages;
+import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
+import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
+@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1")
 public class FundController {
 
     private final FundService fundService;
+
+    @PostMapping("/funds")
+    public ResponseEntity<FundResponseDto> createFund(@Valid @RequestBody CreateFundRequestDto createFundRequestDto) {
+        FundResponseDto fundResponseDto = fundService.createFund(createFundRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(fundResponseDto);
+    }
+
+    @PostMapping("/funds/{fundId}/cancel")
+    public ResponseEntity<MessageResponseDto> cancelFund(@PathVariable UUID fundId) {
+        fundService.cancelFund(fundId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(FundMessages.FUND_CANCELLED_SUCCESSFULLY));
+    }
 
 }
