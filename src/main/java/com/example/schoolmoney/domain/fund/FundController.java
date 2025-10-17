@@ -6,6 +6,10 @@ import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -37,6 +41,17 @@ public class FundController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(FundMessages.FUND_CANCELLED_SUCCESSFULLY));
+    }
+
+    @GetMapping("/funds/created")
+    public ResponseEntity<Page<FundResponseDto>> getCreatedFunds(
+            @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<FundResponseDto> fundResponseDtoPage = fundService.getCreatedFunds(pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fundResponseDtoPage);
     }
 
 }

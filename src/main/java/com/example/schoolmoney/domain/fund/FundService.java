@@ -19,6 +19,8 @@ import com.example.schoolmoney.domain.wallet.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -188,6 +190,17 @@ public class FundService {
         }
 
         fundRepository.saveAll(endedFunds);
+    }
+
+    public Page<FundResponseDto> getCreatedFunds(Pageable pageable) {
+        log.debug("Enter getCreatedFunds(pageable={})", pageable);
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        Page<Fund> fundPage = fundRepository.findAllByAuthor_UserId(userId, pageable);
+
+        log.debug("Exit getCreatedFunds");
+        return fundPage.map(fundMapper::toDto);
     }
 
 }

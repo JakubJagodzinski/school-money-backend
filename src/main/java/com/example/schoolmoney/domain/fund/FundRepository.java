@@ -1,5 +1,7 @@
 package com.example.schoolmoney.domain.fund;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,5 +13,7 @@ import java.util.UUID;
 public interface FundRepository extends JpaRepository<Fund, UUID> {
 
     List<Fund> findAllByEndsAtBeforeAndFundStatus(Instant now, FundStatus fundStatus);
+
+    Page<Fund> findAllByAuthor_UserId(UUID userId, Pageable pageable);
 
 }
