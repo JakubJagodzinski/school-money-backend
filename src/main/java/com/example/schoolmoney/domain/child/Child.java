@@ -30,9 +30,8 @@ public class Child {
     @JoinColumn(name = "parent_id", nullable = false, foreignKey = @ForeignKey(name = "fk_children_parent_id"))
     private Parent parent;
 
-    @NotNull
     @ManyToOne
-    @JoinColumn(name = "school_class_id", nullable = false, foreignKey = @ForeignKey(name = "fk_children_school_class_id"))
+    @JoinColumn(name = "school_class_id", foreignKey = @ForeignKey(name = "fk_children_school_class_id"))
     private SchoolClass schoolClass;
 
     @NotBlank

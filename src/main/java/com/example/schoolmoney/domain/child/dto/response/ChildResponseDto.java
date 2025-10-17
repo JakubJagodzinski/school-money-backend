@@ -2,12 +2,18 @@ package com.example.schoolmoney.domain.child.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonPropertyOrder({
         "child_id",
         "parent_id",
@@ -22,6 +28,7 @@ public class ChildResponseDto {
     @JsonProperty("child_id")
     private UUID childId;
 
+    // TODO maybe return full parent object?
     @JsonProperty("parent_id")
     private UUID parentId;
 

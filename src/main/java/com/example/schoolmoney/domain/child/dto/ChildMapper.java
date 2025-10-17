@@ -1,10 +1,9 @@
 package com.example.schoolmoney.domain.child.dto;
 
 import com.example.schoolmoney.domain.child.Child;
-import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.Mapping;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
@@ -15,10 +14,8 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface ChildMapper {
 
+    @Mapping(target = "parentId", source = "parent.userId")
+    @Mapping(target = "schoolClassId", source = "schoolClass.schoolClassId")
     ChildResponseDto toDto(Child entity);
-
-    Child toEntity(CreateChildRequestDto dto);
-
-    void updateEntityFromDto(CreateChildRequestDto dto, @MappingTarget Child entity);
 
 }
