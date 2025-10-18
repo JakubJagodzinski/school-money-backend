@@ -1,5 +1,6 @@
-package com.example.schoolmoney.payment;
+package com.example.schoolmoney.payment.adapter;
 
+import com.example.schoolmoney.payment.PaymentProviderType;
 import com.example.schoolmoney.payment.dto.PaymentNotificationDto;
 import com.example.schoolmoney.payment.dto.PaymentSessionDto;
 

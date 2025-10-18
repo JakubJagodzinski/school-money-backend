@@ -1,8 +1,8 @@
-package com.example.schoolmoney.payment.stripe;
+package com.example.schoolmoney.payment.adapter.stripe;
 
 import com.example.schoolmoney.common.constants.messages.PaymentMessages;
 import com.example.schoolmoney.config.StripeConfig;
-import com.example.schoolmoney.payment.PaymentAdapter;
+import com.example.schoolmoney.payment.adapter.PaymentAdapter;
 import com.example.schoolmoney.payment.PaymentProviderType;
 import com.example.schoolmoney.payment.dto.PaymentNotificationDto;
 import com.example.schoolmoney.payment.dto.PaymentSessionDto;
