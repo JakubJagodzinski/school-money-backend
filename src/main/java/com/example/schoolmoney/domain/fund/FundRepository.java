@@ -16,4 +16,6 @@ public interface FundRepository extends JpaRepository<Fund, UUID> {
 
     Page<Fund> findAllByAuthor_UserId(UUID userId, Pageable pageable);
 
+    long countBySchoolClass_SchoolClassIdAndFundStatus(UUID schoolClassId, FundStatus fundStatus);
+
 }

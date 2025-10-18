@@ -3,8 +3,14 @@ package com.example.schoolmoney.domain.schoolclass;
 import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,8 +30,9 @@ public class SchoolClassController {
 
     private final SchoolClassService schoolClassService;
 
-    @GetMapping("/school-classes")
+    @GetMapping("/school-classes/all")
     public ResponseEntity<Page<SchoolClassResponseDto>> getAllSchoolClasses(
+            @ParameterObject
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassService.getAllSchoolClasses(pageable);
@@ -35,9 +42,44 @@ public class SchoolClassController {
                 .body(schoolClassResponseDtoPage);
     }
 
+    @Operation(
+            summary = "Get short info for each school class of parent children",
+            description = """
+                    Returns paginated list of school classes that belong to the parent's children,
+                    with summary details like number of children and number of active funds.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "School classes retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SchoolClassResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            )
+    })
+    @GetMapping("/children/school-classes")
+    public ResponseEntity<Page<SchoolClassResponseDto>> getParentChildrenSchoolClasses(
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassService.getParentChildrenSchoolClasses(pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(schoolClassResponseDtoPage);
+    }
+
     @GetMapping("/school-classes/{schoolClassId}/children")
     public ResponseEntity<Page<ChildResponseDto>> getSchoolClassAllChildren(
             @PathVariable UUID schoolClassId,
+            @ParameterObject
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ChildResponseDto> childResponseDtoPage = schoolClassService.getSchoolClassAllChildren(schoolClassId, pageable);

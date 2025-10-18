@@ -1,6 +1,5 @@
 package com.example.schoolmoney.domain.child.dto.response;
 
-import com.example.schoolmoney.domain.parent.dto.response.ParentPublicResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassHeaderResponseDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -18,20 +17,16 @@ import java.util.UUID;
 @AllArgsConstructor
 @JsonPropertyOrder({
         "child_id",
-        "parent",
         "school_class",
         "first_name",
         "last_name",
         "avatar_url",
         "birth_date"
 })
-public class ChildResponseDto {
+public class ChildShortInfoResponseDto {
 
     @JsonProperty("child_id")
     private UUID childId;
-
-    @JsonProperty("parent")
-    private ParentPublicResponseDto parent;
 
     @JsonProperty("school_class")
     private SchoolClassHeaderResponseDto schoolClass;

@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -42,5 +43,10 @@ public class SchoolClass {
     @Size(min = 1, max = 30)
     @Column(name = "school_class_year", nullable = false, length = 30)
     private String schoolClassYear;
+
+    @NotNull
+    @Builder.Default
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
 }

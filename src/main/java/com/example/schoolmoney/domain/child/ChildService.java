@@ -6,7 +6,7 @@ import com.example.schoolmoney.common.constants.messages.ParentMessages;
 import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
-import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
@@ -37,7 +37,7 @@ public class ChildService {
     private final SecurityUtils securityUtils;
 
     @Transactional
-    public ChildResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
+    public ChildShortInfoResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
         log.debug("Enter createChild {}", createChildRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -61,7 +61,7 @@ public class ChildService {
 
         log.debug("Exit createChild");
 
-        return childMapper.toDto(child);
+        return childMapper.toShortInfoDto(child);
     }
 
     @Transactional
@@ -98,16 +98,16 @@ public class ChildService {
         log.debug("Exit assignChildToSchoolClass");
     }
 
-    public Page<ChildResponseDto> getChildren(Pageable pageable) {
-        log.debug("Enter getChildren");
+    public Page<ChildShortInfoResponseDto> getParentAllChildren(Pageable pageable) {
+        log.debug("Enter getParentAllChildren");
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Page<Child> childPage = childRepository.findAllByParent_UserId(userId, pageable);
 
-        log.debug("Exit getChildren");
+        log.debug("Exit getParentAllChildren");
 
-        return childPage.map(childMapper::toDto);
+        return childPage.map(childMapper::toShortInfoDto);
     }
 
 }

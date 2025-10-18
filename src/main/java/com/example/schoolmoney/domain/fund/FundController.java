@@ -6,6 +6,7 @@ import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -45,6 +46,7 @@ public class FundController {
 
     @GetMapping("/funds/created")
     public ResponseEntity<Page<FundResponseDto>> getCreatedFunds(
+            @ParameterObject
             @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<FundResponseDto> fundResponseDtoPage = fundService.getCreatedFunds(pageable);

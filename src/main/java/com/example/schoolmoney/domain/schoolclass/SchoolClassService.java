@@ -6,6 +6,8 @@ import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
+import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
@@ -20,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -36,6 +39,8 @@ public class SchoolClassService {
     private final ChildRepository childRepository;
 
     private final ParentRepository parentRepository;
+
+    private final FundRepository fundRepository;
 
     private final SecurityUtils securityUtils;
 
@@ -75,6 +80,37 @@ public class SchoolClassService {
         log.debug("Exit getAllSchoolClasses(pageable={})", pageable);
 
         return schoolClassPage.map(schoolClassMapper::toDto);
+    }
+
+    public Page<SchoolClassResponseDto> getParentChildrenSchoolClasses(Pageable pageable) {
+        log.debug("Enter getSchoolClasses(pageable={})", pageable);
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        List<UUID> parentChildrenSchoolClassesIds = childRepository.findDistinctSchoolClassIdsByParentUserId(userId);
+
+        log.debug("Fetching {} school classes for user {}", parentChildrenSchoolClassesIds.size(), userId);
+
+        if (parentChildrenSchoolClassesIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        Page<SchoolClass> schoolClassPage = schoolClassRepository.findAllBySchoolClassIdIn(parentChildrenSchoolClassesIds, pageable);
+
+        Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassPage.map(schoolClassMapper::toDto);
+        schoolClassResponseDtoPage.forEach(schoolClass -> {
+            UUID schoolClassId = schoolClass.getSchoolClassId();
+
+            long numberOfChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
+            schoolClass.setNumberOfChildren(numberOfChildren);
+
+            long numberOfActiveFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.ACTIVE);
+            schoolClass.setNumberOfActiveFunds(numberOfActiveFunds);
+        });
+
+        log.debug("Exit getSchoolClasses");
+
+        return schoolClassResponseDtoPage;
     }
 
     public Page<ChildResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
