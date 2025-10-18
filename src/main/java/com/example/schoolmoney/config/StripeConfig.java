@@ -17,8 +17,6 @@ public class StripeConfig {
 
     private String webhookSecret;
 
-    private String priceId;
-
     @PostConstruct
     public void init() {
         Stripe.apiKey = apiKey;

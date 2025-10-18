@@ -60,7 +60,6 @@ server:
 stripe:
   apiKey: ${STRIPE_API_KEY}
   webhookSecret: ${STRIPE_WEBHOOK_SECRET}
-  priceId: ${STRIPE_PRICE_ID}
 
 email:
   domain: ${EMAIL_DOMAIN:}
