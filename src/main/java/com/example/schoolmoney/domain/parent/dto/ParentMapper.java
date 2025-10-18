@@ -15,6 +15,7 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface ParentMapper {
 
+    @Named("parentToParentDto")
     ParentResponseDto toDto(Parent entity);
 
     @Named("parentToParentPublicDto")

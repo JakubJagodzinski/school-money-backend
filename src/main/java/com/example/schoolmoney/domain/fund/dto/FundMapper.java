@@ -2,10 +2,7 @@ package com.example.schoolmoney.domain.fund.dto;
 
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
@@ -14,6 +11,7 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface FundMapper {
 
+    @Named("fundToFundDto")
     @Mapping(target = "authorId", source = "author.userId")
     @Mapping(target = "schoolClassId", source = "schoolClass.schoolClassId")
     FundResponseDto toDto(Fund entity);

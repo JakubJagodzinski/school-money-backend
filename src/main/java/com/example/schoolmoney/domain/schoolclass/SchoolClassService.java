@@ -6,6 +6,7 @@ import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.parent.Parent;
@@ -113,7 +114,7 @@ public class SchoolClassService {
         return schoolClassResponseDtoPage;
     }
 
-    public Page<ChildResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
+    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -139,7 +140,7 @@ public class SchoolClassService {
 
         log.debug("Exit getSchoolClassAllChildren");
 
-        return schoolClassChildren.map(childMapper::toDto);
+        return schoolClassChildren.map(childMapper::toWithParentInfoDto);
     }
 
 }

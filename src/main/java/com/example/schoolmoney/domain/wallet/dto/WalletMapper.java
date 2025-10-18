@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.wallet.dto;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletResponseDto;
 import org.mapstruct.Mapper;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
@@ -13,6 +14,7 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface WalletMapper {
 
+    @Named("walletToWalletDto")
     WalletResponseDto toDto(Wallet entity);
 
 }

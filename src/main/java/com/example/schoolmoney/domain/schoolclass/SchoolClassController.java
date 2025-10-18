@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.schoolclass;
 
-import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
@@ -76,13 +76,34 @@ public class SchoolClassController {
                 .body(schoolClassResponseDtoPage);
     }
 
+    @Operation(
+            summary = "Get all children from the school class",
+            description = """
+                    Returns paginated list of all children assigned to the specified school class.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "School class children retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ChildWithParentInfoResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            )
+    })
     @GetMapping("/school-classes/{schoolClassId}/children")
-    public ResponseEntity<Page<ChildResponseDto>> getSchoolClassAllChildren(
+    public ResponseEntity<Page<ChildWithParentInfoResponseDto>> getSchoolClassAllChildren(
             @PathVariable UUID schoolClassId,
             @ParameterObject
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = "birthDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ChildResponseDto> childResponseDtoPage = schoolClassService.getSchoolClassAllChildren(schoolClassId, pageable);
+        Page<ChildWithParentInfoResponseDto> childResponseDtoPage = schoolClassService.getSchoolClassAllChildren(schoolClassId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

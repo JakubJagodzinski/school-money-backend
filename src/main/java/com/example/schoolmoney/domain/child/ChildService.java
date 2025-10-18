@@ -7,6 +7,7 @@ import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
@@ -98,7 +99,7 @@ public class ChildService {
         log.debug("Exit assignChildToSchoolClass");
     }
 
-    public Page<ChildShortInfoResponseDto> getParentAllChildren(Pageable pageable) {
+    public Page<ChildWithSchoolClassInfoResponseDto> getParentAllChildren(Pageable pageable) {
         log.debug("Enter getParentAllChildren");
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -107,7 +108,7 @@ public class ChildService {
 
         log.debug("Exit getParentAllChildren");
 
-        return childPage.map(childMapper::toShortInfoDto);
+        return childPage.map(childMapper::toWithSchoolClassInfoDto);
     }
 
 }

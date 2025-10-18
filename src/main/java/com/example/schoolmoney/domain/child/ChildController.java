@@ -4,6 +4,7 @@ import com.example.schoolmoney.common.constants.messages.ChildMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -43,11 +44,11 @@ public class ChildController {
     }
 
     @GetMapping("/children")
-    public ResponseEntity<Page<ChildShortInfoResponseDto>> getParentAllChildren(
+    public ResponseEntity<Page<ChildWithSchoolClassInfoResponseDto>> getParentAllChildren(
             @ParameterObject
             @PageableDefault(size = 20, sort = "birthDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ChildShortInfoResponseDto> childShortInfoResponseDtoPage = childService.getParentAllChildren(pageable);
+        Page<ChildWithSchoolClassInfoResponseDto> childShortInfoResponseDtoPage = childService.getParentAllChildren(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
