@@ -9,5 +9,7 @@ public class FundMessages {
     public static final String FUND_UNIGNORED_BY_CHILD_SUCCESSFULLY = "Fund unignored by child successfully";
     public static final String FUND_CANCELLED_SUCCESSFULLY = "Fund cancelled successfully";
     public static final String FUND_IS_NOT_ACTIVE = "Fund is not active";
+    public static final String NOT_ENOUGH_BALANCE_IN_FUND = "Not enough balance in fund";
+    public static final String CANNOT_DEPOSIT_MORE_THAN_WITHDRAWN_AMOUNT = "Cannot deposit more than withdrawn amount";
 
 }

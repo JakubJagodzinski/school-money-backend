@@ -149,6 +149,8 @@ public class FundService {
                 walletRepository.save(treasurerWallet);
                 log.info("Treasurer wallet updated {}", treasurerWallet);
             }
+        } else {
+            log.info("No fund operations found for fund {}", fundId);
         }
 
         fund.setFundStatus(FundStatus.CANCELLED);
@@ -156,7 +158,9 @@ public class FundService {
         log.info("Fund cancelled {}", fund);
 
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationType().equals(FundOperationType.PAYMENT)) {
+            if (fundOperation.getFundOperationType().equals(FundOperationType.PAYMENT) && fundOperation.getAmountInCents() > 0) {
+                log.debug("Processing refund for fund operation {}", fundOperation);
+
                 Wallet parentWallet = walletRepository.findByParent_UserId(fundOperation.getParent().getUserId());
 
                 parentWallet.setBalanceInCents(parentWallet.getBalanceInCents() + fundOperation.getAmountInCents());
