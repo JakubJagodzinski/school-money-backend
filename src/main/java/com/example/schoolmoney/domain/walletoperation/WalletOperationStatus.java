@@ -2,7 +2,8 @@ package com.example.schoolmoney.domain.walletoperation;
 
 public enum WalletOperationStatus {
 
+    PENDING,
     SUCCESS,
-    FAIL
+    FAILED
 
 }

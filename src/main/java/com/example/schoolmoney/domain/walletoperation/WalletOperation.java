@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.walletoperation;
 
 import com.example.schoolmoney.domain.wallet.Wallet;
+import com.example.schoolmoney.payment.PaymentProviderType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -29,8 +30,13 @@ public class WalletOperation {
     private Wallet wallet;
 
     @NotNull
-    @Column(name = "stripe_payment_id", nullable = false, updatable = false)
-    private UUID stripePaymentId;
+    @Column(name = "external_payment_id", updatable = false)
+    private String externalPaymentId;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_provider_type", nullable = false, updatable = false)
+    private PaymentProviderType paymentProviderType;
 
     @NotNull
     @Min(1)

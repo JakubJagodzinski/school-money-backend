@@ -10,5 +10,6 @@ public class UserMessages {
     public static final String ACCOUNT_VERIFIED_SUCCESSFULLY = "Account verified successfully";
     public static final String ACCOUNT_ALREADY_VERIFIED = "Account already verified";
     public static final String ACCOUNT_NOT_VERIFIED = "Account not verified";
+    public static final String UNAUTHORIZED_EMAIL_DOMAIN = "Unauthorized email domain";
 
 }
