@@ -95,7 +95,7 @@ public class VerificationTokenService {
         String verificationLink = verificationLinkService.buildLink(verificationToken);
 
         try {
-            emailService.sendVerificationEmail(user.getEmail(), user.getEmail(), verificationLink);
+            emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationLink);
         } catch (Exception e) {
             throw new MailSendException(EmailMessages.FAILED_TO_SEND_VERIFICATION_EMAIL, e);
         }
