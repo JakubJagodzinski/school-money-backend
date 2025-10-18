@@ -48,6 +48,8 @@ public class AuthenticationService {
 
     private final VerificationTokenService verificationTokenService;
 
+    private final DomainProperties domainProperties;
+
     private AuthenticationResponseDto generateUserToken(User user) {
         String jwtToken = jwtService.generateToken(user);
         saveUserAuthToken(user, jwtToken, AuthTokenType.ACCESS);
@@ -69,6 +71,10 @@ public class AuthenticationService {
     public void register(RegisterRequestDto registerRequestDto) throws IllegalArgumentException {
         if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
             throw new IllegalArgumentException(UserMessages.EMAIL_IS_ALREADY_TAKEN);
+        }
+
+        if (!registerRequestDto.getEmail().endsWith(domainProperties.getDomain())) {
+            throw new IllegalArgumentException(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
         }
 
         Role userRole = Role.PARENT;
