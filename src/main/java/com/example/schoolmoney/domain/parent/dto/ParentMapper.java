@@ -1,16 +1,14 @@
 package com.example.schoolmoney.domain.parent.dto;
 
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.dto.request.UpdateParentRequestDto;
 import com.example.schoolmoney.domain.parent.dto.response.ParentPublicResponseDto;
 import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
-import org.mapstruct.Mapper;
-import org.mapstruct.Named;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface ParentMapper {
@@ -20,5 +18,7 @@ public interface ParentMapper {
 
     @Named("parentToParentPublicDto")
     ParentPublicResponseDto toPublicDto(Parent entity);
+
+    void updateEntityFromDto(UpdateParentRequestDto dto, @MappingTarget Parent entity);
 
 }
