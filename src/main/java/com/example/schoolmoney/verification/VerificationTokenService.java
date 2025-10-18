@@ -82,7 +82,7 @@ public class VerificationTokenService {
     }
 
     @Transactional
-    public void sendVerificationEmail(String email) throws EntityNotFoundException, MailException {
+    public void sendVerificationEmail(String email) throws EntityNotFoundException, IllegalArgumentException, MailException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException(UserMessages.USER_NOT_FOUND));
 
