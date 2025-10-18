@@ -73,7 +73,8 @@ public class AuthenticationService {
             throw new IllegalArgumentException(UserMessages.EMAIL_IS_ALREADY_TAKEN);
         }
 
-        if (!registerRequestDto.getEmail().endsWith(domainProperties.getDomain())) {
+        if (!domainProperties.isEmailDomainAuthorized(registerRequestDto.getEmail())) {
+            log.warn(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
             throw new IllegalArgumentException(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
         }
 

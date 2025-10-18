@@ -63,4 +63,4 @@ stripe:
   priceId: ${STRIPE_PRICE_ID}
 
 email:
-  domain: ${EMAIL_DOMAIN:edu.p.lodz.pl}
+  domain: ${EMAIL_DOMAIN:}
