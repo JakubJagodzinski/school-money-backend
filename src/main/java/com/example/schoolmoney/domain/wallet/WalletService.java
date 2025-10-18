@@ -6,7 +6,8 @@ import com.example.schoolmoney.common.constants.messages.WalletMessages;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.wallet.dto.WalletMapper;
-import com.example.schoolmoney.domain.wallet.dto.response.WalletResponseDto;
+import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
+import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -55,14 +56,28 @@ public class WalletService {
         log.debug("exit createWallet");
     }
 
-    public WalletResponseDto getWalletInfo() {
+    public WalletInfoResponseDto getWalletInfo() {
         log.debug("enter getWalletInfo");
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
-        return walletMapper.toDto(wallet);
+        log.debug("exit getWalletInfo");
+
+        return walletMapper.toInfoDto(wallet);
+    }
+
+    public WalletBalanceResponseDto getWalletBalance() {
+        log.debug("enter getWalletBalance");
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        Wallet wallet = walletRepository.findByParent_UserId(userId);
+
+        log.debug("exit getWalletBalance");
+
+        return walletMapper.toBalanceDto(wallet);
     }
 
     @Transactional
