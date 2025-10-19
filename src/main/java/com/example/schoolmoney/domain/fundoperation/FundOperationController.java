@@ -116,8 +116,8 @@ public class FundOperationController {
             )
     })
     @PostMapping("/funds/{fundId}/withdraw")
-    public ResponseEntity<MessageResponseDto> withdrawFunds(@PathVariable UUID fundId, @RequestParam long amountInCents) {
-        fundOperationService.withdrawFunds(fundId, amountInCents);
+    public ResponseEntity<MessageResponseDto> withdrawFromFund(@PathVariable UUID fundId, @RequestParam long amountInCents) {
+        fundOperationService.withdrawFromFund(fundId, amountInCents);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -173,7 +173,7 @@ public class FundOperationController {
     })
     @PostMapping("/funds/{fundId}/deposit")
     public ResponseEntity<MessageResponseDto> depositToFund(@PathVariable UUID fundId, @RequestParam long amountInCents) {
-        fundOperationService.depositFunds(fundId, amountInCents);
+        fundOperationService.depositToFund(fundId, amountInCents);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

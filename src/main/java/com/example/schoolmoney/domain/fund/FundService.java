@@ -3,7 +3,6 @@ package com.example.schoolmoney.domain.fund;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.FundMessages;
 import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
-import com.example.schoolmoney.common.constants.messages.WalletMessages;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
@@ -52,7 +51,6 @@ public class FundService {
         log.debug("enter createFund {}", createFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-
         Parent parent = parentRepository.getReferenceById(userId);
 
         SchoolClass schoolClass = schoolClassRepository.findById(createFundRequestDto.getSchoolClassId())
@@ -85,7 +83,6 @@ public class FundService {
         return fundMapper.toDto(fund);
     }
 
-    // TODO split it
     @Transactional
     public void cancelFund(UUID fundId) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
         log.debug("enter cancelFund {}", fundId);
@@ -113,55 +110,47 @@ public class FundService {
         List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
 
         if (!fundOperations.isEmpty()) {
-            long resultAmountInCents = 0;
+            long fundTreasurerBalance = calculateFundTreasurerBalance(fundOperations);
 
-            for (FundOperation fundOperation : fundOperations) {
-                if (fundOperation.getFundOperationType().equals(FundOperationType.DEPOSIT)) {
-                    resultAmountInCents += fundOperation.getAmountInCents();
-                } else if (fundOperation.getFundOperationType().equals(FundOperationType.WITHDRAWAL)) {
-                    resultAmountInCents -= fundOperation.getAmountInCents();
-                }
+            if (fundTreasurerBalance < 0) {
+                log.debug("Fund treasurer balance is negative: {}", fundTreasurerBalance);
+                throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
+            } else if (fundTreasurerBalance > 0) {
+                log.debug("Fund treasurer balance is positive: {}", fundTreasurerBalance);
+                throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
             }
-
-            log.debug("Treasurer total withdrawal amount {}", resultAmountInCents);
-
-            if (resultAmountInCents < 0) {
-                Wallet treasurerWallet = walletRepository.findByParent_UserId(userId);
-
-                if (treasurerWallet.getBalanceInCents() < resultAmountInCents) {
-                    log.error(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
-                    throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
-                }
-
-                FundOperation treasurerFundDepositOperation = FundOperation
-                        .builder()
-                        .parent(fund.getAuthor())
-                        .fund(fund)
-                        .wallet(treasurerWallet)
-                        .amountInCents(Math.abs(resultAmountInCents))
-                        .fundOperationType(FundOperationType.DEPOSIT)
-                        .build();
-
-                fundOperationRepository.save(treasurerFundDepositOperation);
-                log.info("Fund deposit operation saved {}", treasurerFundDepositOperation);
-
-                treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() - Math.abs(resultAmountInCents));
-                walletRepository.save(treasurerWallet);
-                log.info("Treasurer wallet updated {}", treasurerWallet);
-            }
-        } else {
-            log.info("No fund operations found for fund {}", fundId);
         }
 
         fund.setFundStatus(FundStatus.CANCELLED);
         fundRepository.save(fund);
         log.info("Fund cancelled {}", fund);
 
+        processParentRefunds(fundOperations);
+
+        log.debug("exit cancelFund");
+    }
+
+    private long calculateFundTreasurerBalance(List<FundOperation> fundOperations) {
+        long fundTreasurerBalance = 0;
+
+        for (FundOperation fundOperation : fundOperations) {
+            FundOperationType fundOperationType = fundOperation.getFundOperationType();
+            if (fundOperationType.equals(FundOperationType.DEPOSIT)) {
+                fundTreasurerBalance += fundOperation.getAmountInCents();
+            } else if (fundOperationType.equals(FundOperationType.WITHDRAWAL)) {
+                fundTreasurerBalance -= fundOperation.getAmountInCents();
+            }
+        }
+
+        return fundTreasurerBalance;
+    }
+
+    private void processParentRefunds(List<FundOperation> fundOperations) {
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getFundOperationType().equals(FundOperationType.PAYMENT) && fundOperation.getAmountInCents() > 0) {
                 log.debug("Processing refund for fund operation {}", fundOperation);
 
-                Wallet parentWallet = walletRepository.findByParent_UserId(fundOperation.getParent().getUserId());
+                Wallet parentWallet = fundOperation.getWallet();
 
                 parentWallet.setBalanceInCents(parentWallet.getBalanceInCents() + fundOperation.getAmountInCents());
                 walletRepository.save(parentWallet);
@@ -171,7 +160,7 @@ public class FundService {
                         .builder()
                         .parent(fundOperation.getParent())
                         .child(fundOperation.getChild())
-                        .fund(fund)
+                        .fund(fundOperation.getFund())
                         .wallet(parentWallet)
                         .amountInCents(fundOperation.getAmountInCents())
                         .fundOperationType(FundOperationType.REFUND)
@@ -181,8 +170,6 @@ public class FundService {
                 log.info("Parent refund operation saved {}", parentRefundOperation);
             }
         }
-
-        log.debug("exit cancelFund");
     }
 
     @Transactional

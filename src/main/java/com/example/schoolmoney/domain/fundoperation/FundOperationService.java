@@ -7,7 +7,6 @@ import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
-import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -81,6 +80,10 @@ public class FundOperationService {
             throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
         }
 
+        parentWallet.setBalanceInCents(parentWallet.getBalanceInCents() - amountInCents);
+        walletRepository.save(parentWallet);
+        log.info("wallet updated {}", parentWallet);
+
         FundOperation fundOperation = FundOperation
                 .builder()
                 .parent(child.getParent())
@@ -95,18 +98,14 @@ public class FundOperationService {
         fundOperationRepository.save(fundOperation);
         log.info("fund operation saved {}", fundOperation);
 
-        parentWallet.setBalanceInCents(parentWallet.getBalanceInCents() - amountInCents);
-        walletRepository.save(parentWallet);
-        log.info("wallet updated {}", parentWallet);
-
         log.debug("exit performPayment");
     }
 
     @Transactional
-    public void depositFunds(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
+    public void depositToFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
         UUID userId = securityUtils.getCurrentUserId();
 
-        log.debug("enter depositFunds for fundId: {}, amountInCents: {}, userId: {}", fundId, amountInCents, userId);
+        log.debug("enter depositToFund for fundId: {}, amountInCents: {}, userId: {}", fundId, amountInCents, userId);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
@@ -132,11 +131,13 @@ public class FundOperationService {
 
         Wallet treasurerWallet = walletRepository.findByParent_UserId(userId);
 
-        Parent treasurer = fund.getSchoolClass().getTreasurer();
+        treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() - amountInCents);
+        walletRepository.save(treasurerWallet);
+        log.info("wallet updated {}", treasurerWallet);
 
         FundOperation fundDepositOperation = FundOperation
                 .builder()
-                .parent(treasurer)
+                .parent(fund.getSchoolClass().getTreasurer())
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
@@ -147,18 +148,14 @@ public class FundOperationService {
         fundOperationRepository.save(fundDepositOperation);
         log.info("fund operation saved {}", fundDepositOperation);
 
-        treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() - amountInCents);
-        walletRepository.save(treasurerWallet);
-        log.info("wallet updated {}", treasurerWallet);
-
-        log.debug("exit depositFunds");
+        log.debug("exit depositToFund");
     }
 
     @Transactional
-    public void withdrawFunds(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
+    public void withdrawFromFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
         UUID userId = securityUtils.getCurrentUserId();
 
-        log.debug("enter withdrawFunds for fundId: {}, amountInCents: {}, userId: {}", fundId, amountInCents, userId);
+        log.debug("enter withdrawFromFund for fundId: {}, amountInCents: {}, userId: {}", fundId, amountInCents, userId);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
@@ -185,11 +182,13 @@ public class FundOperationService {
 
         Wallet treasurerWallet = walletRepository.findByParent_UserId(userId);
 
-        Parent treasurer = fund.getSchoolClass().getTreasurer();
+        treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() + amountInCents);
+        walletRepository.save(treasurerWallet);
+        log.info("wallet updated {}", treasurerWallet);
 
         FundOperation fundWithdrawalOperation = FundOperation
                 .builder()
-                .parent(treasurer)
+                .parent(fund.getSchoolClass().getTreasurer())
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
@@ -200,11 +199,7 @@ public class FundOperationService {
         fundOperationRepository.save(fundWithdrawalOperation);
         log.info("fund operation saved {}", fundWithdrawalOperation);
 
-        treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() + amountInCents);
-        walletRepository.save(treasurerWallet);
-        log.info("wallet updated {}", treasurerWallet);
-
-        log.debug("exit withdrawFunds");
+        log.debug("exit withdrawFromFund");
     }
 
     public long getFundActualAmountInCents(UUID fundId) {
@@ -241,15 +236,10 @@ public class FundOperationService {
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getFundOperationStatus().equals(FundOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getFundOperationType();
-                switch (fundOperationType) {
-                    case DEPOSIT:
-                        remainingDepositLimitInCents -= fundOperation.getAmountInCents();
-                        break;
-                    case WITHDRAWAL:
-                        remainingDepositLimitInCents += fundOperation.getAmountInCents();
-                        break;
-                    default:
-                        break;
+                if (fundOperationType.equals(FundOperationType.DEPOSIT)) {
+                    remainingDepositLimitInCents -= fundOperation.getAmountInCents();
+                } else if (fundOperationType.equals(FundOperationType.WITHDRAWAL)) {
+                    remainingDepositLimitInCents += fundOperation.getAmountInCents();
                 }
             }
         }
