@@ -1,21 +1,22 @@
 package com.example.schoolmoney.verification;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.example.schoolmoney.properties.ServerProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@RequiredArgsConstructor
 @Service
 public class VerificationLinkService {
 
-    @Value("${SERVER_PORT}")
-    private String serverPort;
+    private final ServerProperties serverProperties;
 
     public String buildLink(String verificationToken) {
         String tokenEncoded = URLEncoder.encode(verificationToken, StandardCharsets.UTF_8);
 
-        return "http://localhost:" + serverPort + "/api/v1/auth/verify?token=" + tokenEncoded;
+        return serverProperties.getPublicAddress() + "/api/v1/auth/verify?token=" + tokenEncoded;
     }
 
 }

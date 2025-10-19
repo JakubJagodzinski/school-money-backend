@@ -7,6 +7,7 @@ import com.example.schoolmoney.domain.walletoperation.WalletOperationRepository;
 import com.example.schoolmoney.payment.adapter.PaymentAdapter;
 import com.example.schoolmoney.payment.dto.PaymentNotificationDto;
 import com.example.schoolmoney.payment.dto.PaymentSessionDto;
+import com.example.schoolmoney.properties.ServerProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,16 +28,18 @@ public class PaymentService {
 
     private final WalletOperationRepository walletOperationRepository;
 
+    private final ServerProperties serverProperties;
+
+    private final PaymentProperties paymentProperties;
+
     public PaymentSessionDto createPaymentSession(PaymentProviderType providerType, long amountInCents) throws IllegalStateException {
         PaymentAdapter adapter = getAdapter(providerType);
         try {
             UUID userId = securityUtils.getCurrentUserId();
 
-            // TODO move to config
-            String PAYMENT_SUCCESS_URL = "http://localhost:8090/api/v1/payments/status/success";
-            String PAYMENT_FAILED_URL = "http://localhost:8090/api/v1/payments/status/failed";
-
-            return adapter.createPaymentSession(amountInCents, userId, PAYMENT_SUCCESS_URL, PAYMENT_FAILED_URL);
+            String successUrl = serverProperties.getPublicAddress() + paymentProperties.getSuccessPath();
+            String failedUrl = serverProperties.getPublicAddress() + paymentProperties.getFailedPath();
+            return adapter.createPaymentSession(amountInCents, userId, successUrl, failedUrl);
         } catch (Exception e) {
             throw new IllegalStateException(PaymentMessages.SESSION_CREATION_ERROR);
         }

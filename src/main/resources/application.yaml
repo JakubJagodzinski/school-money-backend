@@ -41,11 +41,6 @@ spring:
           starttls:
             enable: true
 
-  verification:
-    token:
-      expiry-hours: ${VERIFICATION_TOKEN_EXPIRY_HOURS:24}
-      token-length: ${VERIFICATION_TOKEN_LENGTH:36}
-
 management:
   endpoints:
     web:
@@ -61,5 +56,17 @@ stripe:
   apiKey: ${STRIPE_API_KEY}
   webhookSecret: ${STRIPE_WEBHOOK_SECRET}
 
-email:
+app:
+  server:
+    public-address: ${SERVER_PUBLIC_ADDRESS:http://localhost:8090}
+
   domain: ${EMAIL_DOMAIN:}
+
+  verification:
+    token:
+      expiry-hours: ${VERIFICATION_TOKEN_EXPIRY_HOURS:24}
+      token-length: ${VERIFICATION_TOKEN_LENGTH:36}
+
+  payment:
+    success-path: "/api/v1/payments/status/success"
+    failed-path: "/api/v1/payments/status/failed"

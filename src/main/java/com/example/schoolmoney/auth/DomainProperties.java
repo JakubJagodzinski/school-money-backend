@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "email")
+@ConfigurationProperties(prefix = "app")
 @Component
 public class DomainProperties {
 
