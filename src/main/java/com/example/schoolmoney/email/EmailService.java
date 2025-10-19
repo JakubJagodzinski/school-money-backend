@@ -2,6 +2,7 @@ package com.example.schoolmoney.email;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.VerificationEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.WalletTopUpEmailContentProvider;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -31,8 +32,13 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String to, String firstName, String verificationLink) throws MessagingException {
-        EmailContentProvider contentProvider = new VerificationEmailContentProvider(firstName, verificationLink);
-        sendEmail(to, "Verify your account", contentProvider);
+        EmailContentProvider emailContentProvider = new VerificationEmailContentProvider(firstName, verificationLink);
+        sendEmail(to, "Verify your account", emailContentProvider);
+    }
+
+    public void sendWalletTopUpEmail(String to, String firstName, long amountInCents) throws MessagingException {
+        EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents);
+        sendEmail(to, "Wallet top-up", emailContentProvider);
     }
 
 }

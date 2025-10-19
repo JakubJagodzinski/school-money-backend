@@ -2,11 +2,11 @@ package com.example.schoolmoney.payment;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.PaymentMessages;
-import com.example.schoolmoney.domain.walletoperation.WalletOperationService;
+import com.example.schoolmoney.domain.wallet.WalletService;
+import com.example.schoolmoney.domain.walletoperation.WalletOperationRepository;
 import com.example.schoolmoney.payment.adapter.PaymentAdapter;
 import com.example.schoolmoney.payment.dto.PaymentNotificationDto;
 import com.example.schoolmoney.payment.dto.PaymentSessionDto;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,44 +21,57 @@ public class PaymentService {
 
     private final List<PaymentAdapter> paymentAdapters;
 
-    private final WalletOperationService walletOperationService;
-
     private final SecurityUtils securityUtils;
 
-    // TODO change exception type
-    public PaymentSessionDto createPaymentSession(PaymentProviderType providerType, long amountInCents) throws EntityNotFoundException {
-        try {
-            PaymentAdapter adapter = getAdapter(providerType);
+    private final WalletService walletService;
 
+    private final WalletOperationRepository walletOperationRepository;
+
+    public PaymentSessionDto createPaymentSession(PaymentProviderType providerType, long amountInCents) throws IllegalStateException {
+        PaymentAdapter adapter = getAdapter(providerType);
+        try {
             UUID userId = securityUtils.getCurrentUserId();
 
-            if (userId == null) {
-                log.error(PaymentMessages.USER_NOT_AUTHENTICATED);
-                throw new EntityNotFoundException(PaymentMessages.USER_NOT_AUTHENTICATED);
-            }
+            // TODO move to config
+            String PAYMENT_SUCCESS_URL = "http://localhost:8090/api/v1/payments/status/success";
+            String PAYMENT_FAILED_URL = "http://localhost:8090/api/v1/payments/status/failed";
 
-            String PAYMENT_SUCCESS_URL = "http://localhost:8090/api/v1/payments/success";
-            String PAYMENT_FAILED_URL = "http://localhost:8090/api/v1/payments/failed";
             return adapter.createPaymentSession(amountInCents, userId, PAYMENT_SUCCESS_URL, PAYMENT_FAILED_URL);
         } catch (Exception e) {
-            throw new EntityNotFoundException(PaymentMessages.SESSION_CREATION_ERROR);
+            throw new IllegalStateException(PaymentMessages.SESSION_CREATION_ERROR);
         }
     }
 
-    public void handleWebhook(PaymentProviderType providerType, String payload, String sigHeader) throws Exception {
+    // TODO activate payment_failed event in payment provider dashboard and add logic to handle failed payments (wallet, history, email)
+    public void handleWebhook(PaymentProviderType providerType, String payload, String sigHeader) {
         PaymentAdapter adapter = getAdapter(providerType);
 
-        PaymentNotificationDto paymentNotificationDto = adapter.processWebhook(payload, sigHeader);
+        PaymentNotificationDto paymentNotificationDto;
+        try {
+            paymentNotificationDto = adapter.processWebhook(payload, sigHeader);
+        } catch (Exception e) {
+            throw new IllegalArgumentException(PaymentMessages.WEBHOOK_PROCESSING_ERROR);
+        }
 
-        walletOperationService.registerWalletDepositOperation(
-                paymentNotificationDto.getUserId(),
-                paymentNotificationDto.getAmountInCents(),
-                paymentNotificationDto.getExternalPaymentId(),
-                adapter.getProviderType()
+        String externalPaymentId = paymentNotificationDto.getExternalPaymentId();
+        UUID userId = paymentNotificationDto.getUserId();
+        long amountInCents = paymentNotificationDto.getAmountInCents();
+        PaymentProviderType paymentProviderType = adapter.getProviderType();
+
+        if (walletOperationRepository.existsByExternalPaymentIdAndPaymentProviderType(externalPaymentId, paymentProviderType)) {
+            log.warn("Wallet operation already exists for externalPaymentId: {}, paymentProviderType: {}", externalPaymentId, paymentProviderType);
+            return;
+        }
+
+        walletService.registerWalletTopUp(
+                userId,
+                amountInCents,
+                externalPaymentId,
+                paymentProviderType
         );
     }
 
-    private PaymentAdapter getAdapter(PaymentProviderType providerType) {
+    private PaymentAdapter getAdapter(PaymentProviderType providerType) throws IllegalArgumentException {
         return paymentAdapters.stream()
                 .filter(a -> a.getProviderType().equals(providerType))
                 .findFirst()

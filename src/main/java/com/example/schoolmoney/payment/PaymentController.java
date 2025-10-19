@@ -16,16 +16,16 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @PostMapping("/stripe/create-session")
-    public ResponseEntity<PaymentSessionDto> createStripeSession(@RequestParam long amountInCents) {
-        PaymentSessionDto paymentSessionDto = paymentService.createPaymentSession(PaymentProviderType.STRIPE, amountInCents);
+    @PostMapping("/session/top-up")
+    public ResponseEntity<PaymentSessionDto> createStripePaymentSession(@RequestParam PaymentProviderType paymentProviderType, @RequestParam long amountInCents) {
+        PaymentSessionDto paymentSessionDto = paymentService.createPaymentSession(paymentProviderType, amountInCents);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(paymentSessionDto);
     }
 
-    @GetMapping("/success")
+    @GetMapping("/status/success")
     public ResponseEntity<String> paymentSuccessRedirect() {
         String html = "<html>" +
                 "<head><title>Payment successful</title></head>" +
@@ -40,7 +40,7 @@ public class PaymentController {
                 .body(html);
     }
 
-    @GetMapping("/failed")
+    @GetMapping("/status/failed")
     public ResponseEntity<String> paymentFailedRedirect() {
         String html = "<html>" +
                 "<head><title>Payment failed</title></head>" +
@@ -55,8 +55,8 @@ public class PaymentController {
                 .body(html);
     }
 
-    @PostMapping("/stripe/webhook")
-    public ResponseEntity<MessageResponseDto> handleWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) throws Exception {
+    @PostMapping("/webhook/stripe")
+    public ResponseEntity<MessageResponseDto> handleWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
         paymentService.handleWebhook(PaymentProviderType.STRIPE, payload, sigHeader);
 
         return ResponseEntity

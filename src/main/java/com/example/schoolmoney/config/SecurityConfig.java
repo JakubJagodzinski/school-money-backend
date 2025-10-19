@@ -24,10 +24,9 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @Configuration
 public class SecurityConfig {
 
-    // TODO correct (remove subscriptions)
     private static final String[] PUBLIC_API_ENDPOINTS = {
-            "/api/v1/payments/**",
-            "/api/v1/subscriptions/webhook",
+            "/api/v1/payments/webhook/**",
+            "/api/v1/payments/status/**",
             "/api/v1/auth/**",
             "/v2/api-docs",
             "/v3/api-docs",
