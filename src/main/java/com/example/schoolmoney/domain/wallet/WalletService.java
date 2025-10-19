@@ -144,7 +144,7 @@ public class WalletService {
                 .externalPaymentId(externalPaymentId)
                 .paymentProviderType(paymentProviderType)
                 .amountInCents(amountInCents)
-                .operationType(WalletOperationType.DEPOSIT)
+                .operationType(WalletOperationType.WALLET_TOP_UP)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 

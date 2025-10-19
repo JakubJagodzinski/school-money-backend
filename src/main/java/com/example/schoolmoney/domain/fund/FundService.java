@@ -137,9 +137,9 @@ public class FundService {
 
         for (FundOperation fundOperation : fundOperations) {
             FundOperationType fundOperationType = fundOperation.getFundOperationType();
-            if (fundOperationType.equals(FundOperationType.DEPOSIT)) {
+            if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
                 fundTreasurerBalance += fundOperation.getAmountInCents();
-            } else if (fundOperationType.equals(FundOperationType.WITHDRAWAL)) {
+            } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
                 fundTreasurerBalance -= fundOperation.getAmountInCents();
             }
         }
@@ -149,7 +149,7 @@ public class FundService {
 
     private void processParentRefunds(List<FundOperation> fundOperations) {
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationType().equals(FundOperationType.PAYMENT) && fundOperation.getAmountInCents() > 0) {
+            if (fundOperation.getFundOperationType().equals(FundOperationType.FUND_PAYMENT) && fundOperation.getAmountInCents() > 0) {
                 log.debug("Processing refund for fund operation {}", fundOperation);
 
                 Wallet parentWallet = fundOperation.getWallet();
@@ -165,7 +165,7 @@ public class FundService {
                         .fund(fundOperation.getFund())
                         .wallet(parentWallet)
                         .amountInCents(fundOperation.getAmountInCents())
-                        .fundOperationType(FundOperationType.REFUND)
+                        .fundOperationType(FundOperationType.FUND_REFUND)
                         .build();
 
                 fundOperationRepository.save(parentRefundOperation);

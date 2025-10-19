@@ -59,7 +59,7 @@ public class FundOperationService {
         }
 
         if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndFundOperationTypeAndFundOperationStatus(
-                fundId, userId, childId, FundOperationType.PAYMENT, FinancialOperationStatus.SUCCESS
+                fundId, userId, childId, FundOperationType.FUND_PAYMENT, FinancialOperationStatus.SUCCESS
         )) {
             log.error(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
             throw new IllegalStateException(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
@@ -93,7 +93,7 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(parentWallet)
                 .amountInCents(amountInCents)
-                .fundOperationType(FundOperationType.PAYMENT)
+                .fundOperationType(FundOperationType.FUND_PAYMENT)
                 .fundOperationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
@@ -149,7 +149,7 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
-                .fundOperationType(FundOperationType.DEPOSIT)
+                .fundOperationType(FundOperationType.FUND_DEPOSIT)
                 .fundOperationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
@@ -205,7 +205,7 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
-                .fundOperationType(FundOperationType.WITHDRAWAL)
+                .fundOperationType(FundOperationType.FUND_WITHDRAWAL)
                 .fundOperationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
@@ -224,12 +224,12 @@ public class FundOperationService {
             if (fundOperation.getFundOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getFundOperationType();
                 switch (fundOperationType) {
-                    case PAYMENT:
-                    case DEPOSIT:
+                    case FUND_PAYMENT:
+                    case FUND_DEPOSIT:
                         fundActualAmountInCents += fundOperation.getAmountInCents();
                         break;
-                    case WITHDRAWAL:
-                    case REFUND:
+                    case FUND_WITHDRAWAL:
+                    case FUND_REFUND:
                         fundActualAmountInCents -= fundOperation.getAmountInCents();
                         break;
                     default:
@@ -249,9 +249,9 @@ public class FundOperationService {
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getFundOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getFundOperationType();
-                if (fundOperationType.equals(FundOperationType.DEPOSIT)) {
+                if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
                     remainingDepositLimitInCents -= fundOperation.getAmountInCents();
-                } else if (fundOperationType.equals(FundOperationType.WITHDRAWAL)) {
+                } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
                     remainingDepositLimitInCents += fundOperation.getAmountInCents();
                 }
             }
