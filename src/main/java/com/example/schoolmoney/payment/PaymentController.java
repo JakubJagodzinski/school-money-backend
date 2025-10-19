@@ -17,7 +17,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping("/session/top-up")
-    public ResponseEntity<PaymentSessionDto> createStripePaymentSession(@RequestParam PaymentProviderType paymentProviderType, @RequestParam long amountInCents) {
+    public ResponseEntity<PaymentSessionDto> createPaymentSession(@RequestParam PaymentProviderType paymentProviderType, @RequestParam long amountInCents) {
         PaymentSessionDto paymentSessionDto = paymentService.createPaymentSession(paymentProviderType, amountInCents);
 
         return ResponseEntity
