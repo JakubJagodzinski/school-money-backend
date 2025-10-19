@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.schoolclass.dto;
 import com.example.schoolmoney.domain.parent.dto.ParentMapper;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassHeaderResponseDto;
+import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassInvitationCodeResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
 import org.mapstruct.*;
 
@@ -20,5 +21,8 @@ public interface SchoolClassMapper {
 
     @Named("schoolClassToSchoolClassHeaderDto")
     SchoolClassHeaderResponseDto toHeaderDto(SchoolClass entity);
+
+    @Named("schoolClassToSchoolClassInvitationCodeDto")
+    SchoolClassInvitationCodeResponseDto toInvitationCodeDto(SchoolClass entity);
 
 }

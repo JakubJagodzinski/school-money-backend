@@ -5,7 +5,6 @@ import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
-import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
@@ -13,6 +12,7 @@ import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
+import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassInvitationCodeResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
 import com.example.schoolmoney.utils.InvitationCodeGenerator;
 import jakarta.persistence.EntityNotFoundException;
@@ -141,6 +141,34 @@ public class SchoolClassService {
         log.debug("Exit getSchoolClassAllChildren");
 
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
+    }
+
+    @Transactional
+    public SchoolClassInvitationCodeResponseDto regenerateInvitationCode(UUID schoolClassId) throws EntityNotFoundException {
+        log.debug("Enter regenerateInvitationCode(schoolClassId={})", schoolClassId);
+
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
+            log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new IllegalArgumentException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        }
+
+        String invitationCode = InvitationCodeGenerator.generate();
+
+        schoolClass.setInvitationCode(invitationCode);
+        schoolClassRepository.save(schoolClass);
+        log.info("Invitation code regenerated for school class {}", schoolClass);
+
+        log.debug("Exit regenerateInvitationCode");
+
+        return schoolClassMapper.toInvitationCodeDto(schoolClass);
     }
 
 }
