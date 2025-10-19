@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,7 +68,7 @@ public class ChildService {
     }
 
     @Transactional
-    public void assignChildToSchoolClass(UUID childId, String invitationCode) throws EntityNotFoundException, IllegalArgumentException {
+    public void assignChildToSchoolClass(UUID childId, String invitationCode) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter assignChildToSchoolClass childId={}, invitationCode={}", childId, invitationCode);
 
         Child child = childRepository.findById(childId)
@@ -79,7 +80,8 @@ public class ChildService {
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            throw new IllegalArgumentException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         SchoolClass schoolClass = schoolClassRepository.findByInvitationCode(invitationCode)
@@ -90,7 +92,7 @@ public class ChildService {
 
         if (child.getSchoolClass() != null) {
             log.error(ChildMessages.CHILD_ALREADY_IN_SCHOOL_CLASS);
-            throw new IllegalArgumentException(ChildMessages.CHILD_ALREADY_IN_SCHOOL_CLASS);
+            throw new IllegalStateException(ChildMessages.CHILD_ALREADY_IN_SCHOOL_CLASS);
         }
 
         child.setSchoolClass(schoolClass);
@@ -113,7 +115,7 @@ public class ChildService {
     }
 
     @Transactional
-    public ChildShortInfoResponseDto updateChild(UUID childId, UpdateChildRequestDto updateChildRequestDto) throws EntityNotFoundException {
+    public ChildShortInfoResponseDto updateChild(UUID childId, UpdateChildRequestDto updateChildRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter updateChild childId={}, updateChildRequestDto={}", childId, updateChildRequestDto);
 
         Child child = childRepository.findById(childId)
@@ -125,7 +127,8 @@ public class ChildService {
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            throw new IllegalArgumentException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         childMapper.updateEntityFromDto(updateChildRequestDto, child);

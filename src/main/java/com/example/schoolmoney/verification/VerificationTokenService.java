@@ -62,32 +62,42 @@ public class VerificationTokenService {
 
     @Transactional
     public void verifyUser(String token) throws EntityNotFoundException, IllegalArgumentException {
+        log.debug("Enter verifyUser for token: {}", token);
+
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
-                .orElseThrow(() -> new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.error(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+                    return new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+                });
 
-        if (verificationToken.isUsed()) {
-            throw new IllegalArgumentException(VerificationTokenMessages.VERIFICATION_TOKEN_ALREADY_USED);
+        if (verificationToken.getExpiryDate().isBefore(Instant.now()) || verificationToken.isUsed()) {
+            log.error(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+            throw new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
         }
 
-        if (verificationToken.getExpiryDate().isBefore(Instant.now())) {
-            throw new IllegalArgumentException(VerificationTokenMessages.VERIFICATION_TOKEN_EXPIRED);
-        }
+        verificationToken.setUsed(true);
+        verificationTokenRepository.save(verificationToken);
 
         User user = verificationToken.getUser();
         user.setVerified(true);
         userRepository.save(user);
 
-        verificationToken.setUsed(true);
-        verificationTokenRepository.save(verificationToken);
+        log.debug("Exit verifyUser");
     }
 
     @Transactional
-    public void sendVerificationEmail(String email) throws EntityNotFoundException, IllegalArgumentException, MailException {
+    public void sendVerificationEmail(String email) throws MailException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new EntityNotFoundException(UserMessages.USER_NOT_FOUND));
+                .orElse(null);
+
+        if (user == null) {
+            log.debug("User with email {} not found", email);
+            return;
+        }
 
         if (user.isVerified()) {
-            throw new IllegalArgumentException(UserMessages.ACCOUNT_ALREADY_VERIFIED);
+            log.debug("User {} is already verified", email);
+            return;
         }
 
         String verificationToken = createVerificationToken(user);

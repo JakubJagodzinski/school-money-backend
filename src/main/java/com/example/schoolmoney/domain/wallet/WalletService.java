@@ -153,12 +153,11 @@ public class WalletService {
 
         try {
             emailService.sendWalletTopUpEmail(parent.getEmail(), parent.getFirstName(), amountInCents);
+            log.debug("exit registerWalletTopUp");
         } catch (MessagingException e) {
-            log.error("error sending email", e);
+            log.error(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
             throw new MailSendException(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
         }
-
-        log.debug("exit registerWalletTopUp");
     }
 
 }

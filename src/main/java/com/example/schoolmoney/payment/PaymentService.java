@@ -46,14 +46,15 @@ public class PaymentService {
     }
 
     // TODO activate payment_failed event in payment provider dashboard and add logic to handle failed payments (wallet, history, email)
-    public void handleWebhook(PaymentProviderType providerType, String payload, String sigHeader) {
+    public void handleWebhook(PaymentProviderType providerType, String payload, String sigHeader) throws IllegalStateException {
         PaymentAdapter adapter = getAdapter(providerType);
 
         PaymentNotificationDto paymentNotificationDto;
         try {
             paymentNotificationDto = adapter.processWebhook(payload, sigHeader);
         } catch (Exception e) {
-            throw new IllegalArgumentException(PaymentMessages.WEBHOOK_PROCESSING_ERROR);
+            log.error(PaymentMessages.WEBHOOK_PROCESSING_ERROR, e);
+            throw new IllegalStateException(PaymentMessages.WEBHOOK_PROCESSING_ERROR);
         }
 
         String externalPaymentId = paymentNotificationDto.getExternalPaymentId();
@@ -78,7 +79,10 @@ public class PaymentService {
         return paymentAdapters.stream()
                 .filter(a -> a.getProviderType().equals(providerType))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(PaymentMessages.UNSUPPORTED_PAYMENT_PROVIDER));
+                .orElseThrow(() -> {
+                    log.error(PaymentMessages.UNSUPPORTED_PAYMENT_PROVIDER);
+                    return new IllegalArgumentException(PaymentMessages.UNSUPPORTED_PAYMENT_PROVIDER);
+                });
     }
 
 }

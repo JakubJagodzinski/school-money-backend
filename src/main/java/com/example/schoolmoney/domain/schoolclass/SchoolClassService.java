@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -114,37 +115,30 @@ public class SchoolClassService {
         return schoolClassResponseDtoPage;
     }
 
-    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
-        log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
-
+    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException, AccessDeniedException {
         UUID userId = securityUtils.getCurrentUserId();
 
-        log.debug("Fetching children for school class {} for user {}", schoolClassId, userId);
+        log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, parentId={}, pageable={})", schoolClassId, userId, pageable);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        if (!schoolClassRepository.existsById(schoolClassId)) {
+            log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
 
-        boolean isParentTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
-        boolean hasParentChildInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId);
-
-        if (!hasParentChildInSchoolClass && !isParentTreasurer) {
+        if (!childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId)) {
             log.error(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ANY_CHILD_IN_THIS_CLASS);
-            throw new EntityNotFoundException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ANY_CHILD_IN_THIS_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ANY_CHILD_IN_THIS_CLASS);
         }
 
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
         log.info("Fetched {} children for school class {}", schoolClassChildren.getTotalElements(), schoolClassId);
 
         log.debug("Exit getSchoolClassAllChildren");
-
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
     }
 
     @Transactional
-    public SchoolClassInvitationCodeResponseDto regenerateInvitationCode(UUID schoolClassId) throws EntityNotFoundException {
+    public SchoolClassInvitationCodeResponseDto regenerateInvitationCode(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter regenerateInvitationCode(schoolClassId={})", schoolClassId);
 
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
@@ -157,7 +151,7 @@ public class SchoolClassService {
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new IllegalArgumentException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
         String invitationCode = InvitationCodeGenerator.generate();

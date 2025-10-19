@@ -80,13 +80,13 @@ public class ResetPasswordTokenService {
     }
 
     @Transactional
-    public void resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) throws EntityNotFoundException, IllegalArgumentException {
+    public void resetPassword(ResetPasswordRequestDto resetPasswordRequestDto) throws EntityNotFoundException {
         log.debug("Enter resetPassword");
 
         ResetPasswordToken resetPasswordToken = resetPasswordTokenRepository.findByToken(resetPasswordRequestDto.getResetPasswordToken())
                 .orElseThrow(() -> {
                     log.error(ResetPasswordTokenMessages.RESET_PASSWORD_TOKEN_NOT_FOUND);
-                    return new IllegalArgumentException(ResetPasswordTokenMessages.RESET_PASSWORD_TOKEN_NOT_FOUND);
+                    return new EntityNotFoundException(ResetPasswordTokenMessages.RESET_PASSWORD_TOKEN_NOT_FOUND);
                 });
 
         if (resetPasswordToken.getExpiryDate().isBefore(Instant.now()) || resetPasswordToken.isUsed()) {

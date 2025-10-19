@@ -13,6 +13,7 @@ import com.example.schoolmoney.domain.wallet.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +36,7 @@ public class FundOperationService {
     private final SecurityUtils securityUtils;
 
     @Transactional
-    public void performPayment(UUID fundId, UUID childId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
+    public void performPayment(UUID fundId, UUID childId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
         log.debug("enter performPayment for fundId: {}, childId: {}, amountInCents: {}", fundId, childId, amountInCents);
 
         Fund fund = fundRepository.findById(fundId)
@@ -54,14 +55,14 @@ public class FundOperationService {
 
         if (!child.getParent().getUserId().equals(userId)) {
             log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new IllegalArgumentException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndFundOperationTypeAndFundOperationStatus(
                 fundId, userId, childId, FundOperationType.PAYMENT, FinancialOperationStatus.SUCCESS
         )) {
             log.error(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
-            throw new IllegalArgumentException(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
+            throw new IllegalStateException(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
         }
 
         if (amountInCents < 0) {
@@ -103,7 +104,7 @@ public class FundOperationService {
     }
 
     @Transactional
-    public void depositToFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
+    public void depositToFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
         UUID userId = securityUtils.getCurrentUserId();
 
         log.debug("enter depositToFund for fundId: {}, amountInCents: {}, userId: {}", fundId, amountInCents, userId);
@@ -114,13 +115,19 @@ public class FundOperationService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
-        if (fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
+        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
             log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.error(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalArgumentException(FundMessages.FUND_IS_NOT_ACTIVE);
+            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
+        }
+
+        if (amountInCents < 0) {
+            log.error(FundOperationMessages.DEPOSIT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
+            throw new IllegalArgumentException(FundOperationMessages.DEPOSIT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
         }
 
         long remainingDepositLimitInCents = getFundRemainingDepositLimitInCents(fundId);
@@ -153,7 +160,7 @@ public class FundOperationService {
     }
 
     @Transactional
-    public void withdrawFromFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
+    public void withdrawFromFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
         UUID userId = securityUtils.getCurrentUserId();
 
         log.debug("enter withdrawFromFund for fundId: {}, amountInCents: {}, userId: {}", fundId, amountInCents, userId);
@@ -164,14 +171,19 @@ public class FundOperationService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
-        if (fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
+        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
             log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new IllegalArgumentException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.error(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalArgumentException(FundMessages.FUND_IS_NOT_ACTIVE);
+            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
+        }
+
+        if (amountInCents < 0) {
+            log.error(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
+            throw new IllegalArgumentException(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
         }
 
         long fundActualAmountInCents = getFundActualAmountInCents(fundId);

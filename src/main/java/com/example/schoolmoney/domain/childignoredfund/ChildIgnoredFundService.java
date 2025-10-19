@@ -7,10 +7,10 @@ import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +30,7 @@ public class ChildIgnoredFundService {
     private final SecurityUtils securityUtils;
 
     @Transactional
-    public void ignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, EntityExistsException, IllegalArgumentException {
+    public void ignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Ignoring fund {} for child {}", fundId, childId);
 
         Child child = childRepository.findById(childId)
@@ -42,7 +42,8 @@ public class ChildIgnoredFundService {
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            throw new IllegalArgumentException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         Fund fund = fundRepository.findById(fundId)
@@ -55,7 +56,7 @@ public class ChildIgnoredFundService {
 
         if (childIgnoredFundRepository.existsById(id)) {
             log.warn(FundMessages.FUND_IS_ALREADY_IGNORED_BY_CHILD);
-            throw new EntityExistsException(FundMessages.FUND_IS_ALREADY_IGNORED_BY_CHILD);
+            throw new IllegalStateException(FundMessages.FUND_IS_ALREADY_IGNORED_BY_CHILD);
         }
 
         ChildIgnoredFund childIgnoredFund = ChildIgnoredFund
@@ -72,7 +73,7 @@ public class ChildIgnoredFundService {
     }
 
     @Transactional
-    public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalArgumentException {
+    public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter unignoreFundForChild");
         UUID userId = securityUtils.getCurrentUserId();
 
@@ -86,14 +87,14 @@ public class ChildIgnoredFundService {
 
         if (!child.getParent().getUserId().equals(userId)) {
             log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new IllegalArgumentException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         int deleted = childIgnoredFundRepository.deleteByChild_ChildIdAndFund_FundId(childId, fundId);
 
         if (deleted == 0) {
             log.error(FundMessages.FUND_NOT_IGNORED_BY_CHILD);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_IGNORED_BY_CHILD);
+            throw new IllegalStateException(FundMessages.FUND_NOT_IGNORED_BY_CHILD);
         }
 
         log.info("Fund {} unignored for child {}", fundId, childId);

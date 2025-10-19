@@ -49,7 +49,7 @@ public class FundService {
     private final SecurityUtils securityUtils;
 
     @Transactional
-    public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, IllegalArgumentException {
+    public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("enter createFund {}", createFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -63,7 +63,7 @@ public class FundService {
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new IllegalArgumentException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
         Fund fund = Fund
@@ -86,7 +86,7 @@ public class FundService {
     }
 
     @Transactional
-    public void cancelFund(UUID fundId) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException {
+    public void cancelFund(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("enter cancelFund {}", fundId);
 
         Fund fund = fundRepository.findById(fundId)
@@ -97,7 +97,7 @@ public class FundService {
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.error(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalArgumentException(FundMessages.FUND_IS_NOT_ACTIVE);
+            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -106,7 +106,7 @@ public class FundService {
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new IllegalArgumentException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
         List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
@@ -197,7 +197,7 @@ public class FundService {
     }
 
     @Transactional
-    public FundResponseDto updateFund(UUID fundId, UpdateFundRequestDto updateFundRequestDto) throws EntityNotFoundException, IllegalArgumentException, AccessDeniedException {
+    public FundResponseDto updateFund(UUID fundId, UpdateFundRequestDto updateFundRequestDto) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("enter updateFund {}, {}", fundId, updateFundRequestDto);
 
         Fund fund = fundRepository.findById(fundId)
@@ -208,7 +208,7 @@ public class FundService {
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.error(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalArgumentException(FundMessages.FUND_IS_NOT_ACTIVE);
+            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
         UUID userId = securityUtils.getCurrentUserId();
