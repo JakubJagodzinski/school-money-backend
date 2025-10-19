@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.child;
 import com.example.schoolmoney.common.constants.messages.ChildMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
+import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import jakarta.validation.Valid;
@@ -14,10 +15,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1")
@@ -53,6 +56,15 @@ public class ChildController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(childShortInfoResponseDtoPage);
+    }
+
+    @PatchMapping("/children/{childId}")
+    public ResponseEntity<ChildShortInfoResponseDto> updateChild(@PathVariable UUID childId, @Valid @RequestBody UpdateChildRequestDto updateChildRequestDto) {
+        ChildShortInfoResponseDto childShortInfoResponseDto = childService.updateChild(childId, updateChildRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(childShortInfoResponseDto);
     }
 
 }

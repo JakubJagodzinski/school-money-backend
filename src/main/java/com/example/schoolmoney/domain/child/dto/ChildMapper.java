@@ -1,10 +1,11 @@
 package com.example.schoolmoney.domain.child.dto;
 
 import com.example.schoolmoney.domain.child.Child;
+import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
-import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import com.example.schoolmoney.domain.parent.dto.ParentMapper;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
 import org.mapstruct.*;
@@ -32,5 +33,7 @@ public interface ChildMapper {
     @Named("childToChildWithParentInfoDto")
     @Mapping(target = "parent", source = "parent", qualifiedByName = "parentToParentPublicDto")
     ChildWithParentInfoResponseDto toWithParentInfoDto(Child entity);
+
+    void updateEntityFromDto(UpdateChildRequestDto dto, @MappingTarget Child entity);
 
 }

@@ -20,7 +20,7 @@ import java.time.LocalDate;
         "last_name",
         "birth_date"
 })
-public class CreateChildRequestDto {
+public class UpdateChildRequestDto {
 
     @NotBlank
     @Size(min = 1, max = 30)

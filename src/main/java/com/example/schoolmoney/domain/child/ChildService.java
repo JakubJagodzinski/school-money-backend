@@ -6,6 +6,7 @@ import com.example.schoolmoney.common.constants.messages.ParentMessages;
 import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
+import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
@@ -109,6 +110,32 @@ public class ChildService {
         log.debug("Exit getParentAllChildren");
 
         return childPage.map(childMapper::toWithSchoolClassInfoDto);
+    }
+
+    @Transactional
+    public ChildShortInfoResponseDto updateChild(UUID childId, UpdateChildRequestDto updateChildRequestDto) throws EntityNotFoundException {
+        log.debug("Enter updateChild childId={}, updateChildRequestDto={}", childId, updateChildRequestDto);
+
+        Child child = childRepository.findById(childId)
+                .orElseThrow(() -> {
+                    log.error(ChildMessages.CHILD_NOT_FOUND);
+                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
+                });
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        if (!child.getParent().getUserId().equals(userId)) {
+            throw new IllegalArgumentException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+        }
+
+        childMapper.updateEntityFromDto(updateChildRequestDto, child);
+
+        childRepository.save(child);
+        log.info("Child updated {}", child);
+
+        log.debug("Exit updateChild");
+
+        return childMapper.toShortInfoDto(child);
     }
 
 }

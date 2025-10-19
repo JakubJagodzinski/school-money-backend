@@ -34,7 +34,7 @@ public class User implements UserDetails {
     private String firstName;
 
     @NotBlank
-    @Size(min = 3, max = 50)
+    @Size(min = 1, max = 50)
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 

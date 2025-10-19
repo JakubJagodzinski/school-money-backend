@@ -25,9 +25,8 @@ public class UpdateParentRequestDto {
     private String firstName;
 
     @NotBlank
-    @Size(min = 3, max = 50)
+    @Size(min = 1, max = 50)
     @JsonProperty("last_name")
     private String lastName;
-
 
 }
