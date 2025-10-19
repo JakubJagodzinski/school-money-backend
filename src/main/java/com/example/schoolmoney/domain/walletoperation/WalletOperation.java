@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.walletoperation;
 
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.payment.PaymentProviderType;
 import jakarta.persistence.*;
@@ -56,6 +57,6 @@ public class WalletOperation {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status", nullable = false, updatable = false)
-    private WalletOperationStatus operationStatus;
+    private FinancialOperationStatus operationStatus;
 
 }

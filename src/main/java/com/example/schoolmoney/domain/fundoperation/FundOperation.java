@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.fundoperation;
 
 import com.example.schoolmoney.domain.child.Child;
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.wallet.Wallet;
@@ -64,6 +65,6 @@ public class FundOperation {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status", nullable = false, updatable = false)
-    private FundOperationStatus fundOperationStatus;
+    private FinancialOperationStatus fundOperationStatus;
 
 }

@@ -4,6 +4,7 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.*;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
@@ -57,7 +58,7 @@ public class FundOperationService {
         }
 
         if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndFundOperationTypeAndFundOperationStatus(
-                fundId, userId, childId, FundOperationType.PAYMENT, FundOperationStatus.SUCCESS
+                fundId, userId, childId, FundOperationType.PAYMENT, FinancialOperationStatus.SUCCESS
         )) {
             log.error(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
             throw new IllegalArgumentException(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
@@ -92,7 +93,7 @@ public class FundOperationService {
                 .wallet(parentWallet)
                 .amountInCents(amountInCents)
                 .fundOperationType(FundOperationType.PAYMENT)
-                .fundOperationStatus(FundOperationStatus.SUCCESS)
+                .fundOperationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         fundOperationRepository.save(fundOperation);
@@ -142,7 +143,7 @@ public class FundOperationService {
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
                 .fundOperationType(FundOperationType.DEPOSIT)
-                .fundOperationStatus(FundOperationStatus.SUCCESS)
+                .fundOperationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         fundOperationRepository.save(fundDepositOperation);
@@ -193,7 +194,7 @@ public class FundOperationService {
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
                 .fundOperationType(FundOperationType.WITHDRAWAL)
-                .fundOperationStatus(FundOperationStatus.SUCCESS)
+                .fundOperationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         fundOperationRepository.save(fundWithdrawalOperation);
@@ -208,7 +209,7 @@ public class FundOperationService {
         long fundActualAmountInCents = 0;
 
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationStatus().equals(FundOperationStatus.SUCCESS)) {
+            if (fundOperation.getFundOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getFundOperationType();
                 switch (fundOperationType) {
                     case PAYMENT:
@@ -234,7 +235,7 @@ public class FundOperationService {
         long remainingDepositLimitInCents = 0;
 
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationStatus().equals(FundOperationStatus.SUCCESS)) {
+            if (fundOperation.getFundOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getFundOperationType();
                 if (fundOperationType.equals(FundOperationType.DEPOSIT)) {
                     remainingDepositLimitInCents -= fundOperation.getAmountInCents();

@@ -4,6 +4,7 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.ParentMessages;
 import com.example.schoolmoney.common.constants.messages.WalletMessages;
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.wallet.dto.WalletMapper;
@@ -11,7 +12,6 @@ import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseD
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
 import com.example.schoolmoney.domain.walletoperation.WalletOperation;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationRepository;
-import com.example.schoolmoney.domain.walletoperation.WalletOperationStatus;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationType;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.payment.PaymentProviderType;
@@ -145,7 +145,7 @@ public class WalletService {
                 .paymentProviderType(paymentProviderType)
                 .amountInCents(amountInCents)
                 .operationType(WalletOperationType.DEPOSIT)
-                .operationStatus(WalletOperationStatus.SUCCESS)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         walletOperationRepository.save(walletPaymentOperation);
