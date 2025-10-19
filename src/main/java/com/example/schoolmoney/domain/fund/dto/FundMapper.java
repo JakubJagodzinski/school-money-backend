@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.fund.dto;
 
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import org.mapstruct.*;
 
@@ -15,5 +16,7 @@ public interface FundMapper {
     @Mapping(target = "authorId", source = "author.userId")
     @Mapping(target = "schoolClassId", source = "schoolClass.schoolClassId")
     FundResponseDto toDto(Fund entity);
+
+    void updateEntityFromDto(UpdateFundRequestDto dto, @MappingTarget Fund entity);
 
 }

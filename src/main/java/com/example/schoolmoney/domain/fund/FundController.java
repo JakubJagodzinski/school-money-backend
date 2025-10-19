@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.fund;
 import com.example.schoolmoney.common.constants.messages.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
+import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -149,6 +150,61 @@ public class FundController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fundResponseDtoPage);
+    }
+
+    @Operation(
+            summary = "Update an existing fund",
+            description = """
+                    Updates an existing fund identified by its ID.
+                    You need to be a treasurer of the class.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Fund updated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FundResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad Request - Fund is not active and cannot be updated",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - You are not a treasurer of the class",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Fund not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+    })
+    @PatchMapping("/funds/{fundId}")
+    public ResponseEntity<FundResponseDto> updateFund(@PathVariable UUID fundId, @Valid @RequestBody UpdateFundRequestDto updateFundRequestDto) {
+        FundResponseDto fundResponseDto = fundService.updateFund(fundId, updateFundRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fundResponseDto);
     }
 
 }

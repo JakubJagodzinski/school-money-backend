@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.FundMessages;
 import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
+import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -192,6 +194,38 @@ public class FundService {
 
         log.debug("Exit getCreatedFunds");
         return fundPage.map(fundMapper::toDto);
+    }
+
+    @Transactional
+    public FundResponseDto updateFund(UUID fundId, UpdateFundRequestDto updateFundRequestDto) throws EntityNotFoundException, IllegalArgumentException, AccessDeniedException {
+        log.debug("enter updateFund {}, {}", fundId, updateFundRequestDto);
+
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.error(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
+
+        if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
+            log.error(FundMessages.FUND_IS_NOT_ACTIVE);
+            throw new IllegalArgumentException(FundMessages.FUND_IS_NOT_ACTIVE);
+        }
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        SchoolClass schoolClass = fund.getSchoolClass();
+
+        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
+            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        }
+
+        fundMapper.updateEntityFromDto(updateFundRequestDto, fund);
+        Fund savedFund = fundRepository.save(fund);
+        log.info("fund saved {}", fund);
+
+        log.debug("exit updateFund");
+        return fundMapper.toDto(savedFund);
     }
 
 }
