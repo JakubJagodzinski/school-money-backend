@@ -1,6 +1,7 @@
 package com.example.schoolmoney.email;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.ResetPasswordEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.VerificationEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.WalletTopUpEmailContentProvider;
 import jakarta.mail.MessagingException;
@@ -39,6 +40,11 @@ public class EmailService {
     public void sendWalletTopUpEmail(String to, String firstName, long amountInCents) throws MessagingException {
         EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents);
         sendEmail(to, "Wallet top-up", emailContentProvider);
+    }
+
+    public void sendPasswordResetEmail(String to, String firstName, String resetPasswordRedirectUrl) throws MessagingException {
+        EmailContentProvider emailContentProvider = new ResetPasswordEmailContentProvider(firstName, resetPasswordRedirectUrl);
+        sendEmail(to, "Reset your password", emailContentProvider);
     }
 
 }

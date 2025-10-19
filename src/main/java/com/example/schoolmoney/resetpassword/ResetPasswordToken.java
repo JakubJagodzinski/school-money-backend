@@ -1,0 +1,42 @@
+package com.example.schoolmoney.resetpassword;
+
+import com.example.schoolmoney.user.User;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "reset_password_tokens")
+public class ResetPasswordToken {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "token_id")
+    private UUID tokenId;
+
+    @NotNull
+    @Column(name = "token", nullable = false, updatable = false, unique = true)
+    private String token;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_reset_password_tokens_user_id"))
+    private User user;
+
+    @NotNull
+    @Column(name = "expiry_date", nullable = false, updatable = false)
+    private Instant expiryDate;
+
+    @NotNull
+    @Column(name = "used", nullable = false)
+    private boolean used;
+
+}
