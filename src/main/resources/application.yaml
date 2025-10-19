@@ -43,8 +43,8 @@ spring:
 
   verification:
     token:
-      expiry-hours: 24
-      token-length: 36
+      expiry-hours: ${VERIFICATION_TOKEN_EXPIRY_HOURS:24}
+      token-length: ${VERIFICATION_TOKEN_LENGTH:36}
 
 management:
   endpoints:
