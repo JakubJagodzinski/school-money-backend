@@ -13,7 +13,8 @@ public class WalletTopUpEmailContentProvider implements EmailContentProvider {
     public String build() {
         return "<p>Hi " + firstName + "!</p>" +
                 "<p>Your wallet has been successfully topped up with an amount of " + String.format("%.2f", amountInCents / 100.0) + ".</p>" +
-                "<p>Best regards,<br>The SchoolMoney Team</p>";
+                "<p>Best regards,<br>The SchoolMoney Team</p>" +
+                "<p><i>Note: This is an automated message, please do not reply to this email.</i></p>";
     }
 
 }

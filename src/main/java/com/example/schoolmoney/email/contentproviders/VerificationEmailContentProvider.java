@@ -14,7 +14,8 @@ public class VerificationEmailContentProvider implements EmailContentProvider {
         return "<p>Hi " + firstName + "!</p>" +
                 "<p>Thank you for registering on our platform.</p>" +
                 "<p>Click <a href=\"" + verificationLink + "\">here</a> to verify your account.</p>" +
-                "<p>Best regards,<br>The SchoolMoney Team</p>";
+                "<p>Best regards,<br>The SchoolMoney Team</p>" +
+                "<p><i>Note: This is an automated message, please do not reply to this email.</i></p>";
     }
 
 }
