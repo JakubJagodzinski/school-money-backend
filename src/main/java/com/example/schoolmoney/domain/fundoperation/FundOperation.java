@@ -55,7 +55,7 @@ public class FundOperation {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "fund_operation_type", nullable = false, updatable = false)
-    private FundOperationType fundOperationType;
+    private FundOperationType operationType;
 
     @NotNull
     @Builder.Default
@@ -65,6 +65,6 @@ public class FundOperation {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status", nullable = false, updatable = false)
-    private FinancialOperationStatus fundOperationStatus;
+    private FinancialOperationStatus operationStatus;
 
 }

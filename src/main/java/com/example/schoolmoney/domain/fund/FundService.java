@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.fund;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.FundMessages;
 import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
@@ -136,7 +137,7 @@ public class FundService {
         long fundTreasurerBalance = 0;
 
         for (FundOperation fundOperation : fundOperations) {
-            FundOperationType fundOperationType = fundOperation.getFundOperationType();
+            FundOperationType fundOperationType = fundOperation.getOperationType();
             if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
                 fundTreasurerBalance += fundOperation.getAmountInCents();
             } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
@@ -149,7 +150,7 @@ public class FundService {
 
     private void processParentRefunds(List<FundOperation> fundOperations) {
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationType().equals(FundOperationType.FUND_PAYMENT) && fundOperation.getAmountInCents() > 0) {
+            if (fundOperation.getOperationType().equals(FundOperationType.FUND_PAYMENT) && fundOperation.getAmountInCents() > 0) {
                 log.debug("Processing refund for fund operation {}", fundOperation);
 
                 Wallet parentWallet = fundOperation.getWallet();
@@ -165,7 +166,8 @@ public class FundService {
                         .fund(fundOperation.getFund())
                         .wallet(parentWallet)
                         .amountInCents(fundOperation.getAmountInCents())
-                        .fundOperationType(FundOperationType.FUND_REFUND)
+                        .operationType(FundOperationType.FUND_REFUND)
+                        .operationStatus(FinancialOperationStatus.SUCCESS)
                         .build();
 
                 fundOperationRepository.save(parentRefundOperation);

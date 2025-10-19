@@ -10,8 +10,8 @@ import java.util.UUID;
 @Repository
 public interface FundOperationRepository extends JpaRepository<FundOperation, UUID> {
 
-    boolean existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndFundOperationTypeAndFundOperationStatus(
-            UUID fundId, UUID userId, UUID childId, FundOperationType fundOperationType, FinancialOperationStatus fundOperationStatus
+    boolean existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndOperationTypeAndOperationStatus(
+            UUID fundId, UUID userId, UUID childId, FundOperationType operationType, FinancialOperationStatus operationStatus
     );
 
     List<FundOperation> findAllByFund_FundId(UUID fundId);

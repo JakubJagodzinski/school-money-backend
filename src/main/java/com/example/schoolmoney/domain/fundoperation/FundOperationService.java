@@ -58,7 +58,7 @@ public class FundOperationService {
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
-        if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndFundOperationTypeAndFundOperationStatus(
+        if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndOperationTypeAndOperationStatus(
                 fundId, userId, childId, FundOperationType.FUND_PAYMENT, FinancialOperationStatus.SUCCESS
         )) {
             log.error(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
@@ -93,8 +93,8 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(parentWallet)
                 .amountInCents(amountInCents)
-                .fundOperationType(FundOperationType.FUND_PAYMENT)
-                .fundOperationStatus(FinancialOperationStatus.SUCCESS)
+                .operationType(FundOperationType.FUND_PAYMENT)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         fundOperationRepository.save(fundOperation);
@@ -149,8 +149,8 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
-                .fundOperationType(FundOperationType.FUND_DEPOSIT)
-                .fundOperationStatus(FinancialOperationStatus.SUCCESS)
+                .operationType(FundOperationType.FUND_DEPOSIT)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         fundOperationRepository.save(fundDepositOperation);
@@ -205,8 +205,8 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
-                .fundOperationType(FundOperationType.FUND_WITHDRAWAL)
-                .fundOperationStatus(FinancialOperationStatus.SUCCESS)
+                .operationType(FundOperationType.FUND_WITHDRAWAL)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
         fundOperationRepository.save(fundWithdrawalOperation);
@@ -221,8 +221,8 @@ public class FundOperationService {
         long fundActualAmountInCents = 0;
 
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
-                FundOperationType fundOperationType = fundOperation.getFundOperationType();
+            if (fundOperation.getOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
+                FundOperationType fundOperationType = fundOperation.getOperationType();
                 switch (fundOperationType) {
                     case FUND_PAYMENT:
                     case FUND_DEPOSIT:
@@ -247,8 +247,8 @@ public class FundOperationService {
         long remainingDepositLimitInCents = 0;
 
         for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getFundOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
-                FundOperationType fundOperationType = fundOperation.getFundOperationType();
+            if (fundOperation.getOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
+                FundOperationType fundOperationType = fundOperation.getOperationType();
                 if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
                     remainingDepositLimitInCents -= fundOperation.getAmountInCents();
                 } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
