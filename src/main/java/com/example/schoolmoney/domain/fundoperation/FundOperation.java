@@ -54,7 +54,7 @@ public class FundOperation {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "fund_operation_type", nullable = false, updatable = false)
+    @Column(name = "operation_type", nullable = false, updatable = false)
     private FundOperationType operationType;
 
     @NotNull
