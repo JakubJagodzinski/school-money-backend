@@ -48,8 +48,9 @@ public class FundService {
 
     private final WalletRepository walletRepository;
 
-    private final SecurityUtils securityUtils;
     private final ChildRepository childRepository;
+
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
@@ -255,6 +256,17 @@ public class FundService {
 
         log.debug("Exit getSchoolClassAllFunds");
         return fundPage.map(fundMapper::toDto);
+    }
+
+    public Page<FundResponseDto> getParentChildrenAllFunds(Pageable pageable) {
+        log.debug("Enter getParentChildrenAllFunds(pageable={})", pageable);
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        Page<Fund> parentChildrenFundPage = fundRepository.findAllByParentId(userId, pageable);
+
+        log.debug("Exit getParentChildrenAllFunds");
+        return parentChildrenFundPage.map(fundMapper::toDto);
     }
 
 }

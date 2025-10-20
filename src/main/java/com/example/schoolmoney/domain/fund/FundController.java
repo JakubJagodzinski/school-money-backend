@@ -257,4 +257,37 @@ public class FundController {
                 .body(fundResponseDtoPage);
     }
 
+    @Operation(
+            summary = "Get all funds of parent's children school classes",
+            description = """
+                    Returns paginated list of all funds of the school classes where the parent's children are enrolled.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Parent's children school classes funds retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FundResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            )
+    })
+    @GetMapping("/parent/children/funds")
+    public ResponseEntity<Page<FundResponseDto>> getParentChildrenAllFunds(
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<FundResponseDto> fundResponseDtoPage = fundService.getParentChildrenAllFunds(pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fundResponseDtoPage);
+    }
+
 }

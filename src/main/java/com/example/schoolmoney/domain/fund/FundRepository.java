@@ -3,6 +3,8 @@ package com.example.schoolmoney.domain.fund;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -19,5 +21,17 @@ public interface FundRepository extends JpaRepository<Fund, UUID> {
     long countBySchoolClass_SchoolClassIdAndFundStatus(UUID schoolClassId, FundStatus fundStatus);
 
     Page<Fund> findAllBySchoolClass_SchoolClassId(UUID schoolClassId, Pageable pageable);
+
+    @Query("""
+                SELECT f
+                FROM Fund f
+                WHERE f.schoolClass.schoolClassId IN (
+                    SELECT sc.schoolClassId
+                    FROM Child s
+                    JOIN s.schoolClass sc
+                    WHERE s.parent.userId = :parentId
+                )
+            """)
+    Page<Fund> findAllByParentId(@Param("parentId") UUID parentId, Pageable pageable);
 
 }
