@@ -85,7 +85,7 @@ public class SchoolClassService {
     }
 
     public Page<SchoolClassResponseDto> getTreasurerAndParentChildrenSchoolClasses(Pageable pageable) {
-        log.debug("Enter getSchoolClasses(pageable={})", pageable);
+        log.debug("Enter getTreasurerAndParentChildrenSchoolClasses(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
 
@@ -93,11 +93,7 @@ public class SchoolClassService {
 
         log.debug("Fetching {} school classes for user {}", parentChildrenSchoolClassesIds.size(), userId);
 
-        if (parentChildrenSchoolClassesIds.isEmpty()) {
-            return Page.empty(pageable);
-        }
-
-        Page<SchoolClass> schoolClassPage = schoolClassRepository.findAllBySchoolClassIdIn(parentChildrenSchoolClassesIds, pageable);
+        Page<SchoolClass> schoolClassPage = schoolClassRepository.findAllByTreasurer_UserIdOrSchoolClassIdIn(userId, parentChildrenSchoolClassesIds, pageable);
 
         Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassPage.map(schoolClassMapper::toDto);
         schoolClassResponseDtoPage.forEach(schoolClass -> {
@@ -110,7 +106,7 @@ public class SchoolClassService {
             schoolClass.setNumberOfActiveFunds(numberOfActiveFunds);
         });
 
-        log.debug("Exit getSchoolClasses");
+        log.debug("Exit getTreasurerAndParentChildrenSchoolClasses");
 
         return schoolClassResponseDtoPage;
     }

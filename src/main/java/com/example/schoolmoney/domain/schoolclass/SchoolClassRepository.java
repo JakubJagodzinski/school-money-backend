@@ -14,6 +14,6 @@ public interface SchoolClassRepository extends JpaRepository<SchoolClass, UUID> 
 
     Optional<SchoolClass> findByInvitationCode(String invitationCode);
 
-    Page<SchoolClass> findAllBySchoolClassIdIn(List<UUID> schoolClassId, Pageable pageable);
+    Page<SchoolClass> findAllByTreasurer_UserIdOrSchoolClassIdIn(UUID treasurerId, List<UUID> schoolClassId, Pageable pageable);
 
 }
