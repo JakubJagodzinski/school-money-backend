@@ -154,7 +154,7 @@ public class AuthenticationService {
     }
 
     private void revokeAllUserAuthTokens(User user) {
-        List<AuthToken> validUserAuthTokens = authTokenRepository.findAllByUser_UserIdAndIsExpiredFalseOrIsRevokedFalse(user.getUserId());
+        List<AuthToken> validUserAuthTokens = authTokenRepository.findAllByUser_UserIdAndIsRevokedFalse(user.getUserId());
 
         if (validUserAuthTokens.isEmpty()) {
             return;
@@ -162,7 +162,6 @@ public class AuthenticationService {
 
         validUserAuthTokens.forEach(
                 authToken -> {
-                    authToken.setExpired(true);
                     authToken.setRevoked(true);
                 }
         );
@@ -194,7 +193,7 @@ public class AuthenticationService {
             throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
-        if (!jwtService.isTokenValid(refreshToken, user) || authToken.isExpired() || authToken.isRevoked()) {
+        if (!jwtService.isTokenValid(refreshToken, user) || authToken.isRevoked()) {
             throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 

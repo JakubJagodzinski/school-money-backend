@@ -10,7 +10,7 @@ import java.util.UUID;
 @Repository
 public interface AuthTokenRepository extends JpaRepository<AuthToken, UUID> {
 
-    List<AuthToken> findAllByUser_UserIdAndIsExpiredFalseOrIsRevokedFalse(UUID userId);
+    List<AuthToken> findAllByUser_UserIdAndIsRevokedFalse(UUID userId);
 
     Optional<AuthToken> findByAuthToken(String authToken);
 

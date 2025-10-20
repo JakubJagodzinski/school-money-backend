@@ -42,8 +42,4 @@ public class AuthToken {
     @Column(name = "is_revoked", nullable = false)
     private boolean isRevoked;
 
-    @NotNull
-    @Column(name = "is_expired", nullable = false)
-    private boolean isExpired;
-
 }

@@ -11,7 +11,7 @@ public class AuthTokenService {
 
     private final AuthTokenRepository authTokenRepository;
 
-    public boolean isAuthTokenValidInDatabase(String authToken) {
+    public boolean isAccessTokenValid(String authToken) {
         log.debug("enter isAuthTokenValidInDatabase");
 
         AuthToken databaseAuthToken = authTokenRepository.findByAuthToken(authToken).orElse(null);
@@ -20,7 +20,8 @@ public class AuthTokenService {
             return false;
         }
 
-        boolean isValid = databaseAuthToken.getAuthTokenType() == AuthTokenType.ACCESS && !databaseAuthToken.isExpired() && !databaseAuthToken.isRevoked();
+        boolean isAccessToken = databaseAuthToken.getAuthTokenType() == AuthTokenType.ACCESS;
+        boolean isValid = isAccessToken && !databaseAuthToken.isRevoked();
 
         log.debug("exit isAuthTokenValidInDatabase, isValid={}", isValid);
 
