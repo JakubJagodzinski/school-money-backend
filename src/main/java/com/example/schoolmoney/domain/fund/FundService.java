@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.fund;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.FundMessages;
 import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
+import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
@@ -48,6 +49,7 @@ public class FundService {
     private final WalletRepository walletRepository;
 
     private final SecurityUtils securityUtils;
+    private final ChildRepository childRepository;
 
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
@@ -228,6 +230,31 @@ public class FundService {
 
         log.debug("exit updateFund");
         return fundMapper.toDto(savedFund);
+    }
+
+    public Page<FundResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException, AccessDeniedException {
+        log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
+
+        boolean hasAnyChildrenInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId);
+        boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
+
+        if (!hasAnyChildrenInSchoolClass && !isTreasurer) {
+            log.error(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+        }
+
+        Page<Fund> fundPage = fundRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
+
+        log.debug("Exit getSchoolClassAllFunds");
+        return fundPage.map(fundMapper::toDto);
     }
 
 }

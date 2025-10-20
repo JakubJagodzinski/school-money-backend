@@ -84,7 +84,7 @@ public class SchoolClassService {
         return schoolClassPage.map(schoolClassMapper::toDto);
     }
 
-    public Page<SchoolClassResponseDto> getParentChildrenSchoolClasses(Pageable pageable) {
+    public Page<SchoolClassResponseDto> getTreasurerAndParentChildrenSchoolClasses(Pageable pageable) {
         log.debug("Enter getSchoolClasses(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -120,14 +120,18 @@ public class SchoolClassService {
 
         log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, parentId={}, pageable={})", schoolClassId, userId, pageable);
 
-        if (!schoolClassRepository.existsById(schoolClassId)) {
-            log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
 
-        if (!childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId)) {
-            log.error(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ANY_CHILD_IN_THIS_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ANY_CHILD_IN_THIS_CLASS);
+        boolean hasAnyChildrenInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId);
+        boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
+
+        if (!hasAnyChildrenInSchoolClass && !isTreasurer) {
+            log.error(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
         }
 
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);

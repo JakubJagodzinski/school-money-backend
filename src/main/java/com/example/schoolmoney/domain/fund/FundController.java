@@ -207,4 +207,54 @@ public class FundController {
                 .body(fundResponseDto);
     }
 
+    @Operation(
+            summary = "Get all funds of a school class",
+            description = """
+                    Returns paginated list of all funds of a specific school class.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "School class funds retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = FundResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - You do not have access to this school class",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "School class not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+    })
+    @GetMapping("/school-class/{schoolClassId}/funds")
+    public ResponseEntity<Page<FundResponseDto>> getSchoolClassAllFunds(
+            @PathVariable UUID schoolClassId,
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<FundResponseDto> fundResponseDtoPage = fundService.getSchoolClassAllFunds(schoolClassId, pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fundResponseDtoPage);
+    }
+
 }

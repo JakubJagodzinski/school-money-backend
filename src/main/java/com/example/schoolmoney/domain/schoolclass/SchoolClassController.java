@@ -44,10 +44,11 @@ public class SchoolClassController {
     }
 
     @Operation(
-            summary = "Get short info for each school class of parent children",
+            summary = "Get short info for each school class of parent children and where parent is treasurer",
             description = """
                     Returns paginated list of school classes that belong to the parent's children,
                     with summary details like number of children and number of active funds.
+                    Classes where parent is a treasurer are also returned
                     """
     )
     @ApiResponses({
@@ -65,12 +66,12 @@ public class SchoolClassController {
                     content = @Content()
             )
     })
-    @GetMapping("/children/school-classes")
-    public ResponseEntity<Page<SchoolClassResponseDto>> getParentChildrenSchoolClasses(
+    @GetMapping("/school-classes")
+    public ResponseEntity<Page<SchoolClassResponseDto>> getTreasurerAndParentChildrenSchoolClasses(
             @ParameterObject
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassService.getParentChildrenSchoolClasses(pageable);
+        Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassService.getTreasurerAndParentChildrenSchoolClasses(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
