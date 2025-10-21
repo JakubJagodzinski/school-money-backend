@@ -47,7 +47,7 @@ public class FundReportService {
 
         // TODO add parent fund access check
 
-        long participatingChildrenCount = fundOperationRepository.countDistinctChild_ChildIdByFund_FundId(fundId);
+        long participatingChildrenCount = fundOperationRepository.countDistinctChildIdsByFundId(fundId);
 
         return fundReportPdfGenerator.generateFundReportPdf(fund, fundOperations, participatingChildrenCount);
     }

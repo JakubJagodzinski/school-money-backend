@@ -2,6 +2,8 @@ package com.example.schoolmoney.domain.fundoperation;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,6 +20,11 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
 
     List<FundOperation> findAllByFund_FundIdOrderByProcessedAtAsc(UUID fundId);
 
-    long countDistinctChild_ChildIdByFund_FundId(UUID fundId);
+    @Query("""
+            SELECT COUNT(DISTINCT f.child.childId)
+            FROM FundOperation f
+            WHERE f.fund.fundId = :fundId
+            """)
+    long countDistinctChildIdsByFundId(@Param("fundId") UUID fundId);
 
 }
