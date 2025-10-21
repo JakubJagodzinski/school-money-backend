@@ -52,4 +52,8 @@ public class Child {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
 }

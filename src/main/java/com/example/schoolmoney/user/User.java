@@ -66,6 +66,10 @@ public class User implements UserDetails {
     @Column(name = "is_verified", nullable = false)
     private boolean isVerified;
 
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return role.getAuthorities();
