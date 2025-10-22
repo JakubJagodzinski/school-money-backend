@@ -128,6 +128,7 @@ public class FundService {
         }
 
         fund.setFundStatus(FundStatus.CANCELLED);
+        fund.setEndedAt(Instant.now());
         fundRepository.save(fund);
         log.info("Fund cancelled {}", fund);
 
@@ -185,6 +186,7 @@ public class FundService {
 
         for (Fund fund : endedFunds) {
             fund.setFundStatus(FundStatus.FINISHED);
+            fund.setEndedAt(Instant.now());
         }
 
         fundRepository.saveAll(endedFunds);

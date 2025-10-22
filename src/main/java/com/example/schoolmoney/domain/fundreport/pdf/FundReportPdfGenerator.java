@@ -53,6 +53,10 @@ public class FundReportPdfGenerator {
         addRow(table, "Children participating", String.valueOf(participatingChildrenCount));
         addRow(table, "Start date", LocalDateTime.ofInstant(fund.getStartsAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
         addRow(table, "End date", LocalDateTime.ofInstant(fund.getEndsAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
+        if (fund.getEndedAt() != null) {
+            addRow(table, "Ended at", LocalDateTime.ofInstant(fund.getEndedAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
+        }
+        addRow(table, "Updated at", LocalDateTime.ofInstant(fund.getUpdatedAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
         addRow(table, "Status", fund.getFundStatus().name());
         addRow(table, "IBAN", fund.getIban());
 

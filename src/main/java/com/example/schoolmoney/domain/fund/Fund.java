@@ -47,14 +47,19 @@ public class Fund {
     private String description;
 
     @NotNull
-    @Builder.Default
     @Column(name = "starts_at", nullable = false, updatable = false)
-    private Instant startsAt = Instant.now();
+    private Instant startsAt;
 
     @NotNull
     @Future
     @Column(name = "ends_at", nullable = false)
     private Instant endsAt;
+
+    @Column(name = "ended_at")
+    private Instant endedAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @NotNull
     @Min(0) // allow "free" funds
@@ -71,5 +76,17 @@ public class Fund {
     @Enumerated(EnumType.STRING)
     @Column(name = "fund_status", nullable = false)
     private FundStatus fundStatus = FundStatus.ACTIVE;
+
+    @PrePersist
+    protected void onCreate() {
+        Instant now = Instant.now();
+        this.startsAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 
 }
