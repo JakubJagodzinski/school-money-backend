@@ -75,3 +75,10 @@ app:
   payment:
     success-path: "/api/v1/payments/status/success"
     failed-path: "/api/v1/payments/status/failed"
+
+logging:
+  file:
+    name: logs/school-money.log
+  level:
+    root: INFO
+    com.example.schoolmoney: DEBUG
