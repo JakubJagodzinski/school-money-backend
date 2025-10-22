@@ -22,7 +22,7 @@ public class FinancialOperationController {
     @GetMapping("/financial-operations/history")
     public ResponseEntity<Page<FinancialOperationView>> getUserFinancialOperationHistory(
             @ParameterObject
-            @PageableDefault(size = 20, sort = "processedAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 20, sort = "processed_at", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<FinancialOperationView> financialOperationViewPage = financialOperationService.getUserFinancialOperationHistory(pageable);
 
