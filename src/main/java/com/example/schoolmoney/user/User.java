@@ -51,9 +51,8 @@ public class User implements UserDetails {
     private String password;
 
     @NotNull
-    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     @Column(name = "last_logged_in")
     private Instant lastLoggedIn;
@@ -68,6 +67,11 @@ public class User implements UserDetails {
 
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
     }
 
     @Override

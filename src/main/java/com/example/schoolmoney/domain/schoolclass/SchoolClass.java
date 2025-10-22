@@ -45,12 +45,16 @@ public class SchoolClass {
     private String schoolClassYear;
 
     @NotNull
-    @Builder.Default
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    private Instant createdAt;
 
     public String getFullName() {
         return schoolClassName + " " + schoolClassYear;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
     }
 
 }
