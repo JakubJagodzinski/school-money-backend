@@ -45,11 +45,11 @@ public class WalletService {
 
     @Transactional
     public void createWallet(UUID parentId) throws EntityNotFoundException, EntityExistsException {
-        log.debug("enter createWallet for parent with id: {}", parentId);
+        log.debug("Enter createWallet(parentId={})", parentId);
 
         Parent parent = parentRepository.findById(parentId)
                 .orElseThrow(() -> {
-                    log.error(ParentMessages.PARENT_NOT_FOUND);
+                    log.warn(ParentMessages.PARENT_NOT_FOUND);
                     return new EntityNotFoundException(ParentMessages.PARENT_NOT_FOUND);
                 });
 
@@ -64,38 +64,36 @@ public class WalletService {
                 .build();
 
         walletRepository.save(wallet);
-        log.info("wallet saved {}", wallet);
+        log.info("Wallet saved {}", wallet);
 
-        log.debug("exit createWallet");
+        log.debug("Exit createWallet");
     }
 
     public WalletInfoResponseDto getWalletInfo() {
-        log.debug("enter getWalletInfo");
+        log.debug("Enter getWalletInfo");
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
-        log.debug("exit getWalletInfo");
-
+        log.debug("Exit getWalletInfo");
         return walletMapper.toInfoDto(wallet);
     }
 
     public WalletBalanceResponseDto getWalletBalance() {
-        log.debug("enter getWalletBalance");
+        log.debug("Enter getWalletBalance");
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
-        log.debug("exit getWalletBalance");
-
+        log.debug("Exit getWalletBalance");
         return walletMapper.toBalanceDto(wallet);
     }
 
     @Transactional
     public void setWithdrawalIban(String withdrawalIban) {
-        log.debug("enter setWithdrawalIban {}", withdrawalIban);
+        log.debug("Enter setWithdrawalIban(withdrawalIban={})", withdrawalIban);
 
         UUID userId = securityUtils.getCurrentUserId();
 
@@ -103,14 +101,14 @@ public class WalletService {
 
         wallet.setWithdrawalIban(withdrawalIban);
         walletRepository.save(wallet);
-        log.info("wallet saved {}", wallet);
+        log.info("Wallet saved {}", wallet);
 
-        log.debug("exit setWithdrawalIban");
+        log.debug("Exit setWithdrawalIban");
     }
 
     @Transactional
     public void clearWithdrawalIban() {
-        log.debug("enter clearWithdrawalIban");
+        log.debug("Enter clearWithdrawalIban");
 
         UUID userId = securityUtils.getCurrentUserId();
 
@@ -118,18 +116,18 @@ public class WalletService {
 
         wallet.setWithdrawalIban(null);
         walletRepository.save(wallet);
-        log.info("wallet saved {}", wallet);
+        log.info("Wallet saved {}", wallet);
 
-        log.debug("exit clearWithdrawalIban");
+        log.debug("Exit clearWithdrawalIban");
     }
 
     @Transactional
     public void registerWalletTopUp(UUID userId, long amountInCents, String externalPaymentId, PaymentProviderType paymentProviderType) throws EntityNotFoundException, MailSendException {
-        log.debug("enter registerWalletTopUp for userId: {}, amountInCents: {}, externalPaymentId: {}", userId, amountInCents, externalPaymentId);
+        log.debug("Enter registerWalletTopUp(userId={}, amountInCents={}, externalPaymentId={})", userId, amountInCents, externalPaymentId);
 
         Parent parent = parentRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error(ParentMessages.PARENT_NOT_FOUND);
+                    log.warn(ParentMessages.PARENT_NOT_FOUND);
                     return new EntityNotFoundException(ParentMessages.PARENT_NOT_FOUND);
                 });
 
@@ -149,11 +147,11 @@ public class WalletService {
                 .build();
 
         walletOperationRepository.save(walletPaymentOperation);
-        log.info("wallet operation saved {}", walletPaymentOperation);
+        log.info("Wallet operation saved {}", walletPaymentOperation);
 
         try {
             emailService.sendWalletTopUpEmail(parent.getEmail(), parent.getFirstName(), amountInCents);
-            log.debug("exit registerWalletTopUp");
+            log.debug("Exit registerWalletTopUp");
         } catch (MessagingException e) {
             log.error(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
             throw new MailSendException(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);

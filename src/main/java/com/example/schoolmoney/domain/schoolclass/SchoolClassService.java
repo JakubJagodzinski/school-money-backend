@@ -48,11 +48,11 @@ public class SchoolClassService {
 
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
-        log.debug("Enter createSchoolClass {}", createSchoolClassRequestDto);
+        log.debug("Enter createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
 
-        log.debug("Creating school class for user {}", userId);
+        log.debug("Creating school class for user with userId={}", userId);
         Parent parent = parentRepository.getReferenceById(userId);
 
         String invitationCode = InvitationCodeGenerator.generate();
@@ -66,10 +66,9 @@ public class SchoolClassService {
                 .build();
 
         schoolClassRepository.save(schoolClass);
-        log.info("school class saved {}", schoolClass);
+        log.info("School class saved {}", schoolClass);
 
-        log.debug("exit createSchoolClass");
-
+        log.debug("Exit createSchoolClass");
         return schoolClassMapper.toDto(schoolClass);
     }
 
@@ -78,9 +77,8 @@ public class SchoolClassService {
 
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAll(pageable);
 
-        log.info("Fetched {} school classes for pageable={}", schoolClassPage.getTotalElements(), pageable);
-        log.debug("Exit getAllSchoolClasses(pageable={})", pageable);
-
+        log.debug("Fetched {} school classes for pageable={}", schoolClassPage.getTotalElements(), pageable);
+        log.debug("Exit getAllSchoolClasses");
         return schoolClassPage.map(schoolClassMapper::toDto);
     }
 
@@ -91,7 +89,7 @@ public class SchoolClassService {
 
         List<UUID> parentChildrenSchoolClassesIds = childRepository.findDistinctSchoolClassIdsByParentUserId(userId);
 
-        log.debug("Fetching {} school classes for user {}", parentChildrenSchoolClassesIds.size(), userId);
+        log.debug("Fetching {} school classes for user with userId={}", parentChildrenSchoolClassesIds.size(), userId);
 
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAllByTreasurer_UserIdOrSchoolClassIdIn(userId, parentChildrenSchoolClassesIds, pageable);
 
@@ -107,18 +105,17 @@ public class SchoolClassService {
         });
 
         log.debug("Exit getTreasurerAndParentChildrenSchoolClasses");
-
         return schoolClassResponseDtoPage;
     }
 
     public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException, AccessDeniedException {
-        UUID userId = securityUtils.getCurrentUserId();
+        log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, parentId={}, pageable={})", schoolClassId, userId, pageable);
+        UUID userId = securityUtils.getCurrentUserId();
 
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
                 .orElseThrow(() -> {
-                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
@@ -126,12 +123,12 @@ public class SchoolClassService {
         boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
 
         if (!hasAnyChildrenInSchoolClass && !isTreasurer) {
-            log.error(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+            log.warn(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
         }
 
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
-        log.info("Fetched {} children for school class {}", schoolClassChildren.getTotalElements(), schoolClassId);
+        log.debug("Fetched {} children for school class with schoolClassId={}", schoolClassChildren.getTotalElements(), schoolClassId);
 
         log.debug("Exit getSchoolClassAllChildren");
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
@@ -143,14 +140,14 @@ public class SchoolClassService {
 
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
                 .orElseThrow(() -> {
-                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
@@ -161,7 +158,6 @@ public class SchoolClassService {
         log.info("Invitation code regenerated for school class {}", schoolClass);
 
         log.debug("Exit regenerateInvitationCode");
-
         return schoolClassMapper.toInvitationCodeDto(schoolClass);
     }
 

@@ -31,24 +31,24 @@ public class ChildIgnoredFundService {
 
     @Transactional
     public void ignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
-        log.debug("Ignoring fund {} for child {}", fundId, childId);
+        log.debug("Enter ignoreFundForChild(childId={}, fundId={}", childId, fundId);
 
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
-                    log.error(ChildMessages.CHILD_NOT_FOUND);
+                    log.warn(ChildMessages.CHILD_NOT_FOUND);
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
-                    log.error(FundMessages.FUND_NOT_FOUND);
+                    log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
@@ -74,30 +74,31 @@ public class ChildIgnoredFundService {
 
     @Transactional
     public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
-        log.debug("Enter unignoreFundForChild");
+        log.debug("Enter unignoreFundForChild(childId={}, fundId={})", childId, fundId);
+
         UUID userId = securityUtils.getCurrentUserId();
 
-        log.debug("Unignoring fund {} for child {} by user {}", fundId, childId, userId);
+        log.debug("Unignoring fund with fundId={} for child with childId={} by parent with userId={}", fundId, childId, userId);
 
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
-                    log.error(ChildMessages.CHILD_NOT_FOUND);
+                    log.warn(ChildMessages.CHILD_NOT_FOUND);
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
         if (!child.getParent().getUserId().equals(userId)) {
-            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         int deleted = childIgnoredFundRepository.deleteByChild_ChildIdAndFund_FundId(childId, fundId);
 
         if (deleted == 0) {
-            log.error(FundMessages.FUND_NOT_IGNORED_BY_CHILD);
+            log.warn(FundMessages.FUND_NOT_IGNORED_BY_CHILD);
             throw new IllegalStateException(FundMessages.FUND_NOT_IGNORED_BY_CHILD);
         }
 
-        log.info("Fund {} unignored for child {}", fundId, childId);
+        log.info("Parent with userId={} unignored fund with fundId={} for child with childId={}", userId, fundId, childId);
 
         log.debug("Exit unignoreFundForChild");
     }

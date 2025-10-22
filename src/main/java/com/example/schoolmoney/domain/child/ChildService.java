@@ -41,13 +41,13 @@ public class ChildService {
 
     @Transactional
     public ChildShortInfoResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
-        log.debug("Enter createChild {}", createChildRequestDto);
+        log.debug("Enter createChild(createChildRequestDto={})", createChildRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Parent parent = parentRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error(ParentMessages.PARENT_NOT_FOUND);
+                    log.warn(ParentMessages.PARENT_NOT_FOUND);
                     return new EntityNotFoundException(ParentMessages.PARENT_NOT_FOUND);
                 });
 
@@ -63,81 +63,77 @@ public class ChildService {
         log.info("Child saved {}", child);
 
         log.debug("Exit createChild");
-
         return childMapper.toShortInfoDto(child);
     }
 
     @Transactional
     public void assignChildToSchoolClass(UUID childId, String invitationCode) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
-        log.debug("Enter assignChildToSchoolClass childId={}, invitationCode={}", childId, invitationCode);
+        log.debug("Enter assignChildToSchoolClass(childId={}, invitationCode={})", childId, invitationCode);
 
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
-                    log.error(ChildMessages.CHILD_NOT_FOUND);
+                    log.warn(ChildMessages.CHILD_NOT_FOUND);
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         SchoolClass schoolClass = schoolClassRepository.findByInvitationCode(invitationCode)
                 .orElseThrow(() -> {
-                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
         if (child.getSchoolClass() != null) {
-            log.error(ChildMessages.CHILD_ALREADY_IN_SCHOOL_CLASS);
+            log.warn(ChildMessages.CHILD_ALREADY_IN_SCHOOL_CLASS);
             throw new IllegalStateException(ChildMessages.CHILD_ALREADY_IN_SCHOOL_CLASS);
         }
 
         child.setSchoolClass(schoolClass);
         childRepository.save(child);
-        log.info("Child assigned to school class {}", child);
+        log.info("Child {} assigned to school class {}", child, schoolClass);
 
         log.debug("Exit assignChildToSchoolClass");
     }
 
     public Page<ChildWithSchoolClassInfoResponseDto> getParentAllChildren(Pageable pageable) {
-        log.debug("Enter getParentAllChildren");
+        log.debug("Enter getParentAllChildren(pageable={}", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Page<Child> childPage = childRepository.findAllByParent_UserId(userId, pageable);
 
         log.debug("Exit getParentAllChildren");
-
         return childPage.map(childMapper::toWithSchoolClassInfoDto);
     }
 
     @Transactional
     public ChildShortInfoResponseDto updateChild(UUID childId, UpdateChildRequestDto updateChildRequestDto) throws EntityNotFoundException, AccessDeniedException {
-        log.debug("Enter updateChild childId={}, updateChildRequestDto={}", childId, updateChildRequestDto);
+        log.debug("Enter updateChild(childId={}, updateChildRequestDto={})", childId, updateChildRequestDto);
 
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
-                    log.error(ChildMessages.CHILD_NOT_FOUND);
+                    log.warn(ChildMessages.CHILD_NOT_FOUND);
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            log.error(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
         childMapper.updateEntityFromDto(updateChildRequestDto, child);
-
         childRepository.save(child);
         log.info("Child updated {}", child);
 
         log.debug("Exit updateChild");
-
         return childMapper.toShortInfoDto(child);
     }
 

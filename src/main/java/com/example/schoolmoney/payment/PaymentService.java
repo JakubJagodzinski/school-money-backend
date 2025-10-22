@@ -63,7 +63,7 @@ public class PaymentService {
         PaymentProviderType paymentProviderType = adapter.getProviderType();
 
         if (walletOperationRepository.existsByExternalPaymentIdAndPaymentProviderType(externalPaymentId, paymentProviderType)) {
-            log.warn("Wallet operation already exists for externalPaymentId: {}, paymentProviderType: {}", externalPaymentId, paymentProviderType);
+            log.warn("Wallet operation already exists for externalPaymentId={}, paymentProviderType={}", externalPaymentId, paymentProviderType);
             return;
         }
 

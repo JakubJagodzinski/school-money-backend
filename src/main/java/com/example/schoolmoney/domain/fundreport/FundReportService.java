@@ -37,7 +37,7 @@ public class FundReportService {
     public byte[] generateFundReport(UUID fundId) throws EntityNotFoundException, AccessDeniedException {
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
-                    log.error(FundMessages.FUND_NOT_FOUND);
+                    log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
@@ -55,7 +55,7 @@ public class FundReportService {
     public String generateReportFilename(UUID fundId) throws EntityNotFoundException {
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
-                    log.error(FundMessages.FUND_NOT_FOUND);
+                    log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 

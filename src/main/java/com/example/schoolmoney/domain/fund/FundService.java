@@ -54,14 +54,14 @@ public class FundService {
 
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
-        log.debug("enter createFund {}", createFundRequestDto);
+        log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
         SchoolClass schoolClass = schoolClassRepository.findById(createFundRequestDto.getSchoolClassId())
                 .orElseThrow(() -> {
-                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
@@ -82,25 +82,24 @@ public class FundService {
                 .build();
 
         fundRepository.save(fund);
-        log.info("fund saved {}", fund);
+        log.info("Fund saved {}", fund);
 
-        log.debug("exit createFund");
-
+        log.debug("Exit createFund");
         return fundMapper.toDto(fund);
     }
 
     @Transactional
     public void cancelFund(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
-        log.debug("enter cancelFund {}", fundId);
+        log.debug("Enter cancelFund(fundId={})", fundId);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
-                    log.error(FundMessages.FUND_NOT_FOUND);
+                    log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
-            log.error(FundMessages.FUND_IS_NOT_ACTIVE);
+            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
@@ -109,7 +108,7 @@ public class FundService {
         SchoolClass schoolClass = fund.getSchoolClass();
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.error(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
@@ -119,10 +118,10 @@ public class FundService {
             long fundTreasurerBalance = calculateFundTreasurerBalance(fundOperations);
 
             if (fundTreasurerBalance < 0) {
-                log.debug("Fund treasurer balance is negative: {}", fundTreasurerBalance);
+                log.warn(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
                 throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
             } else if (fundTreasurerBalance > 0) {
-                log.debug("Fund treasurer balance is positive: {}", fundTreasurerBalance);
+                log.warn(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
                 throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
             }
         }
@@ -134,7 +133,7 @@ public class FundService {
 
         processParentRefunds(fundOperations);
 
-        log.debug("exit cancelFund");
+        log.debug("Exit cancelFund");
     }
 
     private long calculateFundTreasurerBalance(List<FundOperation> fundOperations) {
@@ -205,16 +204,16 @@ public class FundService {
 
     @Transactional
     public FundResponseDto updateFund(UUID fundId, UpdateFundRequestDto updateFundRequestDto) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
-        log.debug("enter updateFund {}, {}", fundId, updateFundRequestDto);
+        log.debug("Enter updateFund(fundId={}, updateFundRequestDto={})", fundId, updateFundRequestDto);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
-                    log.error(FundMessages.FUND_NOT_FOUND);
+                    log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
-            log.error(FundMessages.FUND_IS_NOT_ACTIVE);
+            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
@@ -229,9 +228,9 @@ public class FundService {
 
         fundMapper.updateEntityFromDto(updateFundRequestDto, fund);
         Fund savedFund = fundRepository.save(fund);
-        log.info("fund saved {}", fund);
+        log.info("Fund saved {}", fund);
 
-        log.debug("exit updateFund");
+        log.debug("Exit updateFund");
         return fundMapper.toDto(savedFund);
     }
 
@@ -242,7 +241,7 @@ public class FundService {
 
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
                 .orElseThrow(() -> {
-                    log.error(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
@@ -250,7 +249,7 @@ public class FundService {
         boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
 
         if (!hasAnyChildrenInSchoolClass && !isTreasurer) {
-            log.error(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+            log.warn(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
         }
 

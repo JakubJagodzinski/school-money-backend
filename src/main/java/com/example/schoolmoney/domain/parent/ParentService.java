@@ -24,7 +24,7 @@ public class ParentService {
 
     @Transactional
     public ParentResponseDto getParent() {
-        log.debug("enter getParent");
+        log.debug("Enter getParent");
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -35,14 +35,15 @@ public class ParentService {
 
     @Transactional
     public ParentResponseDto updateParent(UpdateParentRequestDto updateParentRequestDto) {
-        log.debug("enter updateParent {}", updateParentRequestDto);
+        log.debug("Enter updateParent(updateParentRequestDto={})", updateParentRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
         parentMapper.updateEntityFromDto(updateParentRequestDto, parent);
-
         parentRepository.save(parent);
+        log.info("Parent with userId={} updated", userId);
+
         log.debug("Exit updateParent");
         return parentMapper.toDto(parent);
     }
