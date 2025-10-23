@@ -14,29 +14,29 @@ public class StorageService {
 
     private final StorageAdapter storageAdapter;
 
-    public String uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file, String bucketName) {
         log.debug("Uploading file {}", file.getOriginalFilename());
         log.debug("File size: {}", file.getSize());
         log.debug("File content type: {}", file.getContentType());
 
-        String fileUrl = storageAdapter.uploadFile(file);
+        String fileUrl = storageAdapter.uploadFile(file, bucketName);
         log.debug("File {} uploaded", fileUrl);
 
         return fileUrl;
     }
 
-    public InputStreamResource downloadFile(String fileUrl) {
+    public InputStreamResource downloadFile(String fileUrl, String bucketName) {
         log.debug("Downloading file {}", fileUrl);
 
-        InputStreamResource inputStreamResource = storageAdapter.downloadFile(fileUrl);
+        InputStreamResource inputStreamResource = storageAdapter.downloadFile(fileUrl, bucketName);
         log.debug("File {} downloaded", fileUrl);
 
         return inputStreamResource;
     }
 
-    public void deleteFile(String fileUrl) {
+    public void deleteFile(String fileUrl, String bucketName) {
         log.debug("Deleting file {}", fileUrl);
-        storageAdapter.deleteFile(fileUrl);
+        storageAdapter.deleteFile(fileUrl, bucketName);
         log.debug("File {} deleted", fileUrl);
     }
 

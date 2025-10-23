@@ -19,28 +19,26 @@ public class MinioAdapter implements StorageAdapter {
 
     private final MinioClient minioClient;
 
-    private final MinioConfig minioConfig;
-
-    private void ensureBucketExists() {
+    private void ensureBucketExists(String bucketName) {
         try {
-            log.debug("Checking if bucket {} exists", minioConfig.getBucketName());
+            log.debug("Checking if bucket {} exists", bucketName);
             boolean bucketExists = minioClient.bucketExists(
                     BucketExistsArgs
                             .builder()
-                            .bucket(minioConfig.getBucketName())
+                            .bucket(bucketName)
                             .build()
             );
             if (!bucketExists) {
-                log.warn("Bucket {} not exists - creating...", minioConfig.getBucketName());
+                log.warn("Bucket {} not exists - creating...", bucketName);
                 minioClient.makeBucket(
                         MakeBucketArgs
                                 .builder()
-                                .bucket(minioConfig.getBucketName())
+                                .bucket(bucketName)
                                 .build()
                 );
-                log.debug("Bucket {} created", minioConfig.getBucketName());
+                log.debug("Bucket {} created", bucketName);
             } else {
-                log.debug("Bucket {} exists", minioConfig.getBucketName());
+                log.debug("Bucket {} exists", bucketName);
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to create bucket", e);
@@ -48,24 +46,24 @@ public class MinioAdapter implements StorageAdapter {
     }
 
     @Override
-    public String uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file, String bucketName) {
         try {
-            ensureBucketExists();
+            ensureBucketExists(bucketName);
 
             String fileUrl = UUID.randomUUID().toString();
 
-            log.debug("Uploading file {} to bucket {}", fileUrl, minioConfig.getBucketName());
+            log.debug("Uploading file {} to bucket {}", fileUrl, bucketName);
             try (InputStream inputStream = file.getInputStream()) {
                 minioClient.putObject(
                         PutObjectArgs.builder()
-                                .bucket(minioConfig.getBucketName())
+                                .bucket(bucketName)
                                 .object(fileUrl)
                                 .stream(inputStream, file.getSize(), -1)
                                 .contentType(file.getContentType())
                                 .build()
                 );
             }
-            log.debug("File {} uploaded to bucket {}", fileUrl, minioConfig.getBucketName());
+            log.debug("File {} uploaded to bucket {}", fileUrl, bucketName);
 
             return fileUrl;
         } catch (Exception e) {
@@ -75,12 +73,12 @@ public class MinioAdapter implements StorageAdapter {
     }
 
     @Override
-    public InputStreamResource downloadFile(String fileUrl) {
+    public InputStreamResource downloadFile(String fileUrl, String bucketName) {
         try {
             return new InputStreamResource(
                     minioClient.getObject(
                             GetObjectArgs.builder()
-                                    .bucket(minioConfig.getBucketName())
+                                    .bucket(bucketName)
                                     .object(fileUrl)
                                     .build()
                     )
@@ -92,12 +90,12 @@ public class MinioAdapter implements StorageAdapter {
     }
 
     @Override
-    public void deleteFile(String fileUrl) {
+    public void deleteFile(String fileUrl, String bucketName) {
         try {
             minioClient.removeObject(
                     RemoveObjectArgs
                             .builder()
-                            .bucket(minioConfig.getBucketName())
+                            .bucket(bucketName)
                             .object(fileUrl)
                             .build()
             );

@@ -5,10 +5,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface StorageAdapter {
 
-    String uploadFile(MultipartFile file);
+    String uploadFile(MultipartFile file, String bucketName);
 
-    InputStreamResource downloadFile(String fileUrl);
+    InputStreamResource downloadFile(String fileUrl, String bucketName);
 
-    void deleteFile(String fileUrl);
+    void deleteFile(String fileUrl, String bucketName);
 
 }

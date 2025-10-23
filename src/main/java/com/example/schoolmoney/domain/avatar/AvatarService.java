@@ -29,6 +29,8 @@ import java.util.UUID;
 @Service
 public class AvatarService {
 
+    private static final String bucketName = "avatars";
+
     private final ParentRepository parentRepository;
 
     private final ChildRepository childRepository;
@@ -43,15 +45,17 @@ public class AvatarService {
     public void updateParentAvatar(MultipartFile file) throws IllegalStateException {
         log.debug("Enter uploadParentAvatar");
 
+        // TODO check image file type
+
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
         if (parent.getAvatarId() != null) {
-            storageService.deleteFile(parent.getAvatarId().toString());
+            storageService.deleteFile(parent.getAvatarId().toString(), bucketName);
             log.debug("Old avatar deleted");
         }
 
-        String avatarId = storageService.uploadFile(file);
+        String avatarId = storageService.uploadFile(file, bucketName);
 
         parent.setAvatarId(UUID.fromString(avatarId));
         parentRepository.save(parent);
@@ -78,7 +82,7 @@ public class AvatarService {
         String avatarId = parent.getAvatarId().toString();
 
         log.debug("Exit getParentAvatar");
-        return storageService.downloadFile(avatarId);
+        return storageService.downloadFile(avatarId, bucketName);
     }
 
     @Transactional
@@ -95,7 +99,7 @@ public class AvatarService {
 
         String avatarId = parent.getAvatarId().toString();
 
-        storageService.deleteFile(avatarId);
+        storageService.deleteFile(avatarId, bucketName);
 
         parent.setAvatarId(null);
         parentRepository.save(parent);
@@ -121,11 +125,11 @@ public class AvatarService {
         }
 
         if (child.getAvatarId() != null) {
-            storageService.deleteFile(child.getAvatarId().toString());
+            storageService.deleteFile(child.getAvatarId().toString(), bucketName);
             log.debug("Old avatar deleted");
         }
 
-        String avatarId = storageService.uploadFile(avatarFile);
+        String avatarId = storageService.uploadFile(avatarFile, bucketName);
 
         child.setAvatarId(UUID.fromString(avatarId));
         childRepository.save(child);
@@ -152,7 +156,7 @@ public class AvatarService {
         String avatarId = child.getAvatarId().toString();
 
         log.debug("Exit getChildAvatar");
-        return storageService.downloadFile(avatarId);
+        return storageService.downloadFile(avatarId, bucketName);
     }
 
     @Transactional
@@ -178,7 +182,7 @@ public class AvatarService {
 
         String avatarId = child.getAvatarId().toString();
 
-        storageService.deleteFile(avatarId);
+        storageService.deleteFile(avatarId, bucketName);
 
         child.setAvatarId(null);
         childRepository.save(child);
@@ -212,11 +216,11 @@ public class AvatarService {
         }
 
         if (fund.getLogoId() != null) {
-            storageService.deleteFile(fund.getLogoId().toString());
+            storageService.deleteFile(fund.getLogoId().toString(), bucketName);
             log.debug("Old avatar deleted");
         }
 
-        UUID avatarId = UUID.fromString(storageService.uploadFile(avatarFile));
+        UUID avatarId = UUID.fromString(storageService.uploadFile(avatarFile, bucketName));
 
         fund.setLogoId(avatarId);
         fundRepository.save(fund);
@@ -243,7 +247,7 @@ public class AvatarService {
         String avatarId = fund.getLogoId().toString();
 
         log.debug("Exit getFundAvatar");
-        return storageService.downloadFile(avatarId);
+        return storageService.downloadFile(avatarId, bucketName);
     }
 
     @Transactional
@@ -277,7 +281,7 @@ public class AvatarService {
 
         String avatarId = fund.getLogoId().toString();
 
-        storageService.deleteFile(avatarId);
+        storageService.deleteFile(avatarId, bucketName);
 
         fund.setLogoId(null);
         fundRepository.save(fund);
