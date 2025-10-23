@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.fundreport;
 
+import com.example.schoolmoney.domain.fundreport.dto.FundReportDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,21 +19,20 @@ public class FundReportController {
 
     @GetMapping("/fund/{fundId}/report")
     public ResponseEntity<byte[]> generateFundReport(@PathVariable UUID fundId) {
-        byte[] fundReportPdf = fundReportService.generateFundReport(fundId);
-        String reportFilename = fundReportService.generateReportFilename(fundId);
+        FundReportDto fundReportDto = fundReportService.generateFundReport(fundId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(
                 ContentDisposition.attachment()
-                        .filename(reportFilename)
+                        .filename(fundReportDto.getFundReportFileName())
                         .build()
         );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .headers(headers)
-                .body(fundReportPdf);
+                .body(fundReportDto.getFundReport());
     }
 
 }
