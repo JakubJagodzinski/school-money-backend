@@ -44,6 +44,9 @@ public class SchoolClass {
     @Column(name = "school_class_year", nullable = false, length = 30)
     private String schoolClassYear;
 
+    @Column(name = "avatar_id")
+    private UUID avatarId;
+
     @NotNull
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
