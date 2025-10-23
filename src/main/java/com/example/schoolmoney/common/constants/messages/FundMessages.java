@@ -13,5 +13,6 @@ public class FundMessages {
     public static final String CANNOT_DEPOSIT_MORE_THAN_WITHDRAWN_AMOUNT = "Cannot deposit more than withdrawn amount";
     public static final String CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS = "Cannot cancel fund because of missing funds";
     public static final String CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS = "Cannot cancel fund because of remaining treasurer deposits";
+    public static final String NO_PERMISSION_TO_EDIT_FUND = "No permission to edit fund";
 
 }
