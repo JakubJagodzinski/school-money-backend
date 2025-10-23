@@ -1,9 +1,11 @@
 package com.example.schoolmoney.domain.schoolclass;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassInvitationCodeResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,6 +33,7 @@ public class SchoolClassController {
 
     private final SchoolClassService schoolClassService;
 
+    @CheckPermission(Permission.SCHOOL_CLASS_READ_ALL)
     @GetMapping("/school-classes/all")
     public ResponseEntity<Page<SchoolClassResponseDto>> getAllSchoolClasses(
             @ParameterObject
@@ -66,6 +69,7 @@ public class SchoolClassController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.PARENT_SCHOOL_CLASS_READ_ALL)
     @GetMapping("/school-classes")
     public ResponseEntity<Page<SchoolClassResponseDto>> getTreasurerAndParentChildrenSchoolClasses(
             @ParameterObject
@@ -99,6 +103,7 @@ public class SchoolClassController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.SCHOOL_CLASS_CHILDREN_READ_ALL)
     @GetMapping("/school-classes/{schoolClassId}/children")
     public ResponseEntity<Page<ChildWithParentInfoResponseDto>> getSchoolClassAllChildren(
             @PathVariable UUID schoolClassId,
@@ -112,6 +117,7 @@ public class SchoolClassController {
                 .body(childResponseDtoPage);
     }
 
+    @CheckPermission(Permission.SCHOOL_CLASS_CREATE)
     @PostMapping("/school-classes")
     public ResponseEntity<SchoolClassResponseDto> createSchoolClass(@Valid @RequestBody CreateSchoolClassRequestDto createSchoolClassRequestDto) {
         SchoolClassResponseDto schoolClassResponseDto = schoolClassService.createSchoolClass(createSchoolClassRequestDto);
@@ -121,6 +127,7 @@ public class SchoolClassController {
                 .body(schoolClassResponseDto);
     }
 
+    @CheckPermission(Permission.SCHOOL_CLASS_INVITATION_CODE_REGENERATE)
     @PostMapping("/school-classes/{schoolClassId}/invitation-code")
     public ResponseEntity<SchoolClassInvitationCodeResponseDto> regenerateInvitationCode(@PathVariable UUID schoolClassId) {
         SchoolClassInvitationCodeResponseDto schoolClassInvitationCodeResponseDto = schoolClassService.regenerateInvitationCode(schoolClassId);

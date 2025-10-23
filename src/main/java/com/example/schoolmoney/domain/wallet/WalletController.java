@@ -1,9 +1,11 @@
 package com.example.schoolmoney.domain.wallet;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -42,6 +44,7 @@ public class WalletController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.WALLET_INFO_READ)
     @GetMapping("/wallets/info")
     public ResponseEntity<WalletInfoResponseDto> getWalletInfo() {
         WalletInfoResponseDto walletInfoResponseDto = walletService.getWalletInfo();
@@ -72,6 +75,7 @@ public class WalletController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.WALLET_BALANCE_READ)
     @GetMapping("/wallets/balance")
     public ResponseEntity<WalletBalanceResponseDto> getWalletBalance() {
         WalletBalanceResponseDto walletBalanceResponseDto = walletService.getWalletBalance();
@@ -102,6 +106,7 @@ public class WalletController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.WALLET_INFO_SET)
     @PatchMapping("/wallets")
     public ResponseEntity<MessageResponseDto> setWithdrawalIban(@RequestParam String withdrawalIban) {
         walletService.setWithdrawalIban(withdrawalIban);
@@ -132,6 +137,7 @@ public class WalletController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.WALLET_INFO_CLEAR)
     @DeleteMapping("/wallets")
     public ResponseEntity<MessageResponseDto> clearWithdrawalIban() {
         walletService.clearWithdrawalIban();

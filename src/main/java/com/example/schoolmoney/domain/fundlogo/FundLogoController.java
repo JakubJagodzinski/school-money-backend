@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.fundlogo;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -23,6 +25,7 @@ public class FundLogoController {
     @Operation(
             summary = "Update fund logo"
     )
+    @CheckPermission(Permission.FUND_LOGO_UPDATE)
     @PatchMapping(
             value = "/funds/{fundId}/logo",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -38,6 +41,7 @@ public class FundLogoController {
     @Operation(
             summary = "Get fund logo image file if set"
     )
+    @CheckPermission(Permission.FUND_LOGO_READ)
     @GetMapping("/funds/{fundId}/logo")
     public ResponseEntity<InputStreamResource> getFundLogo(@PathVariable UUID fundId) {
         InputStreamResource fundAvatarResource = fundLogoService.getFundLogo(fundId);
@@ -51,6 +55,7 @@ public class FundLogoController {
     @Operation(
             summary = "Delete fund logo"
     )
+    @CheckPermission(Permission.FUND_LOGO_DELETE)
     @DeleteMapping("/funds/{fundId}/logo")
     public ResponseEntity<Void> deleteFundLogo(@PathVariable UUID fundId) {
         fundLogoService.deleteFundLogo(fundId);

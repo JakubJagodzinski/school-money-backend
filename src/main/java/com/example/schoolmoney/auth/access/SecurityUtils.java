@@ -1,6 +1,5 @@
 package com.example.schoolmoney.auth.access;
 
-import com.example.schoolmoney.user.Role;
 import com.example.schoolmoney.user.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,21 +32,6 @@ public class SecurityUtils {
         }
 
         return (User) auth.getPrincipal();
-    }
-
-    public boolean isAdmin() {
-        return hasRole(Role.ADMIN.name());
-    }
-
-    public boolean hasRole(String role) {
-        Authentication auth = getAuthentication();
-
-        if (auth == null) {
-            return false;
-        }
-
-        return auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
     }
 
     public boolean hasPermission(String authority) {

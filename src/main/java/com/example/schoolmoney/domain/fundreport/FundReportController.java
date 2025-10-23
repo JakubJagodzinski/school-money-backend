@@ -1,6 +1,8 @@
 package com.example.schoolmoney.domain.fundreport;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.domain.fundreport.dto.FundReportDto;
+import com.example.schoolmoney.user.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +19,7 @@ public class FundReportController {
 
     private final FundReportService fundReportService;
 
+    @CheckPermission(Permission.FUND_REPORT_GENERATE)
     @GetMapping("/fund/{fundId}/report")
     public ResponseEntity<byte[]> generateFundReport(@PathVariable UUID fundId) {
         FundReportDto fundReportDto = fundReportService.generateFundReport(fundId);

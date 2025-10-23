@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.schoolclassavatar;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -23,6 +25,7 @@ public class SchoolClassAvatarController {
     @Operation(
             summary = "Update school class avatar"
     )
+    @CheckPermission(Permission.SCHOOL_CLASS_AVATAR_UPDATE)
     @PatchMapping(
             value = "/school-classes/{schoolClassId}/avatar",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -38,6 +41,7 @@ public class SchoolClassAvatarController {
     @Operation(
             summary = "Get school class avatar image file if set"
     )
+    @CheckPermission(Permission.SCHOOL_CLASS_AVATAR_READ)
     @GetMapping("/school-classes/{schoolClassId}/avatar")
     public ResponseEntity<InputStreamResource> getSchoolClassAvatar(@PathVariable UUID schoolClassId) {
         InputStreamResource schoolClassAvatarSource = schoolClassAvatarService.getSchoolClassAvatar(schoolClassId);
@@ -51,6 +55,7 @@ public class SchoolClassAvatarController {
     @Operation(
             summary = "Delete school class avatar"
     )
+    @CheckPermission(Permission.SCHOOL_CLASS_AVATAR_DELETE)
     @DeleteMapping("/school-classes/{schoolClassId}/avatar")
     public ResponseEntity<Void> deleteChildAvatar(@PathVariable UUID schoolClassId) {
         schoolClassAvatarService.deleteSchoolClassAvatar(schoolClassId);

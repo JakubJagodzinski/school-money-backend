@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.parentavatar;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.InputStreamResource;
@@ -23,6 +25,7 @@ public class ParentAvatarController {
     @Operation(
             summary = "Update parent avatar"
     )
+    @CheckPermission(Permission.PARENT_AVATAR_UPDATE)
     @PatchMapping(
             value = "/parents/avatar",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -38,6 +41,7 @@ public class ParentAvatarController {
     @Operation(
             summary = "Get parent avatar image file if exists"
     )
+    @CheckPermission(Permission.PARENT_AVATAR_READ)
     @GetMapping("/parents/{parentId}/avatar")
     public ResponseEntity<InputStreamResource> getParentAvatar(@PathVariable UUID parentId) {
         InputStreamResource parentAvatarResource = parentAvatarService.getParentAvatar(parentId);
@@ -51,6 +55,7 @@ public class ParentAvatarController {
     @Operation(
             summary = "Delete parent avatar"
     )
+    @CheckPermission(Permission.PARENT_AVATAR_DELETE)
     @DeleteMapping("/parents/avatar")
     public ResponseEntity<Void> deleteParentAvatar() {
         parentAvatarService.deleteParentAvatar();

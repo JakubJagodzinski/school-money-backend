@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.parent;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.domain.parent.dto.request.UpdateParentRequestDto;
 import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,6 +45,7 @@ public class ParentController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.PARENT_READ)
     @GetMapping("/parents")
     public ResponseEntity<ParentResponseDto> getParent() {
         ParentResponseDto parentResponseDto = parentService.getParent();
@@ -73,6 +76,7 @@ public class ParentController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.PARENT_UPDATE)
     @PatchMapping("/parents")
     public ResponseEntity<ParentResponseDto> updateParent(@Valid @RequestBody UpdateParentRequestDto updateParentRequestDto) {
         ParentResponseDto parentResponseDto = parentService.updateParent(updateParentRequestDto);

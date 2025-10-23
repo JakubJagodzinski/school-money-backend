@@ -30,7 +30,7 @@ public class UserController {
     private final UserService userService;
 
     @Operation(
-            summary = "Change password (only when logged in)"
+            summary = "Change password"
     )
     @ApiResponses({
             @ApiResponse(

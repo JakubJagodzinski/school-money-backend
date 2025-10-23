@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.fundoperation;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -60,6 +62,7 @@ public class FundOperationController {
                     )
             )
     })
+    @CheckPermission(Permission.FUND_PAY)
     @PostMapping("/funds/{fundId}/pay")
     public ResponseEntity<MessageResponseDto> performPayment(@PathVariable UUID fundId, @RequestParam UUID childId, @RequestParam long amountInCents) {
         fundOperationService.performPayment(fundId, childId, amountInCents);
@@ -115,6 +118,7 @@ public class FundOperationController {
                     )
             )
     })
+    @CheckPermission(Permission.FUND_WITHDRAW)
     @PostMapping("/funds/{fundId}/withdraw")
     public ResponseEntity<MessageResponseDto> withdrawFromFund(@PathVariable UUID fundId, @RequestParam long amountInCents) {
         fundOperationService.withdrawFromFund(fundId, amountInCents);
@@ -171,6 +175,7 @@ public class FundOperationController {
                     )
             )
     })
+    @CheckPermission(Permission.FUND_DEPOSIT)
     @PostMapping("/funds/{fundId}/deposit")
     public ResponseEntity<MessageResponseDto> depositToFund(@PathVariable UUID fundId, @RequestParam long amountInCents) {
         fundOperationService.depositToFund(fundId, amountInCents);

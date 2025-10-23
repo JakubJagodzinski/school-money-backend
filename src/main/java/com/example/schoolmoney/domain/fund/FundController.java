@@ -1,10 +1,12 @@
 package com.example.schoolmoney.domain.fund;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -53,6 +55,7 @@ public class FundController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.FUND_CREATE)
     @PostMapping("/funds")
     public ResponseEntity<FundResponseDto> createFund(@Valid @RequestBody CreateFundRequestDto createFundRequestDto) {
         FundResponseDto fundResponseDto = fundService.createFund(createFundRequestDto);
@@ -110,6 +113,7 @@ public class FundController {
                     )
             ),
     })
+    @CheckPermission(Permission.FUND_CANCEL)
     @PostMapping("/funds/{fundId}/cancel")
     public ResponseEntity<MessageResponseDto> cancelFund(@PathVariable UUID fundId) {
         fundService.cancelFund(fundId);
@@ -140,6 +144,7 @@ public class FundController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.FUND_CREATED_READ_ALL)
     @GetMapping("/funds/created")
     public ResponseEntity<Page<FundResponseDto>> getCreatedFunds(
             @ParameterObject
@@ -198,6 +203,7 @@ public class FundController {
                     )
             ),
     })
+    @CheckPermission(Permission.FUND_UPDATE)
     @PatchMapping("/funds/{fundId}")
     public ResponseEntity<FundResponseDto> updateFund(@PathVariable UUID fundId, @Valid @RequestBody UpdateFundRequestDto updateFundRequestDto) {
         FundResponseDto fundResponseDto = fundService.updateFund(fundId, updateFundRequestDto);
@@ -244,6 +250,7 @@ public class FundController {
                     )
             ),
     })
+    @CheckPermission(Permission.SCHOOL_CLASS_FUND_READ_ALL)
     @GetMapping("/school-class/{schoolClassId}/funds")
     public ResponseEntity<Page<FundResponseDto>> getSchoolClassAllFunds(
             @PathVariable UUID schoolClassId,
@@ -278,6 +285,7 @@ public class FundController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.PARENT_CHILDREN_FUND_READ_ALL)
     @GetMapping("/parent/children/funds")
     public ResponseEntity<Page<FundResponseDto>> getParentChildrenAllFunds(
             @ParameterObject

@@ -1,8 +1,10 @@
 package com.example.schoolmoney.payment;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.PaymentMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.payment.dto.PaymentSessionDto;
+import com.example.schoolmoney.user.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,6 +18,7 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
+    @CheckPermission(Permission.PAYMENT_SESSION_CREATE)
     @PostMapping("/session/top-up")
     public ResponseEntity<PaymentSessionDto> createPaymentSession(@RequestParam PaymentProviderType paymentProviderType, @RequestParam long amountInCents) {
         PaymentSessionDto paymentSessionDto = paymentService.createPaymentSession(paymentProviderType, amountInCents);

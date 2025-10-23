@@ -1,8 +1,10 @@
 package com.example.schoolmoney.domain.fundmedia;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.domain.fundmedia.dto.internal.FileWithMetadata;
 import com.example.schoolmoney.domain.fundmedia.dto.request.UpdateFundMediaFileMetadataRequestDto;
 import com.example.schoolmoney.domain.fundmedia.dto.response.FundMediaResponseDto;
+import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -30,6 +32,7 @@ public class FundMediaController {
     @Operation(
             summary = "Upload a media file for a fund"
     )
+    @CheckPermission(Permission.FUND_MEDIA_FILE_UPLOAD)
     @PostMapping(
             value = "/funds/{fundId}/media/file",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
@@ -45,6 +48,7 @@ public class FundMediaController {
     @Operation(
             summary = "Get fund all media metadata"
     )
+    @CheckPermission(Permission.FUND_MEDIA_METADATA_READ)
     @GetMapping("/funds/{fundId}/media/file/metadata")
     public ResponseEntity<Page<FundMediaResponseDto>> getFundMediaMetadataPage(
             @PathVariable UUID fundId,
@@ -61,6 +65,7 @@ public class FundMediaController {
     @Operation(
             summary = "Get fund media file if exists"
     )
+    @CheckPermission(Permission.FUND_MEDIA_FILE_READ)
     @GetMapping("/funds/{fundId}/media/{fundMediaId}/file")
     public ResponseEntity<InputStreamResource> getFundMediaFile(@PathVariable UUID fundId, @PathVariable UUID fundMediaId) {
         FileWithMetadata file = fundMediaService.getFundMediaFileWithMetadata(fundId, fundMediaId);
@@ -72,6 +77,7 @@ public class FundMediaController {
                 .body(file.getResource());
     }
 
+    @CheckPermission(Permission.FUND_MEDIA_METADATA_UPDATE)
     @PatchMapping("/funds/{fundId}/media/{fundMediaId}/file/metadata")
     public ResponseEntity<FundMediaResponseDto> updateFundMediaFileMetadata(
             @PathVariable UUID fundId,
@@ -88,6 +94,7 @@ public class FundMediaController {
     @Operation(
             summary = "Delete fund media file if exists"
     )
+    @CheckPermission(Permission.FUND_MEDIA_FILE_DELETE)
     @DeleteMapping("/funds/{fundId}/media/{fundMediaId}/file")
     public ResponseEntity<Void> deleteFundMediaFile(@PathVariable UUID fundId, @PathVariable UUID fundMediaId) {
         fundMediaService.deleteFundMediaFile(fundId, fundMediaId);

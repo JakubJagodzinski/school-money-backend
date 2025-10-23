@@ -57,6 +57,10 @@ stripe:
   webhookSecret: ${STRIPE_WEBHOOK_SECRET}
 
 app:
+  super-admin:
+    email: ${SUPER_ADMIN_EMAIL}
+    password: ${SUPER_ADMIN_PASSWORD}
+
   server:
     public-address: ${SERVER_PUBLIC_ADDRESS:http://localhost:8090}
 
@@ -87,4 +91,3 @@ minio:
   url: ${MINIO_URL:http://minio:9000}
   access-key: ${MINIO_ACCESS_KEY}
   secret-key: ${MINIO_SECRET_KEY}
-  bucket-name: ${MINIO_BUCKET_NAME}

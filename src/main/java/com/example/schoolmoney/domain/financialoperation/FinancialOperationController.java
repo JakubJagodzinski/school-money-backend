@@ -1,5 +1,7 @@
 package com.example.schoolmoney.domain.financialoperation;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
+import com.example.schoolmoney.user.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ public class FinancialOperationController {
 
     private final FinancialOperationService financialOperationService;
 
+    @CheckPermission(Permission.FINANCIAL_OPERATION_HISTORY_READ)
     @GetMapping("/financial-operations/history")
     public ResponseEntity<Page<FinancialOperationView>> getUserFinancialOperationHistory(
             @ParameterObject
