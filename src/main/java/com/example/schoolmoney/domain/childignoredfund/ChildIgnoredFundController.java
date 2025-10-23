@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.childignoredfund;
 
-import com.example.schoolmoney.common.constants.messages.FundMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

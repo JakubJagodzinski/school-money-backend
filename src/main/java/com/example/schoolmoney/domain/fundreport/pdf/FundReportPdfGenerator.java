@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.fundreport.pdf;
 
-import com.example.schoolmoney.common.constants.messages.FundReportMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundReportMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.lowagie.text.Document;

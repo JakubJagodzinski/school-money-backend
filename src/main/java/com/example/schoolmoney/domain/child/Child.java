@@ -44,9 +44,8 @@ public class Child {
     @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
-    @Size(max = 2048)
-    @Column(name = "avatar_url", length = 2048)
-    private String avatarUrl;
+    @Column(name = "avatar_id")
+    private UUID avatarId;
 
     @NotNull
     @Column(name = "birth_date", nullable = false)

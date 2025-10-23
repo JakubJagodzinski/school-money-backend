@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.child;
 
-import com.example.schoolmoney.common.constants.messages.ChildMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;

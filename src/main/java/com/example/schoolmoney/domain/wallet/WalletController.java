@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.wallet;
 
-import com.example.schoolmoney.common.constants.messages.WalletMessages;
+import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;

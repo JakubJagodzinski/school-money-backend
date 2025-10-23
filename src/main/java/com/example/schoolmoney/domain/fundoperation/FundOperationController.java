@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.fundoperation;
 
-import com.example.schoolmoney.common.constants.messages.FundOperationMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

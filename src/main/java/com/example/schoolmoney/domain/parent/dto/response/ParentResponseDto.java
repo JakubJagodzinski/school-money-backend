@@ -17,8 +17,7 @@ import java.util.UUID;
         "user_id",
         "first_name",
         "last_name",
-        "email",
-        "avatar_url"
+        "email"
 })
 public class ParentResponseDto {
 
@@ -33,8 +32,5 @@ public class ParentResponseDto {
 
     @JsonProperty("email")
     private String email;
-
-    @JsonProperty("avatar_url")
-    private String avatarUrl;
 
 }

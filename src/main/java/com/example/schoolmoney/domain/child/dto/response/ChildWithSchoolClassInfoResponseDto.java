@@ -20,7 +20,6 @@ import java.util.UUID;
         "school_class",
         "first_name",
         "last_name",
-        "avatar_url",
         "birth_date"
 })
 public class ChildWithSchoolClassInfoResponseDto {
@@ -36,9 +35,6 @@ public class ChildWithSchoolClassInfoResponseDto {
 
     @JsonProperty("last_name")
     private String lastName;
-
-    @JsonProperty("avatar_url")
-    private String avatarUrl;
 
     @JsonProperty("birth_date")
     private LocalDate birthDate;

@@ -1,8 +1,8 @@
 package com.example.schoolmoney.domain.childignoredfund;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.ChildMessages;
-import com.example.schoolmoney.common.constants.messages.FundMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.fund.Fund;

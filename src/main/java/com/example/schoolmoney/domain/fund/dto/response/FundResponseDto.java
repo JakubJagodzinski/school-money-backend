@@ -42,9 +42,6 @@ public class FundResponseDto {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("logo_url")
-    private String logoUrl;
-
     @JsonProperty("description")
     private String description;
 

@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.schoolclass.dto.response;
 
-import com.example.schoolmoney.domain.parent.dto.response.ParentPublicResponseDto;
+import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -27,7 +27,7 @@ public class SchoolClassResponseDto {
     private UUID schoolClassId;
 
     @JsonProperty("treasurer")
-    private ParentPublicResponseDto treasurer;
+    private ParentResponseDto treasurer;
 
     @JsonProperty("invitation_code")
     private String invitationCode;

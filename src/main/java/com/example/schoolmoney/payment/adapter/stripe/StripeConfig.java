@@ -1,4 +1,4 @@
-package com.example.schoolmoney.config;
+package com.example.schoolmoney.payment.adapter.stripe;
 
 import com.stripe.Stripe;
 import jakarta.annotation.PostConstruct;

@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.child.dto.response;
 
-import com.example.schoolmoney.domain.parent.dto.response.ParentPublicResponseDto;
+import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,6 @@ import java.util.UUID;
         "parent",
         "first_name",
         "last_name",
-        "avatar_url",
         "birth_date"
 })
 public class ChildWithParentInfoResponseDto {
@@ -29,16 +28,13 @@ public class ChildWithParentInfoResponseDto {
     private UUID childId;
 
     @JsonProperty("parent")
-    private ParentPublicResponseDto parent;
+    private ParentResponseDto parent;
 
     @JsonProperty("first_name")
     private String firstName;
 
     @JsonProperty("last_name")
     private String lastName;
-
-    @JsonProperty("avatar_url")
-    private String avatarUrl;
 
     @JsonProperty("birth_date")
     private LocalDate birthDate;

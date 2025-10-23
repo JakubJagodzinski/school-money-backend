@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.avatar;
 
-import com.example.schoolmoney.common.constants.messages.AvatarMessages;
+import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;

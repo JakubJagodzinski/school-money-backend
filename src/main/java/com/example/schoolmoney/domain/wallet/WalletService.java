@@ -2,8 +2,8 @@ package com.example.schoolmoney.domain.wallet;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.EmailMessages;
-import com.example.schoolmoney.common.constants.messages.ParentMessages;
-import com.example.schoolmoney.common.constants.messages.WalletMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
+import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;

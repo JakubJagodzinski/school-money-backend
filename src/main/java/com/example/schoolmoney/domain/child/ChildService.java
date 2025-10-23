@@ -1,9 +1,9 @@
 package com.example.schoolmoney.domain.child;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.ChildMessages;
-import com.example.schoolmoney.common.constants.messages.ParentMessages;
-import com.example.schoolmoney.common.constants.messages.SchoolClassMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
+import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;

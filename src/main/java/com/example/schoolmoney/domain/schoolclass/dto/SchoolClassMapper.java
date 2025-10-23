@@ -16,7 +16,7 @@ import org.mapstruct.*;
 public interface SchoolClassMapper {
 
     @Named("schoolClassToSchoolClassDto")
-    @Mapping(target = "treasurer", source = "treasurer", qualifiedByName = "parentToParentPublicDto")
+    @Mapping(target = "treasurer", source = "treasurer", qualifiedByName = "parentToParentDto")
     SchoolClassResponseDto toDto(SchoolClass entity);
 
     @Named("schoolClassToSchoolClassHeaderDto")

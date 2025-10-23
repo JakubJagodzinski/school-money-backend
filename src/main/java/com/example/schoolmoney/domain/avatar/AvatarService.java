@@ -1,10 +1,10 @@
 package com.example.schoolmoney.domain.avatar;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.AvatarMessages;
-import com.example.schoolmoney.common.constants.messages.ChildMessages;
-import com.example.schoolmoney.common.constants.messages.FundMessages;
-import com.example.schoolmoney.common.constants.messages.ParentMessages;
+import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
+import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.fund.Fund;
@@ -46,16 +46,16 @@ public class AvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (parent.getAvatarUrl() != null) {
-            storageService.deleteFile(parent.getAvatarUrl());
+        if (parent.getAvatarId() != null) {
+            storageService.deleteFile(parent.getAvatarId().toString());
             log.debug("Old avatar deleted");
         }
 
-        String avatarUrl = storageService.uploadFile(file);
+        String avatarId = storageService.uploadFile(file);
 
-        parent.setAvatarUrl(avatarUrl);
+        parent.setAvatarId(UUID.fromString(avatarId));
         parentRepository.save(parent);
-        log.info("Avatar url saved for parent with parentId={}", userId);
+        log.info("Avatar id saved for parent with parentId={}", userId);
 
         log.debug("Exit uploadParentAvatar");
     }
@@ -70,14 +70,15 @@ public class AvatarService {
                     return new EntityNotFoundException(ParentMessages.PARENT_NOT_FOUND);
                 });
 
-        String avatarUrl = parent.getAvatarUrl();
-        if (avatarUrl == null || avatarUrl.isBlank()) {
+        if (parent.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
             return null;
         }
 
+        String avatarId = parent.getAvatarId().toString();
+
         log.debug("Exit getParentAvatar");
-        return storageService.downloadFile(avatarUrl);
+        return storageService.downloadFile(avatarId);
     }
 
     @Transactional
@@ -87,18 +88,18 @@ public class AvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        String avatarUrl = parent.getAvatarUrl();
-
-        if (avatarUrl == null || avatarUrl.isBlank()) {
+        if (parent.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
             return;
         }
 
-        storageService.deleteFile(avatarUrl);
+        String avatarId = parent.getAvatarId().toString();
 
-        parent.setAvatarUrl(null);
+        storageService.deleteFile(avatarId);
+
+        parent.setAvatarId(null);
         parentRepository.save(parent);
-        log.info("Avatar url set to null for parent with parentId={}", userId);
+        log.info("Avatar id set to null for parent with parentId={}", userId);
 
         log.debug("Exit deleteParentAvatar");
     }
@@ -119,16 +120,16 @@ public class AvatarService {
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
-        if (child.getAvatarUrl() != null) {
-            storageService.deleteFile(child.getAvatarUrl());
+        if (child.getAvatarId() != null) {
+            storageService.deleteFile(child.getAvatarId().toString());
             log.debug("Old avatar deleted");
         }
 
-        String avatarUrl = storageService.uploadFile(avatarFile);
+        String avatarId = storageService.uploadFile(avatarFile);
 
-        child.setAvatarUrl(avatarUrl);
+        child.setAvatarId(UUID.fromString(avatarId));
         childRepository.save(child);
-        log.info("Avatar url saved for child with childId={}", childId);
+        log.info("Avatar id saved for child with childId={}", childId);
 
         log.debug("Exit uploadChildAvatar");
     }
@@ -143,14 +144,15 @@ public class AvatarService {
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
-        String avatarUrl = child.getAvatarUrl();
-        if (avatarUrl == null || avatarUrl.isBlank()) {
+        if (child.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
             return null;
         }
 
+        String avatarId = child.getAvatarId().toString();
+
         log.debug("Exit getChildAvatar");
-        return storageService.downloadFile(avatarUrl);
+        return storageService.downloadFile(avatarId);
     }
 
     @Transactional
@@ -169,17 +171,18 @@ public class AvatarService {
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
-        String avatarUrl = child.getAvatarUrl();
-        if (avatarUrl == null || avatarUrl.isBlank()) {
+        if (child.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
             return;
         }
 
-        storageService.deleteFile(avatarUrl);
+        String avatarId = child.getAvatarId().toString();
 
-        child.setAvatarUrl(null);
+        storageService.deleteFile(avatarId);
+
+        child.setAvatarId(null);
         childRepository.save(child);
-        log.info("Avatar url set to null for child with childId={}", childId);
+        log.info("Avatar id set to null for child with childId={}", childId);
 
         log.debug("Exit deleteChildAvatar");
     }
@@ -208,16 +211,16 @@ public class AvatarService {
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
-        if (fund.getLogoUrl() != null) {
-            storageService.deleteFile(fund.getLogoUrl());
+        if (fund.getLogoId() != null) {
+            storageService.deleteFile(fund.getLogoId().toString());
             log.debug("Old avatar deleted");
         }
 
-        String avatarUrl = storageService.uploadFile(avatarFile);
+        UUID avatarId = UUID.fromString(storageService.uploadFile(avatarFile));
 
-        fund.setLogoUrl(avatarUrl);
+        fund.setLogoId(avatarId);
         fundRepository.save(fund);
-        log.info("Avatar url saved for fund with fundId={}", fundId);
+        log.info("Avatar id saved for fund with fundId={}", fundId);
 
         log.debug("Exit uploadFundAvatar");
     }
@@ -232,14 +235,15 @@ public class AvatarService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
-        String avatarUrl = fund.getLogoUrl();
-        if (avatarUrl == null || avatarUrl.isBlank()) {
+        if (fund.getLogoId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
             return null;
         }
 
+        String avatarId = fund.getLogoId().toString();
+
         log.debug("Exit getFundAvatar");
-        return storageService.downloadFile(avatarUrl);
+        return storageService.downloadFile(avatarId);
     }
 
     @Transactional
@@ -266,17 +270,18 @@ public class AvatarService {
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
-        String avatarUrl = fund.getLogoUrl();
-        if (avatarUrl == null || avatarUrl.isBlank()) {
+        if (fund.getLogoId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
             return;
         }
 
-        storageService.deleteFile(avatarUrl);
+        String avatarId = fund.getLogoId().toString();
 
-        fund.setLogoUrl(null);
+        storageService.deleteFile(avatarId);
+
+        fund.setLogoId(null);
         fundRepository.save(fund);
-        log.info("Avatar url set to null for fund with fundId={}", fund.getFundId());
+        log.info("Avatar id set to null for fund with fundId={}", fund.getFundId());
 
         log.debug("Exit deleteFundAvatar");
     }

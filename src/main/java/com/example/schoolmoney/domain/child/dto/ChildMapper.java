@@ -19,7 +19,7 @@ import org.mapstruct.*;
 public interface ChildMapper {
 
     @Named("childToChildDto")
-    @Mapping(target = "parent", source = "parent", qualifiedByName = "parentToParentPublicDto")
+    @Mapping(target = "parent", source = "parent", qualifiedByName = "parentToParentDto")
     @Mapping(target = "schoolClass", source = "schoolClass", qualifiedByName = "schoolClassToSchoolClassHeaderDto")
     ChildResponseDto toDto(Child entity);
 
@@ -31,7 +31,7 @@ public interface ChildMapper {
     ChildWithSchoolClassInfoResponseDto toWithSchoolClassInfoDto(Child entity);
 
     @Named("childToChildWithParentInfoDto")
-    @Mapping(target = "parent", source = "parent", qualifiedByName = "parentToParentPublicDto")
+    @Mapping(target = "parent", source = "parent", qualifiedByName = "parentToParentDto")
     ChildWithParentInfoResponseDto toWithParentInfoDto(Child entity);
 
     void updateEntityFromDto(UpdateChildRequestDto dto, @MappingTarget Child entity);

@@ -38,9 +38,8 @@ public class Fund {
     @Column(name = "title", nullable = false, length = 80)
     private String title;
 
-    @Size(max = 2_048)
-    @Column(name = "logo_url", length = 2_048)
-    private String logoUrl;
+    @Column(name = "logo_id")
+    private UUID logoId;
 
     @Size(max = 1_000)
     @Column(name = "description", length = 1_000)

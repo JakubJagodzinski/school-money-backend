@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.fund;
 
-import com.example.schoolmoney.common.constants.messages.FundMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;

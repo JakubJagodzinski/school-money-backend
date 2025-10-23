@@ -1,4 +1,4 @@
-package com.example.schoolmoney.common.constants.messages;
+package com.example.schoolmoney.common.constants.messages.domain;
 
 public class SchoolClassMessages {
 
