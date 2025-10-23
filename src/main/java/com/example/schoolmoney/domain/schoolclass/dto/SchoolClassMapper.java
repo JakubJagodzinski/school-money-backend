@@ -10,7 +10,7 @@ import org.mapstruct.*;
 @Mapper(
         componentModel = "spring",
         uses = {ParentMapper.class},
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface SchoolClassMapper {
