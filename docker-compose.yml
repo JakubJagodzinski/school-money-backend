@@ -9,6 +9,18 @@ services:
       - school-money-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  school-money-storage:
+    image: quay.io/minio/minio
+    env_file:
+      - .env
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+
   school-money-app:
     image: school-money-app:latest
     build:
@@ -20,7 +32,9 @@ services:
       - "8090:8090"
     depends_on:
       - school-money-db
+      - school-money-storage
     restart: unless-stopped
 
 volumes:
   school-money-data:
+  minio-data:

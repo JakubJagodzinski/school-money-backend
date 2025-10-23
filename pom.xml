@@ -117,6 +117,13 @@
             <version>29.2.0</version>
         </dependency>
 
+        <!-- MinIO -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.6</version>
+        </dependency>
+
         <!-- OpenPDF -->
         <dependency>
             <groupId>com.github.librepdf</groupId>
