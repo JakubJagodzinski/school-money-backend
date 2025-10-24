@@ -5,7 +5,9 @@ import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.payment.PaymentProviderType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Instant;
@@ -38,6 +40,11 @@ public class WalletOperation {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_provider_type", nullable = false, updatable = false)
     private PaymentProviderType paymentProviderType;
+
+    @NotBlank
+    @Size(max = 34)
+    @Column(name = "iban", nullable = false, updatable = false, length = 34)
+    private String iban;
 
     @NotNull
     @Min(1)

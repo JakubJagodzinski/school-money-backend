@@ -60,4 +60,9 @@ public class EmailService {
         sendEmail(to, "Fund report", emailContentProvider, report, reportTitle);
     }
 
+    public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents) throws MessagingException {
+        EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents);
+        sendEmail(to, "Wallet withdrawal", emailContentProvider, null, null);
+    }
+
 }

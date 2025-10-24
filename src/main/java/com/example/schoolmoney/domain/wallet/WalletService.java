@@ -4,6 +4,7 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
 import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
+import com.example.schoolmoney.common.constants.messages.domain.WalletOperationMessages;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
@@ -15,6 +16,7 @@ import com.example.schoolmoney.domain.walletoperation.WalletOperationRepository;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationType;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.payment.PaymentProviderType;
+import com.example.schoolmoney.utils.IbanMasker;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -155,6 +157,59 @@ public class WalletService {
         } catch (MessagingException e) {
             log.error(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
             throw new MailSendException(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
+        }
+    }
+
+    @Transactional
+    public void withdrawFunds(long withdrawalAmountInCents) throws IllegalStateException, IllegalArgumentException {
+        log.debug("Enter withdrawFunds(amountInCents={})", withdrawalAmountInCents);
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        Wallet wallet = walletRepository.findByParent_UserId(userId);
+
+        if (wallet.getWithdrawalIban() == null) {
+            log.warn(WalletMessages.WITHDRAWAL_IBAN_NOT_SET);
+            throw new IllegalStateException(WalletMessages.WITHDRAWAL_IBAN_NOT_SET);
+        }
+
+        if (withdrawalAmountInCents <= 0) {
+            log.warn(WalletOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
+            throw new IllegalArgumentException(WalletOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
+        }
+
+        if (wallet.getBalanceInCents() < withdrawalAmountInCents) {
+            log.warn(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
+            throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
+        }
+
+        // TODO add stripe withdrawal
+        UUID externalPaymentId = UUID.randomUUID();
+
+        wallet.setBalanceInCents(wallet.getBalanceInCents() - withdrawalAmountInCents);
+        walletRepository.save(wallet);
+        log.info("Wallet updated {}", wallet);
+
+        WalletOperation walletWithdrawalOperation = WalletOperation.builder()
+                .wallet(wallet)
+                .externalPaymentId(externalPaymentId.toString())
+                .paymentProviderType(PaymentProviderType.STRIPE)
+                .iban(IbanMasker.maskIban(wallet.getWithdrawalIban()))
+                .amountInCents(withdrawalAmountInCents)
+                .operationType(WalletOperationType.WALLET_WITHDRAWAL)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
+                .build();
+
+        walletOperationRepository.save(walletWithdrawalOperation);
+        log.info("Wallet operation saved {}", walletWithdrawalOperation);
+
+        try {
+            emailService.sendWalletWithdrawalEmail(parent.getEmail(), parent.getFirstName(), withdrawalAmountInCents);
+            log.debug("Exit withdrawFunds");
+        } catch (Exception e) {
+            log.error(EmailMessages.FAILED_TO_SEND_WALLET_WITHDRAWAL_EMAIL);
         }
     }
 

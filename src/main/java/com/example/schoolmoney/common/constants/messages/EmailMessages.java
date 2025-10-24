@@ -7,5 +7,6 @@ public class EmailMessages {
     public static final String FAILED_TO_SEND_WALLET_TOP_UP_EMAIL = "Failed to send wallet top up email";
     public static final String FAILED_TO_SEND_RESET_PASSWORD_EMAIL = "Failed to send reset password email";
     public static final String FAILED_TO_SEND_FUND_REPORT_EMAIL = "Failed to send fund report email";
+    public static final String FAILED_TO_SEND_WALLET_WITHDRAWAL_EMAIL = "Failed to send wallet withdrawal email";
 
 }

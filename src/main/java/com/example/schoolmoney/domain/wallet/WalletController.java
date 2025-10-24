@@ -147,4 +147,50 @@ public class WalletController {
                 .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_IBAN_CLEARED_SUCCESSFULLY));
     }
 
+    @Operation(
+            summary = "Withdraw funds from the wallet",
+            description = """
+                    Withdraws funds from the wallet via payment provider to real account with IBAN set in wallet info.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Wallet withdrawal operation processed successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad request - Invalid withdrawal amount",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Conflict - Insufficient funds available for withdrawal",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            )
+    })
+    @PostMapping("/wallet/withdraw")
+    public ResponseEntity<MessageResponseDto> withdrawFunds(@RequestParam long withdrawalAmountInCents) {
+        walletService.withdrawFunds(withdrawalAmountInCents);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_OPERATION_PROCESSED_SUCCESSFULLY));
+    }
+
 }
