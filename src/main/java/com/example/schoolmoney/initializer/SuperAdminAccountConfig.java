@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "app.superadmin")
 public class SuperAdminAccountConfig {
 
+    private String firstName;
+
+    private String lastName;
+
     private String email;
 
     private String password;

@@ -1,5 +1,6 @@
 package com.example.schoolmoney.user;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.PasswordMessages;
 import com.example.schoolmoney.common.dto.ApiErrorResponseDto;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
@@ -18,8 +19,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.security.Principal;
 
 @Validated
 @RequiredArgsConstructor
@@ -43,7 +42,7 @@ public class UserController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Failed to change password",
+                    description = "Wrong password / password don't match",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponseDto.class)
@@ -55,9 +54,10 @@ public class UserController {
                     content = @Content()
             )
     })
+    @CheckPermission(Permission.USER_PASSWORD_CHANGE)
     @PatchMapping("/users/change-password")
-    public ResponseEntity<MessageResponseDto> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordRequestDto, Principal connectedUser) {
-        userService.changePassword(changePasswordRequestDto, connectedUser);
+    public ResponseEntity<MessageResponseDto> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordRequestDto) {
+        userService.changePassword(changePasswordRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

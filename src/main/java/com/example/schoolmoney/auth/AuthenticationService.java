@@ -2,6 +2,7 @@ package com.example.schoolmoney.auth;
 
 import com.example.schoolmoney.auth.authtoken.AuthToken;
 import com.example.schoolmoney.auth.authtoken.AuthTokenRepository;
+import com.example.schoolmoney.auth.authtoken.AuthTokenService;
 import com.example.schoolmoney.auth.authtoken.AuthTokenType;
 import com.example.schoolmoney.auth.dto.request.AuthenticationRequestDto;
 import com.example.schoolmoney.auth.dto.request.RefreshTokenRequestDto;
@@ -27,7 +28,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,68 +50,49 @@ public class AuthenticationService {
 
     private final DomainProperties domainProperties;
 
-    private AuthenticationResponseDto generateUserToken(User user) {
-        String jwtToken = jwtService.generateToken(user);
-        saveUserAuthToken(user, jwtToken, AuthTokenType.ACCESS);
-
-        String refreshToken = jwtService.generateRefreshToken(user);
-        saveUserAuthToken(user, refreshToken, AuthTokenType.REFRESH);
-
-        return AuthenticationResponseDto.builder()
-                .accessToken(jwtToken)
-                .refreshToken(refreshToken)
-                .userId(user.getUserId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .role(user.getRole())
-                .build();
-    }
+    private final AuthTokenService authTokenService;
 
     @Transactional
-    public void register(RegisterRequestDto registerRequestDto) throws IllegalArgumentException {
+    public void register(RegisterRequestDto registerRequestDto, Role role) throws IllegalArgumentException, AccessDeniedException {
         if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
             throw new IllegalArgumentException(UserMessages.EMAIL_IS_ALREADY_TAKEN);
         }
 
         if (!domainProperties.isEmailDomainAuthorized(registerRequestDto.getEmail())) {
             log.warn(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
-            throw new IllegalArgumentException(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
+            throw new AccessDeniedException(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
         }
 
-        Role userRole = Role.PARENT;
-        User user = createUserInstance(userRole);
+        User user = createUser(role, registerRequestDto);
 
-        populateCommonUserFields(user, registerRequestDto);
-
-        User savedUser = userRepository.save(user);
-
-        walletService.createWallet(savedUser.getUserId());
-
-        verificationTokenService.sendVerificationEmail(savedUser.getEmail());
+        postRegistrationActions(user);
     }
 
-    private Role parseRole(String role) throws IllegalArgumentException {
-        try {
-            return Role.valueOf(role.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(UserMessages.INVALID_USER_ROLE);
+    private void populateUserCommonFields(User user, Role role, RegisterRequestDto registerRequestDto) {
+        user.setFirstName(registerRequestDto.getFirstName());
+        user.setLastName(registerRequestDto.getLastName());
+        user.setEmail(registerRequestDto.getEmail());
+        user.setPassword(passwordEncoder.encode(registerRequestDto.getPassword()));
+        user.setRole(role);
+    }
+
+    private User createUser(Role role, RegisterRequestDto dto) throws IllegalArgumentException {
+        User user = switch (role) {
+            case PARENT -> new Parent();
+            case SCHOOL_ADMIN -> new User();
+            default -> throw new IllegalArgumentException(UserMessages.INVALID_USER_ROLE);
+        };
+
+        populateUserCommonFields(user, role, dto);
+        return userRepository.save(user);
+    }
+
+    private void postRegistrationActions(User user) {
+        if (user instanceof Parent) {
+            walletService.createWallet(user.getUserId());
         }
-    }
 
-    private User createUserInstance(Role role) throws IllegalArgumentException {
-        if (role == Role.PARENT) {
-            return new Parent();
-        } else {
-            throw new IllegalArgumentException(UserMessages.INVALID_USER_ROLE);
-        }
-    }
-
-    private void populateCommonUserFields(User user, RegisterRequestDto dto) {
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setEmail(dto.getEmail());
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
-        user.setRole(Role.PARENT);
+        verificationTokenService.sendVerificationEmail(user.getEmail());
     }
 
     @Transactional
@@ -137,40 +118,26 @@ public class AuthenticationService {
         user.setLastLoggedIn(Instant.now());
         userRepository.save(user);
 
-        revokeAllUserAuthTokens(user);
+        authTokenService.revokeAllUserAuthTokens(user);
 
-        return generateUserToken(user);
-    }
+        String jwtToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
-    private void saveUserAuthToken(User user, String tokenValue, AuthTokenType authTokenType) {
-        AuthToken authToken = AuthToken
-                .builder()
-                .authToken(tokenValue)
-                .authTokenType(authTokenType)
-                .user(user)
+        authTokenService.saveAuthToken(user, jwtToken, AuthTokenType.ACCESS);
+        authTokenService.saveAuthToken(user, refreshToken, AuthTokenType.REFRESH);
+
+        return AuthenticationResponseDto.builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
+                .userId(user.getUserId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole())
                 .build();
-
-        authTokenRepository.save(authToken);
-    }
-
-    private void revokeAllUserAuthTokens(User user) {
-        List<AuthToken> validUserAuthTokens = authTokenRepository.findAllByUser_UserIdAndIsRevokedFalse(user.getUserId());
-
-        if (validUserAuthTokens.isEmpty()) {
-            return;
-        }
-
-        validUserAuthTokens.forEach(
-                authToken -> {
-                    authToken.setRevoked(true);
-                }
-        );
-
-        authTokenRepository.saveAll(validUserAuthTokens);
     }
 
     @Transactional
-    public RefreshTokenResponseDto refreshAuthToken(RefreshTokenRequestDto requestDto) throws IllegalArgumentException {
+    public RefreshTokenResponseDto refreshToken(RefreshTokenRequestDto requestDto) throws IllegalArgumentException {
         String refreshToken = requestDto.getRefreshToken();
 
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -193,17 +160,17 @@ public class AuthenticationService {
             throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
-        if (!jwtService.isTokenValid(refreshToken, user) || authToken.isRevoked()) {
+        if (!jwtService.isJwtValid(refreshToken, user) || authToken.isRevoked()) {
             throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
-        revokeAllUserAuthTokens(user);
+        authTokenService.revokeAllUserAuthTokens(user);
 
-        String newAccessToken = jwtService.generateToken(user);
-        saveUserAuthToken(user, newAccessToken, AuthTokenType.ACCESS);
-
+        String newAccessToken = jwtService.generateAccessToken(user);
         String newRefreshToken = jwtService.generateRefreshToken(user);
-        saveUserAuthToken(user, newRefreshToken, AuthTokenType.REFRESH);
+
+        authTokenService.saveAuthToken(user, newAccessToken, AuthTokenType.ACCESS);
+        authTokenService.saveAuthToken(user, newRefreshToken, AuthTokenType.REFRESH);
 
         return RefreshTokenResponseDto.builder()
                 .accessToken(newAccessToken)

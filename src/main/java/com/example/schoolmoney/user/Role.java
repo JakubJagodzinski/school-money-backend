@@ -13,7 +13,10 @@ import java.util.stream.Collectors;
 public enum Role {
 
     PARENT(
+            false,
             Set.of(
+                    Permission.USER_PASSWORD_CHANGE,
+
                     Permission.PARENT_READ,
                     Permission.PARENT_UPDATE,
                     Permission.PARENT_DELETE,
@@ -90,7 +93,10 @@ public enum Role {
     ),
 
     SCHOOL_ADMIN(
+            true,
             Set.of(
+                    Permission.USER_PASSWORD_CHANGE,
+
                     Permission.PARENT_READ_ALL,
                     Permission.PARENT_READ,
 
@@ -152,11 +158,13 @@ public enum Role {
     ),
 
     SUPER_ADMIN(
+            true,
             Set.of(
                     Permission.values()
             )
     );
 
+    private final boolean isAdminRole;
     private final Set<Permission> permissions;
 
     public List<SimpleGrantedAuthority> getAuthorities() {

@@ -40,7 +40,7 @@ public class ChangePasswordRequestDto {
     private String newPassword;
 
     @Schema(
-            description = "Confirmation of the new password, must match exactly with newPassword field",
+            description = "Confirmation of the new password, must match exactly with new_password value",
             example = "newPassword12345",
             maxLength = 128
     )

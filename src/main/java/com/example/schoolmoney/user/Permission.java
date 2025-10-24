@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum Permission {
 
+    USER_PASSWORD_CHANGE("user:password:change"),
+
     PARENT_READ("parent:read"),
     PARENT_READ_ALL("parent:read:all"),
     PARENT_UPDATE("parent:update"),
@@ -81,7 +83,9 @@ public enum Permission {
 
     FINANCIAL_OPERATION_HISTORY_READ("financial_operation_history:read"),
 
-    PAYMENT_SESSION_CREATE("payment_session:create");
+    PAYMENT_SESSION_CREATE("payment_session:create"),
+
+    ADMIN_ACCOUNT_CREATE("admin_account:create");
 
     private final String permission;
 

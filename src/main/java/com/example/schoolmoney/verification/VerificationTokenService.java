@@ -1,7 +1,6 @@
 package com.example.schoolmoney.verification;
 
 import com.example.schoolmoney.common.constants.messages.EmailMessages;
-import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.constants.messages.VerificationTokenMessages;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.User;
@@ -66,12 +65,12 @@ public class VerificationTokenService {
 
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> {
-                    log.error(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+                    log.warn(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
                     return new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
                 });
 
         if (verificationToken.getExpiryDate().isBefore(Instant.now()) || verificationToken.isUsed()) {
-            log.error(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+            log.warn(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
             throw new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
         }
 

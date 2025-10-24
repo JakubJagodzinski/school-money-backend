@@ -4,10 +4,11 @@ import com.example.schoolmoney.user.Role;
 import com.example.schoolmoney.user.User;
 import com.example.schoolmoney.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class SuperAdminAccountInitializer {
@@ -18,22 +19,25 @@ public class SuperAdminAccountInitializer {
 
     private final SuperAdminAccountConfig superAdminAccountConfig;
 
-    private static final String SUPER_ADMIN_FIRST_NAME = "Super";
-    private static final String SUPER_ADMIN_LAST_NAME = "Admin";
-
     public void initialize() {
         if (!userRepository.existsByEmail(superAdminAccountConfig.getEmail())) {
-            User admin = new User();
+            createSuperAdminAccount();
 
-            admin.setEmail(superAdminAccountConfig.getEmail());
-            admin.setFirstName(SUPER_ADMIN_FIRST_NAME);
-            admin.setLastName(SUPER_ADMIN_LAST_NAME);
-            admin.setPassword(passwordEncoder.encode(superAdminAccountConfig.getPassword()));
-            admin.setRole(Role.SUPER_ADMIN);
-            admin.setVerified(true);
-
-            userRepository.save(admin);
+            log.info("Superadmin account created: {}", superAdminAccountConfig.getEmail());
         }
+    }
+
+    private void createSuperAdminAccount() {
+        User admin = User.builder()
+                .firstName(superAdminAccountConfig.getFirstName())
+                .lastName(superAdminAccountConfig.getLastName())
+                .email(superAdminAccountConfig.getEmail())
+                .password(passwordEncoder.encode(superAdminAccountConfig.getPassword()))
+                .role(Role.SUPER_ADMIN)
+                .isVerified(true)
+                .build();
+
+        userRepository.save(admin);
     }
 
 }

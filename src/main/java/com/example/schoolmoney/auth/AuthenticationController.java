@@ -8,6 +8,7 @@ import com.example.schoolmoney.auth.dto.response.RefreshTokenResponseDto;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.dto.ApiErrorResponseDto;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.user.Role;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,7 +33,7 @@ public class AuthenticationController {
     private final AuthenticationService service;
 
     @Operation(
-            summary = "Register new account"
+            summary = "Register new parent account"
     )
     @ApiResponses({
             @ApiResponse(
@@ -45,7 +46,15 @@ public class AuthenticationController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Email is already taken / invalid user role",
+                    description = "Email is already taken",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiErrorResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Email address domain not allowed",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ApiErrorResponseDto.class)
@@ -54,10 +63,10 @@ public class AuthenticationController {
     })
     @PostMapping("/register")
     public ResponseEntity<MessageResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequestDto) {
-        service.register(registerRequestDto);
+        service.register(registerRequestDto, Role.PARENT);
 
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(new MessageResponseDto(UserMessages.ACCOUNT_CREATED_SUCCESSFULLY));
     }
 
@@ -114,7 +123,7 @@ public class AuthenticationController {
     })
     @PostMapping("/refresh-token")
     public ResponseEntity<RefreshTokenResponseDto> refreshToken(@Valid @RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
-        RefreshTokenResponseDto refreshTokenResponseDto = service.refreshAuthToken(refreshTokenRequestDto);
+        RefreshTokenResponseDto refreshTokenResponseDto = service.refreshToken(refreshTokenRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
