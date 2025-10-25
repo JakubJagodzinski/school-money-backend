@@ -18,7 +18,6 @@ import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
-import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -186,7 +185,7 @@ public class FundService {
     }
 
     @Transactional
-    public void expireEndedFunds() {
+    public void markEndedFundsAsFinished() {
         List<Fund> endedFunds = fundRepository.findAllByEndsAtBeforeAndFundStatus(Instant.now(), FundStatus.ACTIVE);
 
         for (Fund fund : endedFunds) {

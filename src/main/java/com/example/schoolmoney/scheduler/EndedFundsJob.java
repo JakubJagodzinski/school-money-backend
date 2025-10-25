@@ -9,17 +9,17 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class FundExpirationJob {
+public class EndedFundsJob {
 
     private final FundService fundService;
 
     @Scheduled(cron = "0 0 * * * *")
-    public void markExpiredFunds() {
-        log.debug("Job to mark expired funds started");
+    public void markEndedFundsAsFinished() {
+        log.debug("Job to mark ended funds as finished started");
 
-        fundService.expireEndedFunds();
+        fundService.markEndedFundsAsFinished();
 
-        log.debug("Job to mark expired funds finished");
+        log.debug("Job to mark ended funds as finished finished");
     }
 
 }
