@@ -16,9 +16,9 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
-    command: server /data --console-address ":9001"
+    command: server /storage --console-address ":9001"
     volumes:
-      - minio-data:/data
+      - school-money-storage:/storage
     restart: unless-stopped
 
   school-money-app:
@@ -37,4 +37,4 @@ services:
 
 volumes:
   school-money-data:
-  minio-data:
+  school-money-storage:
