@@ -1,8 +1,10 @@
 package com.example.schoolmoney.domain.schoolclass;
 
 import com.example.schoolmoney.auth.access.CheckPermission;
+import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
+import com.example.schoolmoney.domain.schoolclass.dto.request.UpdateSchoolClassRequestDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassInvitationCodeResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
 import com.example.schoolmoney.user.Permission;
@@ -117,6 +119,28 @@ public class SchoolClassController {
                 .body(childResponseDtoPage);
     }
 
+    @Operation(
+            summary = "Create a new school class",
+            description = """
+                    Creates a new school class with the provided details.
+                    You will be the treasurer of this class
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "School class created successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SchoolClassResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            )
+    })
     @CheckPermission(Permission.SCHOOL_CLASS_CREATE)
     @PostMapping("/school-classes")
     public ResponseEntity<SchoolClassResponseDto> createSchoolClass(@Valid @RequestBody CreateSchoolClassRequestDto createSchoolClassRequestDto) {
@@ -127,6 +151,92 @@ public class SchoolClassController {
                 .body(schoolClassResponseDto);
     }
 
+    @Operation(
+            summary = "Update an existing school class",
+            description = """
+                    Updates the details of an existing school class identified by its ID.
+                    You need to be the treasurer of this class.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "School class updated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SchoolClassResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - You are not a treasurer of the class",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "School class not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            )
+    })
+    @CheckPermission(Permission.SCHOOL_CLASS_UPDATE)
+    @PatchMapping("/school-classes/{schoolClassId}")
+    public ResponseEntity<SchoolClassResponseDto> updateSchoolClass(@PathVariable UUID schoolClassId, @Valid @RequestBody UpdateSchoolClassRequestDto updateSchoolClassRequestDto) {
+        SchoolClassResponseDto schoolClassResponseDto = schoolClassService.updateSchoolClass(schoolClassId, updateSchoolClassRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(schoolClassResponseDto);
+    }
+
+    @Operation(
+            summary = "Regenerate invitation code for a school class",
+            description = """
+                    Regenerates the invitation code for the specified school class.
+                    You need to be the treasurer of this class.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Invitation code regenerated successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SchoolClassInvitationCodeResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Forbidden - You are not a treasurer of the class",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "School class not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            )
+    })
     @CheckPermission(Permission.SCHOOL_CLASS_INVITATION_CODE_REGENERATE)
     @PostMapping("/school-classes/{schoolClassId}/invitation-code")
     public ResponseEntity<SchoolClassInvitationCodeResponseDto> regenerateInvitationCode(@PathVariable UUID schoolClassId) {

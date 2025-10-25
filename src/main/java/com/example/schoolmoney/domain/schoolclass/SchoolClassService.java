@@ -12,6 +12,7 @@ import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
+import com.example.schoolmoney.domain.schoolclass.dto.request.UpdateSchoolClassRequestDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassInvitationCodeResponseDto;
 import com.example.schoolmoney.domain.schoolclass.dto.response.SchoolClassResponseDto;
 import com.example.schoolmoney.utils.InvitationCodeGenerator;
@@ -132,6 +133,32 @@ public class SchoolClassService {
 
         log.debug("Exit getSchoolClassAllChildren");
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
+    }
+
+    @Transactional
+    public SchoolClassResponseDto updateSchoolClass(UUID schoolClassId, UpdateSchoolClassRequestDto updateSchoolClassRequestDto) throws EntityNotFoundException, AccessDeniedException {
+        log.debug("Enter updateSchoolClass(schoolClassId={}, updateSchoolClassRequestDto={})", schoolClassId, updateSchoolClassRequestDto);
+
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
+            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        }
+
+        schoolClassMapper.updateEntityFromDto(updateSchoolClassRequestDto, schoolClass);
+
+        SchoolClass updatedSchoolClass = schoolClassRepository.save(schoolClass);
+        log.info("School class updated {}", updatedSchoolClass);
+
+        log.debug("Exit updateSchoolClass");
+        return schoolClassMapper.toDto(updatedSchoolClass);
     }
 
     @Transactional
