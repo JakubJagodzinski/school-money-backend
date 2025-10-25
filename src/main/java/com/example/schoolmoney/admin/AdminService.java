@@ -5,6 +5,10 @@ import com.example.schoolmoney.admin.dto.request.UnblockUserRequestDto;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.auth.authtoken.AuthTokenService;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
+import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.User;
 import com.example.schoolmoney.user.UserRepository;
@@ -31,7 +35,10 @@ public class AdminService {
     private final AuthTokenService authTokenService;
 
     private final SecurityUtils securityUtils;
+
     private final EmailService emailService;
+
+    private final FundRepository fundRepository;
 
     @Transactional
     public void blockUser(UUID userId, BlockUserRequestDto blockUserRequestDto) throws EntityNotFoundException, IllegalStateException {
@@ -113,6 +120,68 @@ public class AdminService {
         );
 
         log.debug("Exit unblockUser");
+    }
+
+    @Transactional
+    public void blockFund(UUID fundId) throws EntityNotFoundException {
+        log.debug("Enter blockFund");
+
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
+
+        if (fund.getFundStatus() == FundStatus.BLOCKED) {
+            log.warn("Fund with fundId={} already blocked", fundId);
+            return;
+        }
+
+        fund.setFundStatus(FundStatus.BLOCKED);
+        fundRepository.save(fund);
+        log.info("Blocked fund with fundId={}", fund.getFundId());
+
+        User treasurer = fund.getSchoolClass().getTreasurer();
+
+        emailService.sendFundBlockedEmail(
+                treasurer.getEmail(),
+                treasurer.getFirstName(),
+                fund.getTitle(),
+                fund.getSchoolClass().getFullName()
+        );
+
+        log.debug("Exit blockFund");
+    }
+
+    @Transactional
+    public void unblockFund(UUID fundId) throws EntityNotFoundException {
+        log.debug("Enter unblockFund");
+
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
+
+        if (fund.getFundStatus() == FundStatus.ACTIVE) {
+            log.warn("Fund with fundId={} already unblocked", fundId);
+            return;
+        }
+
+        fund.setFundStatus(FundStatus.ACTIVE);
+        fundRepository.save(fund);
+        log.info("Unblocked fund with fundId={}", fund.getFundId());
+
+        User treasurer = fund.getSchoolClass().getTreasurer();
+
+        emailService.sendFundUnblockedEmail(
+                treasurer.getEmail(),
+                treasurer.getFirstName(),
+                fund.getTitle(),
+                fund.getSchoolClass().getFullName()
+        );
+
+        log.debug("Exit unblockFund");
     }
 
 }

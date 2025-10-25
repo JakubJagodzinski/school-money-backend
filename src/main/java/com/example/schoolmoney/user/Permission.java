@@ -81,6 +81,9 @@ public enum Permission {
     FUND_WITHDRAW("fund:withdraw"),
     FUND_DEPOSIT("fund:deposit"),
 
+    FUND_BLOCK("fund:block"),
+    FUND_UNBLOCK("fund:unblock"),
+
     FUND_REPORT_GENERATE("fund:report:generate"),
 
     FINANCIAL_OPERATION_HISTORY_READ("financial_operation_history:read"),

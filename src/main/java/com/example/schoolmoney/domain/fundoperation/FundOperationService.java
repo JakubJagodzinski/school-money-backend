@@ -58,6 +58,16 @@ public class FundOperationService {
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
+        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
+            log.warn(FundMessages.FUND_IS_BLOCKED);
+            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
+        }
+
+        if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
+            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
+            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
+        }
+
         if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndOperationTypeAndOperationStatus(
                 fundId, userId, childId, FundOperationType.FUND_PAYMENT, FinancialOperationStatus.SUCCESS
         )) {
@@ -120,6 +130,11 @@ public class FundOperationService {
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
+        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
+            log.warn(FundMessages.FUND_IS_BLOCKED);
+            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
+        }
+
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
@@ -174,6 +189,11 @@ public class FundOperationService {
         if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        }
+
+        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
+            log.warn(FundMessages.FUND_IS_BLOCKED);
+            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
         }
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {

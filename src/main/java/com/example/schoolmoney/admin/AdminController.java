@@ -4,6 +4,7 @@ import com.example.schoolmoney.admin.dto.request.BlockUserRequestDto;
 import com.example.schoolmoney.admin.dto.request.UnblockUserRequestDto;
 import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.user.Permission;
 import jakarta.validation.Valid;
@@ -24,7 +25,7 @@ public class AdminController {
     private final AdminService adminService;
 
     @CheckPermission(Permission.USER_BLOCK)
-    @PostMapping("/block/{userId}")
+    @PostMapping("/users/{userId}/block")
     public ResponseEntity<MessageResponseDto> blockUser(@PathVariable UUID userId, @Valid @RequestBody BlockUserRequestDto blockUserRequestDto) {
         adminService.blockUser(userId, blockUserRequestDto);
 
@@ -34,13 +35,33 @@ public class AdminController {
     }
 
     @CheckPermission(Permission.USER_UNBLOCK)
-    @PostMapping("/unblock/{userId}")
+    @PostMapping("/users/{userId}/unblock")
     public ResponseEntity<MessageResponseDto> unblockUser(@PathVariable UUID userId, @Valid @RequestBody UnblockUserRequestDto unblockUserRequestDto) {
         adminService.unblockUser(userId, unblockUserRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(UserMessages.ACCOUNT_UNBLOCKED_SUCCESSFULLY));
+    }
+
+    @CheckPermission(Permission.FUND_BLOCK)
+    @PostMapping("/funds/{fundId}/block")
+    public ResponseEntity<MessageResponseDto> blockFund(@PathVariable UUID fundId) {
+        adminService.blockFund(fundId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(FundMessages.FUND_BLOCKED_SUCCESSFULLY));
+    }
+
+    @CheckPermission(Permission.FUND_UNBLOCK)
+    @PostMapping("/funds/{fundId}/unblock")
+    public ResponseEntity<MessageResponseDto> unblockFund(@PathVariable UUID fundId) {
+        adminService.unblockFund(fundId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(FundMessages.FUND_UNBLOCKED_SUCCESSFULLY));
     }
 
 }

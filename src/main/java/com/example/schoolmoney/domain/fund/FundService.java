@@ -18,6 +18,7 @@ import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
+import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +98,11 @@ public class FundService {
                     log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
+
+        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
+            log.warn(FundMessages.FUND_IS_BLOCKED);
+            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
+        }
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
@@ -211,6 +217,11 @@ public class FundService {
                     log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
+
+        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
+            log.warn(FundMessages.FUND_IS_BLOCKED);
+            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
+        }
 
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);

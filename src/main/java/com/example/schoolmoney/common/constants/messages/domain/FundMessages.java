@@ -14,5 +14,8 @@ public class FundMessages {
     public static final String CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS = "Cannot cancel fund because of missing funds";
     public static final String CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS = "Cannot cancel fund because of remaining treasurer deposits";
     public static final String NO_PERMISSION_TO_EDIT_FUND = "No permission to edit fund";
+    public static final String FUND_BLOCKED_SUCCESSFULLY = "Fund blocked successfully";
+    public static final String FUND_UNBLOCKED_SUCCESSFULLY = "Fund unblocked successfully";
+    public static final String FUND_IS_BLOCKED = "Fund is blocked";
 
 }

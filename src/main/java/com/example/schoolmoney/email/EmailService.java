@@ -88,4 +88,14 @@ public class EmailService {
         sendEmail(to, "Account block expired", emailContentProvider, null, null);
     }
 
+    public void sendFundBlockedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
+        EmailContentProvider emailContentProvider = new FundBlockedEmailContentProvider(firstName, fundName, schoolClassFullName);
+        sendEmail(to, "Fund blocked", emailContentProvider, null, null);
+    }
+
+    public void sendFundUnblockedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
+        EmailContentProvider emailContentProvider = new FundUnblockedEmailContentProvider(firstName, fundName, schoolClassFullName);
+        sendEmail(to, "Fund unblocked", emailContentProvider, null, null);
+    }
+
 }

@@ -4,6 +4,8 @@ public enum FundStatus {
 
     ACTIVE,
     FINISHED,
+    BLOCKED,
+    ARCHIVED,
     CANCELLED
 
 }
