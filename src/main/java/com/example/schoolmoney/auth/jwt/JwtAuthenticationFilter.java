@@ -57,7 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            if (jwtService.isJwtValid(jwt, userDetails) && authTokenService.isActiveAccessToken(jwt)) {
+            boolean isJwtValid = jwtService.isJwtValid(jwt, userDetails);
+            boolean isAccessTokenValid = authTokenService.isActiveAccessToken(jwt);
+            boolean isAccountNonLocked = userDetails.isAccountNonLocked();
+            boolean isAccountNonExpired = userDetails.isAccountNonExpired(); // always true for now, reserved for future account expiry feature
+            if (isJwtValid && isAccessTokenValid && isAccountNonLocked && isAccountNonExpired) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

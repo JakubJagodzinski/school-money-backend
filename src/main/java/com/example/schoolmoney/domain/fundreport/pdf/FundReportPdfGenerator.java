@@ -4,6 +4,7 @@ import com.example.schoolmoney.common.constants.messages.domain.FundReportMessag
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fundlogo.FundLogoService;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
+import com.example.schoolmoney.utils.DateToStringConverter;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -14,17 +15,12 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class FundReportPdfGenerator {
-
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final FundLogoService fundLogoService;
 
@@ -68,7 +64,7 @@ public class FundReportPdfGenerator {
 
     private Paragraph createGeneratedAtParagraph() {
         Paragraph generatedAtParagraph = new Paragraph(
-                "Report generated at " + LocalDateTime.now().format(dateTimeFormatter),
+                "Report generated at " + DateToStringConverter.nowFormatted(),
                 new Font(Font.HELVETICA, 10, Font.ITALIC)
         );
         generatedAtParagraph.setAlignment(Element.ALIGN_CENTER);
@@ -139,12 +135,12 @@ public class FundReportPdfGenerator {
         addRow(table, "Treasurer", fund.getSchoolClass().getTreasurer().getFullName());
         addRow(table, "Amount per child", String.format("%.2f PLN", fund.getAmountPerChildInCents() / 100.0));
         addRow(table, "Children participating", String.valueOf(participatingChildrenCount));
-        addRow(table, "Start date", LocalDateTime.ofInstant(fund.getStartsAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
-        addRow(table, "End date", LocalDateTime.ofInstant(fund.getEndsAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
+        addRow(table, "Start date", DateToStringConverter.fromInstant(fund.getStartsAt()));
+        addRow(table, "End date", DateToStringConverter.fromInstant(fund.getEndsAt()));
         if (fund.getEndedAt() != null) {
-            addRow(table, "Ended at", LocalDateTime.ofInstant(fund.getEndedAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
+            addRow(table, "Ended at", DateToStringConverter.fromInstant(fund.getEndedAt()));
         }
-        addRow(table, "Updated at", LocalDateTime.ofInstant(fund.getUpdatedAt(), ZoneId.of("UTC")).format(dateTimeFormatter));
+        addRow(table, "Updated at", DateToStringConverter.fromInstant(fund.getUpdatedAt()));
         addRow(table, "Status", fund.getFundStatus().name());
         addRow(table, "IBAN", fund.getIban());
 
@@ -171,7 +167,7 @@ public class FundReportPdfGenerator {
             addDataCell(table, fundOperation.getChild().getFullName());
             addDataCell(table, String.format("%.2f PLN", fundOperation.getAmountInCents() / 100.0));
             addDataCell(table, fundOperation.getOperationType().name());
-            addDataCell(table, LocalDateTime.ofInstant(fundOperation.getProcessedAt(), ZoneId.systemDefault()).format(dateTimeFormatter));
+            addDataCell(table, DateToStringConverter.fromInstantToLocal(fundOperation.getProcessedAt()));
         }
 
         return table;

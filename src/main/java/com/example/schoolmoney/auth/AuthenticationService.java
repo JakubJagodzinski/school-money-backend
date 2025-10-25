@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -96,24 +97,16 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public AuthenticationResponseDto authenticate(AuthenticationRequestDto request) throws AccessDeniedException {
+    public AuthenticationResponseDto authenticate(AuthenticationRequestDto request) throws BadCredentialsException {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 request.getEmail(),
                 request.getPassword()
         );
 
-        try {
-            authenticationManager.authenticate(authenticationToken);
-        } catch (Exception e) {
-            throw new AccessDeniedException(UserMessages.WRONG_USERNAME_OR_PASSWORD);
-        }
+        authenticationManager.authenticate(authenticationToken);
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new AccessDeniedException(UserMessages.WRONG_USERNAME_OR_PASSWORD));
-
-        if (!user.isVerified()) {
-            throw new AccessDeniedException(UserMessages.ACCOUNT_NOT_VERIFIED);
-        }
+                .orElseThrow(() -> new BadCredentialsException(UserMessages.WRONG_USERNAME_OR_PASSWORD));
 
         user.setLastLoggedIn(Instant.now());
         userRepository.save(user);

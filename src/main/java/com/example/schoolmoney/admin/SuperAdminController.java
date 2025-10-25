@@ -1,4 +1,4 @@
-package com.example.schoolmoney.superadmin;
+package com.example.schoolmoney.admin;
 
 import com.example.schoolmoney.auth.AuthenticationService;
 import com.example.schoolmoney.auth.access.CheckPermission;

@@ -1,6 +1,5 @@
 package com.example.schoolmoney.resetpassword;
 
-import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.ResetPasswordTokenMessages;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.resetpassword.dto.request.CreateResetPasswordTokenRequestDto;
@@ -12,7 +11,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.MailSendException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +44,7 @@ public class ResetPasswordTokenService {
     }
 
     @Transactional
-    public void createResetPasswordToken(CreateResetPasswordTokenRequestDto createResetPasswordTokenRequestDto) throws MailSendException {
+    public void createResetPasswordToken(CreateResetPasswordTokenRequestDto createResetPasswordTokenRequestDto) {
         log.debug("Enter createResetPasswordToken for user {}", createResetPasswordTokenRequestDto.getEmail());
 
         User user = userRepository.findByEmail(createResetPasswordTokenRequestDto.getEmail())
@@ -71,12 +69,8 @@ public class ResetPasswordTokenService {
 
         String resetPasswordRedirectUrl = createResetPasswordTokenRequestDto.getRedirectUrl() + "?token=" + resetPasswordToken.getToken();
 
-        try {
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getFirstName(), resetPasswordRedirectUrl);
-            log.debug("Exit createResetPasswordToken");
-        } catch (Exception e) {
-            throw new MailSendException(EmailMessages.FAILED_TO_SEND_RESET_PASSWORD_EMAIL, e);
-        }
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFirstName(), resetPasswordRedirectUrl);
+        log.debug("Exit createResetPasswordToken");
     }
 
     @Transactional

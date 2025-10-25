@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum Permission {
 
     USER_PASSWORD_CHANGE("user:password:change"),
+    USER_BLOCK("user:block"),
+    USER_UNBLOCK("user:unblock"),
 
     PARENT_READ("parent:read"),
     PARENT_READ_ALL("parent:read:all"),

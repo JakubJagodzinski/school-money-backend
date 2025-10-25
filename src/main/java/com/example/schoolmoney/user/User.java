@@ -65,6 +65,13 @@ public class User implements UserDetails {
     @Column(name = "is_verified", nullable = false)
     private boolean isVerified;
 
+    @NotNull
+    @Column(name = "is_blocked", nullable = false)
+    private boolean isBlocked;
+
+    @Column(name = "blocked_until")
+    private Instant blockedUntil;
+
     public String getFullName() {
         return firstName + " " + lastName;
     }
@@ -96,7 +103,16 @@ public class User implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        if (!isBlocked) {
+            return true;
+        }
+
+        // blocked permanently
+        if (blockedUntil == null) {
+            return false;
+        }
+
+        return Instant.now().isAfter(blockedUntil);
     }
 
     @Override
@@ -106,7 +122,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return isVerified;
     }
 
 }

@@ -1,14 +1,19 @@
 package com.example.schoolmoney.exception;
 
+import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.dto.ApiErrorResponseDto;
 import com.example.schoolmoney.utils.SnakeCaseConverter;
 import com.stripe.exception.StripeException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -16,7 +21,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -41,9 +48,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponseDto> handleGlobalException(Exception e) {
+        String errorId = UUID.randomUUID().toString();
+        log.error("Unexpected error occurred. ErrorId: {}: {}", errorId, e.getMessage(), e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("Unexpected error occurred: " + e.getMessage())
+                .message("Unexpected error occurred. ErrorId: " + errorId)
                 .build();
 
         return ResponseEntity
@@ -51,11 +61,47 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ApiErrorResponseDto> handleDisabled(DisabledException e) {
+        ApiErrorResponseDto response = ApiErrorResponseDto.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .message(UserMessages.ACCOUNT_NOT_VERIFIED)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
+    @ExceptionHandler(LockedException.class)
+    public ResponseEntity<ApiErrorResponseDto> handleLocked(LockedException e) {
+        ApiErrorResponseDto response = ApiErrorResponseDto.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .message(UserMessages.ACCOUNT_BLOCKED)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponseDto> handleBadCredentials(BadCredentialsException e) {
+        ApiErrorResponseDto response = ApiErrorResponseDto.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .message(UserMessages.WRONG_USERNAME_OR_PASSWORD)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(response);
+    }
+
     @ExceptionHandler(MailException.class)
     public ResponseEntity<ApiErrorResponseDto> handleMailException(MailException e) {
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.SERVICE_UNAVAILABLE.value())
-                .message("Email could not be sent. Please try again later.")
+                .message(e.getMessage())
                 .build();
 
         return ResponseEntity
@@ -67,7 +113,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponseDto> handleStripeException(StripeException e) {
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.BAD_GATEWAY.value())
-                .message("A payment processing error occurred. Please try again or contact support.")
+                .message(e.getMessage())
                 .build();
 
         return ResponseEntity

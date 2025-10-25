@@ -1,6 +1,5 @@
 package com.example.schoolmoney.verification;
 
-import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.VerificationTokenMessages;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.User;
@@ -10,8 +9,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.MailException;
-import org.springframework.mail.MailSendException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -85,7 +82,7 @@ public class VerificationTokenService {
     }
 
     @Transactional
-    public void sendVerificationEmail(String email) throws MailException {
+    public void sendVerificationEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElse(null);
 
@@ -103,11 +100,7 @@ public class VerificationTokenService {
 
         String verificationLink = verificationLinkService.buildLink(verificationToken);
 
-        try {
-            emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationLink);
-        } catch (Exception e) {
-            throw new MailSendException(EmailMessages.FAILED_TO_SEND_VERIFICATION_EMAIL, e);
-        }
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationLink);
     }
 
 }

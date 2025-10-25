@@ -1,7 +1,6 @@
 package com.example.schoolmoney.domain.wallet;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
 import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.common.constants.messages.domain.WalletOperationMessages;
@@ -17,12 +16,10 @@ import com.example.schoolmoney.domain.walletoperation.WalletOperationType;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.payment.PaymentProviderType;
 import com.example.schoolmoney.utils.IbanMasker;
-import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.MailSendException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,7 +121,7 @@ public class WalletService {
     }
 
     @Transactional
-    public void registerWalletTopUp(UUID userId, long amountInCents, String externalPaymentId, PaymentProviderType paymentProviderType) throws EntityNotFoundException, MailSendException {
+    public void registerWalletTopUp(UUID userId, long amountInCents, String externalPaymentId, PaymentProviderType paymentProviderType) throws EntityNotFoundException {
         log.debug("Enter registerWalletTopUp(userId={}, amountInCents={}, externalPaymentId={})", userId, amountInCents, externalPaymentId);
 
         Parent parent = parentRepository.findById(userId)
@@ -151,13 +148,8 @@ public class WalletService {
         walletOperationRepository.save(walletPaymentOperation);
         log.info("Wallet operation saved {}", walletPaymentOperation);
 
-        try {
-            emailService.sendWalletTopUpEmail(parent.getEmail(), parent.getFirstName(), amountInCents);
-            log.debug("Exit registerWalletTopUp");
-        } catch (MessagingException e) {
-            log.error(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
-            throw new MailSendException(EmailMessages.FAILED_TO_SEND_WALLET_TOP_UP_EMAIL, e);
-        }
+        emailService.sendWalletTopUpEmail(parent.getEmail(), parent.getFirstName(), amountInCents);
+        log.debug("Exit registerWalletTopUp");
     }
 
     @Transactional
@@ -205,12 +197,8 @@ public class WalletService {
         walletOperationRepository.save(walletWithdrawalOperation);
         log.info("Wallet operation saved {}", walletWithdrawalOperation);
 
-        try {
-            emailService.sendWalletWithdrawalEmail(parent.getEmail(), parent.getFirstName(), withdrawalAmountInCents);
-            log.debug("Exit withdrawFunds");
-        } catch (Exception e) {
-            log.error(EmailMessages.FAILED_TO_SEND_WALLET_WITHDRAWAL_EMAIL);
-        }
+        emailService.sendWalletWithdrawalEmail(parent.getEmail(), parent.getFirstName(), withdrawalAmountInCents);
+        log.debug("Exit withdrawFunds");
     }
 
 }

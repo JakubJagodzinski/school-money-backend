@@ -1,0 +1,27 @@
+package com.example.schoolmoney.admin.dto.request;
+
+import com.example.schoolmoney.usermoderation.UserModerationReason;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonPropertyOrder({
+        "duration",
+        "reason"
+})
+public class BlockUserRequestDto {
+
+    @JsonProperty("durationInDays")
+    private long durationInDays;
+
+    @JsonProperty("reason")
+    private UserModerationReason reason;
+
+}
