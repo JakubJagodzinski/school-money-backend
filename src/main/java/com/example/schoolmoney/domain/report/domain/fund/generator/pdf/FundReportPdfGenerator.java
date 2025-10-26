@@ -1,48 +1,50 @@
-package com.example.schoolmoney.domain.fundreport.pdf;
+package com.example.schoolmoney.domain.report.domain.fund.generator.pdf;
 
 import com.example.schoolmoney.common.constants.messages.domain.FundReportMessages;
 import com.example.schoolmoney.domain.fund.Fund;
-import com.example.schoolmoney.domain.fundlogo.FundLogoService;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
+import com.example.schoolmoney.domain.report.domain.fund.dto.FundReportData;
+import com.example.schoolmoney.domain.report.dto.ReportData;
+import com.example.schoolmoney.domain.report.generator.pdf.ReportPageEvent;
+import com.example.schoolmoney.domain.report.generator.pdf.ReportPdfGenerator;
 import com.example.schoolmoney.utils.DateToStringConverter;
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.Document;
+import com.lowagie.text.Image;
+import com.lowagie.text.PageSize;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
-@Slf4j
-@RequiredArgsConstructor
 @Service
-public class FundReportPdfGenerator {
+public class FundReportPdfGenerator implements ReportPdfGenerator {
 
-    private final FundLogoService fundLogoService;
+    @Override
+    public byte[] generateReportPdf(ReportData reportData) {
+        FundReportData fundReportData = (FundReportData) reportData;
+        Fund fund = fundReportData.getFund();
+        List<FundOperation> fundOperationList = fundReportData.getFundOperationList();
+        long fundParticipatingChildrenCount = fundReportData.getFundParticipatingChildrenCount();
+        InputStreamResource fundLogo = fundReportData.getFundLogo();
 
-    public byte[] generateFundReportPdf(Fund fund, List<FundOperation> fundOperations, long participatingChildrenCount) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document(PageSize.A4);
             PdfWriter pdfWriter = PdfWriter.getInstance(document, out);
-            pdfWriter.setPageEvent(new FundReportPageEvent(fund.getTitle()));
+            pdfWriter.setPageEvent(new ReportPageEvent(fund.getTitle()));
 
             document.open();
 
-            Image fundLogo = createFundLogo(fund);
-            if (fundLogo != null) {
-                document.add(fundLogo);
+            document.add(createTitle("General information"));
+
+            Image fundLogoImage = createImage(fundLogo, 400, 200);
+            if (fundLogoImage != null) {
+                document.add(fundLogoImage);
             }
 
-            document.add(Chunk.NEWLINE);
-
-            document.add(createGeneratedAtParagraph());
-
-            document.add(createTitle("General information"));
-            document.add(createFundInfoTable(fund, participatingChildrenCount));
+            document.add(createFundInfoTable(fund, fundParticipatingChildrenCount));
 
             document.newPage();
 
@@ -52,75 +54,13 @@ public class FundReportPdfGenerator {
             document.newPage();
 
             document.add(createTitle("Fund operations history"));
-            document.add(createFundOperationsTable(fundOperations));
+            document.add(createFundOperationsTable(fundOperationList));
 
             document.close();
 
             return out.toByteArray();
         } catch (Exception e) {
             throw new RuntimeException(FundReportMessages.PDF_REPORT_GENERATION_FAILED, e);
-        }
-    }
-
-    private Paragraph createGeneratedAtParagraph() {
-        Paragraph generatedAtParagraph = new Paragraph(
-                "Report generated at " + DateToStringConverter.nowFormatted(),
-                new Font(Font.HELVETICA, 10, Font.ITALIC)
-        );
-        generatedAtParagraph.setAlignment(Element.ALIGN_CENTER);
-
-        return generatedAtParagraph;
-    }
-
-    private Paragraph createTitle(String title) {
-        Paragraph titleParagraph = new Paragraph(title, new Font(Font.HELVETICA, 14, Font.BOLD));
-        titleParagraph.setAlignment(Element.ALIGN_CENTER);
-        titleParagraph.setSpacingBefore(10);
-        titleParagraph.setSpacingAfter(10);
-
-        return titleParagraph;
-    }
-
-    private void addRow(PdfPTable table, String label, String value) {
-        Font labelFont = new Font(Font.HELVETICA, 12, Font.BOLD);
-        Font valueFont = new Font(Font.HELVETICA, 12);
-
-        PdfPCell labelCell = new PdfPCell(new Phrase(label, labelFont));
-        PdfPCell valueCell = new PdfPCell(new Phrase(value, valueFont));
-
-        labelCell.setPadding(8);
-        valueCell.setPadding(8);
-
-        table.addCell(labelCell);
-        table.addCell(valueCell);
-    }
-
-    private void addHeaderCell(PdfPTable table, String text) {
-        Font font = new Font(Font.HELVETICA, 12, Font.BOLD);
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setPadding(8);
-        table.addCell(cell);
-    }
-
-    private void addDataCell(PdfPTable table, String text) {
-        Font font = new Font(Font.HELVETICA, 12);
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setPadding(8);
-        table.addCell(cell);
-    }
-
-    private Image createFundLogo(Fund fund) {
-        try {
-            InputStreamResource logoResource = fundLogoService.getFundLogo(fund.getFundId());
-            Image fundLogo = Image.getInstance(logoResource.getInputStream().readAllBytes());
-
-            fundLogo.scaleToFit(400, 200);
-            fundLogo.setAlignment(Element.ALIGN_CENTER);
-
-            return fundLogo;
-        } catch (Exception e) {
-            log.warn(FundReportMessages.FAILED_TO_ADD_FUND_LOGO_TO_REPORT, e);
-            return null;
         }
     }
 

@@ -1,7 +1,7 @@
-package com.example.schoolmoney.domain.fundreport;
+package com.example.schoolmoney.domain.report.domain.fund;
 
 import com.example.schoolmoney.auth.access.CheckPermission;
-import com.example.schoolmoney.domain.fundreport.dto.FundReportDto;
+import com.example.schoolmoney.domain.report.dto.ReportDto;
 import com.example.schoolmoney.user.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -22,20 +22,20 @@ public class FundReportController {
     @CheckPermission(Permission.FUND_REPORT_GENERATE)
     @GetMapping("/fund/{fundId}/report")
     public ResponseEntity<byte[]> generateFundReport(@PathVariable UUID fundId) {
-        FundReportDto fundReportDto = fundReportService.generateFundReport(fundId);
+        ReportDto reportDto = fundReportService.generateFundReport(fundId);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(
                 ContentDisposition.attachment()
-                        .filename(fundReportDto.getFundReportFileName())
+                        .filename(reportDto.getReportFileName())
                         .build()
         );
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .headers(headers)
-                .body(fundReportDto.getFundReport());
+                .body(reportDto.getReport());
     }
 
 }

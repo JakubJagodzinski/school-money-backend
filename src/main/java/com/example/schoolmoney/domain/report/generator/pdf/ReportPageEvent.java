@@ -1,5 +1,6 @@
-package com.example.schoolmoney.domain.fundreport.pdf;
+package com.example.schoolmoney.domain.report.generator.pdf;
 
+import com.example.schoolmoney.utils.DateToStringConverter;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
@@ -8,18 +9,21 @@ import com.lowagie.text.pdf.*;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class FundReportPageEvent extends PdfPageEventHelper {
+public class ReportPageEvent extends PdfPageEventHelper {
 
-    private final String fundTitle;
+    private final String reportTitle;
+    private final String generatedAtText;
 
     private final BaseFont baseFont;
-    private final Font headerFont;
+    private final Font headerTitleFont;
+    private final Font headerGeneratedAtFont;
     private final Font footerFont;
 
     private PdfTemplate totalPageTemplate;
 
-    public FundReportPageEvent(String fundTitle) {
-        this.fundTitle = fundTitle;
+    public ReportPageEvent(String reportTitle) {
+        this.reportTitle = reportTitle + " Financial Report";
+        this.generatedAtText = "Generated at " + DateToStringConverter.nowFormatted();
 
         try {
             this.baseFont = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.NOT_EMBEDDED);
@@ -28,7 +32,8 @@ public class FundReportPageEvent extends PdfPageEventHelper {
         }
 
         this.footerFont = new Font(baseFont, 10, Font.ITALIC);
-        this.headerFont = new Font(baseFont, 16, Font.BOLD);
+        this.headerTitleFont = new Font(baseFont, 16, Font.BOLD);
+        this.headerGeneratedAtFont = new Font(Font.HELVETICA, 10, Font.ITALIC);
     }
 
     @Override
@@ -42,13 +47,23 @@ public class FundReportPageEvent extends PdfPageEventHelper {
         float centerX = (document.right() - document.left()) / 2 + document.leftMargin();
         float bottomY = document.bottom() + 5;
 
-        // === HEADER ===
+        // === HEADER: title ===
         ColumnText.showTextAligned(
                 cb,
                 Element.ALIGN_CENTER,
-                new Phrase("Fund report: " + fundTitle, headerFont),
+                new Phrase(reportTitle, headerTitleFont),
                 centerX,
                 document.top() + 15, // slightly lower than the top margin
+                0
+        );
+
+        // === HEADER: generated at ===
+        ColumnText.showTextAligned(
+                cb,
+                Element.ALIGN_CENTER,
+                new Phrase(this.generatedAtText, this.headerGeneratedAtFont),
+                centerX,
+                document.top() + 5,
                 0
         );
 

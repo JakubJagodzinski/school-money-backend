@@ -1,4 +1,4 @@
-package com.example.schoolmoney.domain.fundreport.dto;
+package com.example.schoolmoney.domain.report.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FundReportDto {
+public class ReportDto {
 
-    byte[] fundReport;
+    byte[] report;
 
-    String fundReportFileName;
+    String reportFileName;
 
 }

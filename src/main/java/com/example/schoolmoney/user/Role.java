@@ -85,6 +85,8 @@ public enum Role {
                     Permission.FUND_DEPOSIT,
 
                     Permission.FUND_REPORT_GENERATE,
+                    Permission.SCHOOL_CLASS_REPORT_GENERATE,
+                    Permission.CHILD_REPORT_GENERATE,
 
                     Permission.FINANCIAL_OPERATION_HISTORY_READ,
 

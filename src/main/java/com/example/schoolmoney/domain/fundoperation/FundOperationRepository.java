@@ -20,11 +20,27 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
 
     List<FundOperation> findAllByFund_FundIdOrderByProcessedAtAsc(UUID fundId);
 
+    List<FundOperation> findAllByChild_ChildIdOrderByProcessedAtAsc(UUID childId);
+
     @Query("""
             SELECT COUNT(DISTINCT f.child.childId)
             FROM FundOperation f
             WHERE f.fund.fundId = :fundId
             """)
-    long countDistinctChildIdsByFundId(@Param("fundId") UUID fundId);
+    long countDistinctChildrenByFundId(@Param("fundId") UUID fundId);
+
+    @Query("""
+            SELECT COUNT(DISTINCT f.fund.fundId)
+            FROM FundOperation f
+            WHERE f.child.childId = :childId
+            """)
+    long countDistinctFundsByChildId(@Param("childId") UUID childId);
+
+    @Query("""
+            SELECT COUNT(DISTINCT f.fund.fundId)
+            FROM FundOperation f
+            WHERE f.fund.schoolClass.schoolClassId = :schoolClassId
+            """)
+    long countDistinctFundsBySchoolClassId(@Param("schoolClassId") UUID schoolClassId);
 
 }

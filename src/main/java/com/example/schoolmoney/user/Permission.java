@@ -85,6 +85,8 @@ public enum Permission {
     FUND_UNBLOCK("fund:unblock"),
 
     FUND_REPORT_GENERATE("fund:report:generate"),
+    CHILD_REPORT_GENERATE("child:report:generate"),
+    SCHOOL_CLASS_REPORT_GENERATE("school_class:report:generate"),
 
     FINANCIAL_OPERATION_HISTORY_READ("financial_operation_history:read"),
 

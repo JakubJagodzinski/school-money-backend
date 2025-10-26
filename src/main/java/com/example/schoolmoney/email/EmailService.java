@@ -68,6 +68,16 @@ public class EmailService {
         sendEmail(to, "Fund report", emailContentProvider, report, reportTitle);
     }
 
+    public void sendChildReportEmail(String to, String firstName, String childFullName, byte[] report, String reportTitle) {
+        EmailContentProvider emailContentProvider = new ChildReportEmailContentProvider(firstName, childFullName);
+        sendEmail(to, "Your child report", emailContentProvider, report, reportTitle);
+    }
+
+    public void sendSchoolClassReportEmail(String to, String firstName, String schoolClassFullName, byte[] report, String reportTitle) {
+        EmailContentProvider emailContentProvider = new SchoolClassReportEmailContentProvider(firstName, schoolClassFullName);
+        sendEmail(to, "School class report", emailContentProvider, report, reportTitle);
+    }
+
     public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents) {
         EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents);
         sendEmail(to, "Wallet withdrawal", emailContentProvider, null, null);
@@ -96,6 +106,11 @@ public class EmailService {
     public void sendFundUnblockedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
         EmailContentProvider emailContentProvider = new FundUnblockedEmailContentProvider(firstName, fundName, schoolClassFullName);
         sendEmail(to, "Fund unblocked", emailContentProvider, null, null);
+    }
+
+    public void sendFundFinishedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
+        EmailContentProvider emailContentProvider = new FundUnblockedEmailContentProvider(firstName, fundName, schoolClassFullName);
+        sendEmail(to, "Fund finished", emailContentProvider, null, null);
     }
 
 }
