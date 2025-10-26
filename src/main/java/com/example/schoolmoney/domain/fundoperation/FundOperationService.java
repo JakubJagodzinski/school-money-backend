@@ -8,11 +8,15 @@ import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatu
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
+import com.example.schoolmoney.domain.fundoperation.dto.FundOperationMapper;
+import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +28,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Service
 public class FundOperationService {
+
+    private final FundOperationMapper fundOperationMapper;
 
     private final FundOperationRepository fundOperationRepository;
 
@@ -278,6 +284,23 @@ public class FundOperationService {
         }
 
         return remainingDepositLimitInCents;
+    }
+
+    @Transactional
+    public Page<FundOperationResponseDto> getFundAllOperations(UUID fundId, Pageable pageable) throws EntityNotFoundException {
+        log.debug("Enter getFundAllOperations(fundId={}, pageable={})", fundId, pageable);
+
+        if (!fundRepository.existsById(fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+
+        // TODO add check if parent can access fund
+
+        Page<FundOperation> fundOperationPage = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtDesc(fundId, pageable);
+
+        log.debug("Exit getFundAllOperations");
+        return fundOperationPage.map(fundOperationMapper::toDto);
     }
 
 }

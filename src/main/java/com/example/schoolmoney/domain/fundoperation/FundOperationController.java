@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.fundoperation;
 import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -10,6 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -183,6 +189,20 @@ public class FundOperationController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(FundOperationMessages.FUND_DEPOSIT_OPERATION_SUCCESSFUL));
+    }
+
+    @CheckPermission(Permission.FUND_OPERATIONS_READ_ALL)
+    @GetMapping("/funds/{fundId}/operations")
+    public ResponseEntity<Page<FundOperationResponseDto>> getFundAllOperations(
+            @PathVariable UUID fundId,
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "processedAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<FundOperationResponseDto> fundOperationPage = fundOperationService.getFundAllOperations(fundId, pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fundOperationPage);
     }
 
 }

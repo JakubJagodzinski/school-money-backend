@@ -1,6 +1,8 @@
 package com.example.schoolmoney.domain.fundoperation;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +19,8 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
     );
 
     List<FundOperation> findAllByFund_FundId(UUID fundId);
+
+    Page<FundOperation> findAllByFund_FundIdOrderByProcessedAtDesc(UUID fundId, Pageable pageable);
 
     List<FundOperation> findAllByFund_FundIdOrderByProcessedAtAsc(UUID fundId);
 
