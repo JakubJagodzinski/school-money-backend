@@ -1,5 +1,6 @@
-package com.example.schoolmoney.payment.dto;
+package com.example.schoolmoney.finance.payment.dto;
 
+import com.example.schoolmoney.finance.payment.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({
+        "provider_type",
         "external_payment_id",
         "event_type",
         "user_id",
@@ -22,6 +24,9 @@ import java.util.UUID;
         "raw_event"
 })
 public class PaymentNotificationDto {
+
+    @JsonProperty("provider_type")
+    private ProviderType providerType;
 
     @JsonProperty("external_payment_id")
     private String externalPaymentId;

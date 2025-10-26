@@ -58,10 +58,11 @@ public enum Role {
                     Permission.SCHOOL_CLASS_AVATAR_READ,
                     Permission.SCHOOL_CLASS_AVATAR_DELETE,
 
-                    Permission.WALLET_INFO_SET,
                     Permission.WALLET_INFO_READ,
                     Permission.WALLET_BALANCE_READ,
-                    Permission.WALLET_INFO_CLEAR,
+
+                    Permission.WALLET_IBAN_SET,
+                    Permission.WALLET_IBAN_CLEAR,
 
                     Permission.WALLET_HISTORY_READ_ALL,
 
@@ -94,7 +95,8 @@ public enum Role {
 
                     Permission.FINANCIAL_OPERATION_HISTORY_READ,
 
-                    Permission.PAYMENT_SESSION_CREATE
+                    Permission.WALLET_TOP_UP,
+                    Permission.WALLET_WITHDRAW
             )
     ),
 

@@ -54,10 +54,11 @@ public enum Permission {
     SCHOOL_CLASS_AVATAR_READ("school_class:avatar:read"),
     SCHOOL_CLASS_AVATAR_DELETE("school_class:avatar:delete"),
 
-    WALLET_INFO_SET("wallet:info:set"),
-    WALLET_INFO_READ("wallet:info:read"),
     WALLET_BALANCE_READ("wallet:balance:read"),
-    WALLET_INFO_CLEAR("wallet:info:clear"),
+    WALLET_INFO_READ("wallet:info:read"),
+
+    WALLET_IBAN_SET("wallet:iban:set"),
+    WALLET_IBAN_CLEAR("wallet:iban:clear"),
 
     WALLET_HISTORY_READ_ALL("wallet_history:read:all"),
 
@@ -94,7 +95,8 @@ public enum Permission {
 
     FINANCIAL_OPERATION_HISTORY_READ("financial_operation_history:read"),
 
-    PAYMENT_SESSION_CREATE("payment_session:create"),
+    WALLET_TOP_UP("wallet:top_up"),
+    WALLET_WITHDRAW("wallet:withdraw"),
 
     ADMIN_ACCOUNT_CREATE("admin_account:create");
 

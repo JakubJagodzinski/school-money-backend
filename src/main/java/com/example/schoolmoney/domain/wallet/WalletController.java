@@ -5,6 +5,8 @@ import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
+import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.payment.dto.PaymentSessionDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -106,7 +108,7 @@ public class WalletController {
                     content = @Content()
             )
     })
-    @CheckPermission(Permission.WALLET_INFO_SET)
+    @CheckPermission(Permission.WALLET_IBAN_SET)
     @PatchMapping("/wallets")
     public ResponseEntity<MessageResponseDto> setWithdrawalIban(@RequestParam String withdrawalIban) {
         walletService.setWithdrawalIban(withdrawalIban);
@@ -137,7 +139,7 @@ public class WalletController {
                     content = @Content()
             )
     })
-    @CheckPermission(Permission.WALLET_INFO_CLEAR)
+    @CheckPermission(Permission.WALLET_IBAN_CLEAR)
     @DeleteMapping("/wallets")
     public ResponseEntity<MessageResponseDto> clearWithdrawalIban() {
         walletService.clearWithdrawalIban();
@@ -145,6 +147,45 @@ public class WalletController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_IBAN_CLEARED_SUCCESSFULLY));
+    }
+
+    @Operation(
+            summary = "Initialize wallet top up session with selected provider",
+            description = """
+                    Top up your wallet with given amount via selected payment provider
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Payment session created successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PaymentSessionDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad request - Invalid amount",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            )
+    })
+    @CheckPermission(Permission.WALLET_TOP_UP)
+    @PostMapping("/wallets/top-up")
+    public ResponseEntity<PaymentSessionDto> initializeWalletTopUp(@RequestParam ProviderType providerType, @RequestParam long amountInCents) {
+        PaymentSessionDto paymentSessionDto = walletService.initializeWalletTopUp(providerType, amountInCents);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(paymentSessionDto);
     }
 
     @Operation(
@@ -184,6 +225,7 @@ public class WalletController {
                     )
             )
     })
+    @CheckPermission(Permission.WALLET_WITHDRAW)
     @PostMapping("/wallet/withdraw")
     public ResponseEntity<MessageResponseDto> withdrawFunds(@RequestParam long withdrawalAmountInCents) {
         walletService.withdrawFunds(withdrawalAmountInCents);

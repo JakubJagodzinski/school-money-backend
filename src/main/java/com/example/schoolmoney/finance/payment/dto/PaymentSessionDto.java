@@ -1,4 +1,4 @@
-package com.example.schoolmoney.payment.dto;
+package com.example.schoolmoney.finance.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

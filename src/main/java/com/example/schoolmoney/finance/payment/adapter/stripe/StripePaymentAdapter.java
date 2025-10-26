@@ -1,16 +1,11 @@
-package com.example.schoolmoney.payment.adapter.stripe;
+package com.example.schoolmoney.finance.payment.adapter.stripe;
 
-import com.example.schoolmoney.common.constants.messages.PaymentMessages;
-import com.example.schoolmoney.payment.PaymentProviderType;
-import com.example.schoolmoney.payment.adapter.PaymentAdapter;
-import com.example.schoolmoney.payment.dto.PaymentNotificationDto;
-import com.example.schoolmoney.payment.dto.PaymentSessionDto;
+import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.payment.adapter.PaymentAdapter;
+import com.example.schoolmoney.finance.payment.dto.PaymentSessionDto;
 import com.stripe.Stripe;
-import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
-import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
-import com.stripe.net.Webhook;
 import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -20,18 +15,18 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
-public class StripeAdapter implements PaymentAdapter {
+public class StripePaymentAdapter implements PaymentAdapter {
 
-    private final StripeConfig stripeConfig;
+    private final StripePaymentConfig stripePaymentConfig;
 
     @PostConstruct
     void init() {
-        Stripe.apiKey = stripeConfig.getApiKey();
+        Stripe.apiKey = stripePaymentConfig.getApiKey();
     }
 
     @Override
-    public PaymentProviderType getProviderType() {
-        return PaymentProviderType.STRIPE;
+    public ProviderType getProviderType() {
+        return ProviderType.STRIPE;
     }
 
     @Override
@@ -65,22 +60,6 @@ public class StripeAdapter implements PaymentAdapter {
         return PaymentSessionDto.builder()
                 .sessionId(session.getId())
                 .checkoutUrl(session.getUrl())
-                .build();
-    }
-
-    @Override
-    public PaymentNotificationDto processWebhook(String payload, String signatureHeader) throws SignatureVerificationException {
-        Event event = Webhook.constructEvent(payload, signatureHeader, stripeConfig.getWebhookSecret());
-        Session session = (Session) event.getDataObjectDeserializer().getObject()
-                .orElseThrow(() -> new IllegalStateException(PaymentMessages.SESSION_IS_NULL));
-
-        return PaymentNotificationDto.builder()
-                .externalPaymentId(session.getId())
-                .eventType(event.getType())
-                .userId(UUID.fromString(session.getMetadata().get("userId")))
-                .amountInCents(session.getAmountTotal())
-                .currency(session.getCurrency())
-                .rawEvent(payload)
                 .build();
     }
 

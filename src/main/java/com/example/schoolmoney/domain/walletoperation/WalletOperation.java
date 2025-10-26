@@ -2,10 +2,9 @@ package com.example.schoolmoney.domain.walletoperation;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.wallet.Wallet;
-import com.example.schoolmoney.payment.PaymentProviderType;
+import com.example.schoolmoney.finance.payment.ProviderType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -33,17 +32,16 @@ public class WalletOperation {
     private Wallet wallet;
 
     @NotNull
-    @Column(name = "external_payment_id", updatable = false)
-    private String externalPaymentId;
+    @Column(name = "external_operation_id", updatable = false)
+    private String externalOperationId;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_provider_type", nullable = false, updatable = false)
-    private PaymentProviderType paymentProviderType;
+    @Column(name = "provider_type", nullable = false, updatable = false)
+    private ProviderType providerType;
 
-    @NotBlank
     @Size(max = 34)
-    @Column(name = "iban", nullable = false, updatable = false, length = 34)
+    @Column(name = "iban", updatable = false, length = 34)
     private String iban;
 
     @NotNull

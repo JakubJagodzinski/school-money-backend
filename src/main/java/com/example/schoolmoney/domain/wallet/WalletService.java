@@ -14,7 +14,10 @@ import com.example.schoolmoney.domain.walletoperation.WalletOperation;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationRepository;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationType;
 import com.example.schoolmoney.email.EmailService;
-import com.example.schoolmoney.payment.PaymentProviderType;
+import com.example.schoolmoney.finance.payment.PaymentService;
+import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.payment.dto.PaymentNotificationDto;
+import com.example.schoolmoney.finance.payment.dto.PaymentSessionDto;
 import com.example.schoolmoney.utils.IbanMasker;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,9 +41,11 @@ public class WalletService {
 
     private final WalletOperationRepository walletOperationRepository;
 
-    private final SecurityUtils securityUtils;
+    private final PaymentService paymentService;
 
     private final EmailService emailService;
+
+    private final SecurityUtils securityUtils;
 
     @Transactional
     public void createWallet(UUID parentId) throws EntityNotFoundException, EntityExistsException {
@@ -120,9 +125,23 @@ public class WalletService {
         log.debug("Exit clearWithdrawalIban");
     }
 
+    public PaymentSessionDto initializeWalletTopUp(ProviderType providerType, long amountInCents) {
+        return paymentService.createPaymentSession(providerType, amountInCents);
+    }
+
     @Transactional
-    public void registerWalletTopUp(UUID userId, long amountInCents, String externalPaymentId, PaymentProviderType paymentProviderType) throws EntityNotFoundException {
-        log.debug("Enter registerWalletTopUp(userId={}, amountInCents={}, externalPaymentId={})", userId, amountInCents, externalPaymentId);
+    public void registerWalletTopUp(PaymentNotificationDto paymentNotificationDto) throws EntityNotFoundException {
+        log.debug("Enter registerWalletTopUp");
+
+        String externalOperationId = paymentNotificationDto.getExternalPaymentId();
+        UUID userId = paymentNotificationDto.getUserId();
+        long amountInCents = paymentNotificationDto.getAmountInCents();
+        ProviderType providerType = paymentNotificationDto.getProviderType();
+
+        if (walletOperationRepository.existsByExternalOperationIdAndProviderType(externalOperationId, providerType)) {
+            log.warn(WalletOperationMessages.WALLET_OPERATION_ALREADY_REGISTERED);
+            return;
+        }
 
         Parent parent = parentRepository.findById(userId)
                 .orElseThrow(() -> {
@@ -134,12 +153,12 @@ public class WalletService {
 
         wallet.setBalanceInCents(wallet.getBalanceInCents() + amountInCents);
         walletRepository.save(wallet);
-        log.info("wallet updated {}", wallet);
+        log.info("Wallet updated {}", wallet);
 
         WalletOperation walletPaymentOperation = WalletOperation.builder()
                 .wallet(wallet)
-                .externalPaymentId(externalPaymentId)
-                .paymentProviderType(paymentProviderType)
+                .externalOperationId(externalOperationId)
+                .providerType(providerType)
                 .amountInCents(amountInCents)
                 .operationType(WalletOperationType.WALLET_TOP_UP)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
@@ -178,7 +197,7 @@ public class WalletService {
         }
 
         // TODO add stripe withdrawal
-        UUID externalPaymentId = UUID.randomUUID();
+        UUID externalOperationId = UUID.randomUUID();
 
         wallet.setBalanceInCents(wallet.getBalanceInCents() - withdrawalAmountInCents);
         walletRepository.save(wallet);
@@ -186,8 +205,8 @@ public class WalletService {
 
         WalletOperation walletWithdrawalOperation = WalletOperation.builder()
                 .wallet(wallet)
-                .externalPaymentId(externalPaymentId.toString())
-                .paymentProviderType(PaymentProviderType.STRIPE)
+                .externalOperationId(externalOperationId.toString())
+                .providerType(ProviderType.STRIPE)
                 .iban(IbanMasker.maskIban(wallet.getWithdrawalIban()))
                 .amountInCents(withdrawalAmountInCents)
                 .operationType(WalletOperationType.WALLET_WITHDRAWAL)

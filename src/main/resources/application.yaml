@@ -54,7 +54,7 @@ server:
 
 stripe:
   apiKey: ${STRIPE_API_KEY}
-  webhookSecret: ${STRIPE_WEBHOOK_SECRET}
+  paymentWebhookSecret: ${STRIPE PAYMENT__WEBHOOK_SECRET}
 
 app:
   super-admin:
@@ -78,9 +78,10 @@ app:
       expiry-hours: ${RESET_PASSWORD_TOKEN_EXPIRY_HOURS:1}
       token-length: ${RESET_PASSWORD_TOKEN_LENGTH:36}
 
-  payment:
-    success-path: "/api/v1/payments/status/success"
-    failed-path: "/api/v1/payments/status/failed"
+  finances:
+    payment:
+      success-path: "/api/v1/payments/status/success"
+      failed-path: "/api/v1/payments/status/failed"
 
 logging:
   file:

@@ -1,4 +1,4 @@
-package com.example.schoolmoney.payment.adapter.stripe;
+package com.example.schoolmoney.finance.payment.adapter.stripe;
 
 import com.stripe.Stripe;
 import jakarta.annotation.PostConstruct;
@@ -11,11 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "stripe")
-public class StripeConfig {
+public class StripePaymentConfig {
 
     private String apiKey;
 
-    private String webhookSecret;
+    private String paymentWebhookSecret;
 
     @PostConstruct
     public void init() {

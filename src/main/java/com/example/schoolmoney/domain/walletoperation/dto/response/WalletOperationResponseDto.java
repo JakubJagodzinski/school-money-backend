@@ -2,7 +2,7 @@ package com.example.schoolmoney.domain.walletoperation.dto.response;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationType;
-import com.example.schoolmoney.payment.PaymentProviderType;
+import com.example.schoolmoney.finance.payment.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -19,8 +19,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @JsonPropertyOrder({
         "wallet_operation_id",
-        "external_payment_id",
-        "payment_provider_type",
+        "external_operation_id",
+        "provider_type",
         "iban",
         "amount_in_cents",
         "processed_at",
@@ -32,11 +32,11 @@ public class WalletOperationResponseDto {
     @JsonProperty("wallet_operation_id")
     private UUID walletOperationId;
 
-    @JsonProperty("external_payment_id")
-    private String externalPaymentId;
+    @JsonProperty("external_operation_id")
+    private String externalOperationId;
 
-    @JsonProperty("payment_provider_type")
-    private PaymentProviderType paymentProviderType;
+    @JsonProperty("provider_type")
+    private ProviderType providerType;
 
     @JsonProperty("iban")
     private String iban;
