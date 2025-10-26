@@ -52,9 +52,8 @@ public class WalletOperation {
     private long amountInCents;
 
     @NotNull
-    @Builder.Default
     @Column(name = "processed_at", nullable = false, updatable = false)
-    private Instant processedAt = Instant.now();
+    private Instant processedAt;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -65,5 +64,10 @@ public class WalletOperation {
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status", nullable = false, updatable = false)
     private FinancialOperationStatus operationStatus;
+
+    @PrePersist
+    protected void onCreate() {
+        this.processedAt = Instant.now();
+    }
 
 }

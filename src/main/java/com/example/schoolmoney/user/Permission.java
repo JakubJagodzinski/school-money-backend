@@ -59,6 +59,8 @@ public enum Permission {
     WALLET_BALANCE_READ("wallet:balance:read"),
     WALLET_INFO_CLEAR("wallet:info:clear"),
 
+    WALLET_HISTORY_READ_ALL("wallet_history:read:all"),
+
     FUND_CREATE("fund:create"),
     FUND_READ("fund:read"),
     FUND_READ_ALL("fund:read:all"),

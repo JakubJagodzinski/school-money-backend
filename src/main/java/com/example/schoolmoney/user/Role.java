@@ -63,6 +63,8 @@ public enum Role {
                     Permission.WALLET_BALANCE_READ,
                     Permission.WALLET_INFO_CLEAR,
 
+                    Permission.WALLET_HISTORY_READ_ALL,
+
                     Permission.FUND_CREATE,
                     Permission.FUND_READ,
                     Permission.FUND_UPDATE,
