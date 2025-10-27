@@ -1,4 +1,4 @@
-package com.example.schoolmoney.finance.payment.dto;
+package com.example.schoolmoney.finance.payout.dto;
 
 import com.example.schoolmoney.finance.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @JsonPropertyOrder({
         "provider_type",
-        "external_payment_id",
+        "external_payout_id",
         "event_type",
         "user_id",
         "operation_id",
@@ -24,13 +24,13 @@ import java.util.UUID;
         "currency",
         "raw_event"
 })
-public class PaymentNotificationDto {
+public class PayoutNotificationDto {
 
     @JsonProperty("provider_type")
     private ProviderType providerType;
 
-    @JsonProperty("external_payment_id")
-    private String externalPaymentId;
+    @JsonProperty("external_payout_id")
+    private String externalPayoutId;
 
     @JsonProperty("event_type")
     private String eventType;

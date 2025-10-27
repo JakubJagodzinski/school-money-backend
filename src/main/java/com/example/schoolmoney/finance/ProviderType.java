@@ -1,4 +1,4 @@
-package com.example.schoolmoney.finance.payment;
+package com.example.schoolmoney.finance;
 
 public enum ProviderType {
 

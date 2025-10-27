@@ -2,7 +2,7 @@ package com.example.schoolmoney.domain.walletoperation;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.wallet.Wallet;
-import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.ProviderType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -32,7 +32,7 @@ public class WalletOperation {
     private Wallet wallet;
 
     @NotNull
-    @Column(name = "external_operation_id", updatable = false)
+    @Column(name = "external_operation_id")
     private String externalOperationId;
 
     @NotNull
@@ -50,7 +50,10 @@ public class WalletOperation {
     private long amountInCents;
 
     @NotNull
-    @Column(name = "processed_at", nullable = false, updatable = false)
+    @Column(name = "currency", nullable = false, updatable = false)
+    private String currency;
+
+    @Column(name = "processed_at")
     private Instant processedAt;
 
     @NotNull
@@ -60,12 +63,7 @@ public class WalletOperation {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "operation_status", nullable = false, updatable = false)
+    @Column(name = "operation_status", nullable = false)
     private FinancialOperationStatus operationStatus;
-
-    @PrePersist
-    protected void onCreate() {
-        this.processedAt = Instant.now();
-    }
 
 }

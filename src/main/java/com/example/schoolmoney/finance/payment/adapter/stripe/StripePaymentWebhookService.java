@@ -2,7 +2,7 @@ package com.example.schoolmoney.finance.payment.adapter.stripe;
 
 import com.example.schoolmoney.common.constants.messages.PaymentMessages;
 import com.example.schoolmoney.domain.wallet.WalletService;
-import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.ProviderType;
 import com.example.schoolmoney.finance.payment.dto.PaymentNotificationDto;
 import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
@@ -35,13 +35,14 @@ public class StripePaymentWebhookService {
                     .externalPaymentId(session.getId())
                     .eventType(event.getType())
                     .userId(UUID.fromString(session.getMetadata().get("userId")))
+                    .operationId(UUID.fromString(session.getMetadata().get("operationId")))
                     .amountInCents(session.getAmountTotal())
                     .currency(session.getCurrency())
                     .rawEvent(payload)
                     .providerType(ProviderType.STRIPE)
                     .build();
 
-            walletService.registerWalletTopUp(paymentNotificationDto);
+            walletService.finalizeWalletTopUp(paymentNotificationDto);
         } catch (Exception e) {
             log.error(PaymentMessages.PAYMENT_WEBHOOK_PROCESSING_ERROR, e);
             throw new IllegalStateException(PaymentMessages.PAYMENT_WEBHOOK_PROCESSING_ERROR);

@@ -93,12 +93,12 @@ public class FundOperationService {
 
         Wallet parentWallet = walletRepository.findByParent_UserId(userId);
 
-        if (parentWallet.getBalanceInCents() < amountInCents) {
+        if (parentWallet.getAvailableBalanceInCents() < amountInCents) {
             log.warn(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
             throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
         }
 
-        parentWallet.setBalanceInCents(parentWallet.getBalanceInCents() - amountInCents);
+        parentWallet.decreaseBalanceInCents(amountInCents);
         walletRepository.save(parentWallet);
         log.info("Wallet updated {}", parentWallet);
 
@@ -160,7 +160,12 @@ public class FundOperationService {
 
         Wallet treasurerWallet = walletRepository.findByParent_UserId(userId);
 
-        treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() - amountInCents);
+        if (treasurerWallet.getAvailableBalanceInCents() < amountInCents) {
+            log.warn(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
+            throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
+        }
+
+        treasurerWallet.decreaseBalanceInCents(amountInCents);
         walletRepository.save(treasurerWallet);
         log.info("Wallet updated {}", treasurerWallet);
 
@@ -221,7 +226,7 @@ public class FundOperationService {
 
         Wallet treasurerWallet = walletRepository.findByParent_UserId(userId);
 
-        treasurerWallet.setBalanceInCents(treasurerWallet.getBalanceInCents() + amountInCents);
+        treasurerWallet.increaseBalanceInCents(amountInCents);
         walletRepository.save(treasurerWallet);
         log.info("wallet updated {}", treasurerWallet);
 

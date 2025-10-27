@@ -5,7 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
-import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.ProviderType;
 import com.example.schoolmoney.finance.payment.dto.PaymentSessionDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -226,13 +226,13 @@ public class WalletController {
             )
     })
     @CheckPermission(Permission.WALLET_WITHDRAW)
-    @PostMapping("/wallet/withdraw")
-    public ResponseEntity<MessageResponseDto> withdrawFunds(@RequestParam long withdrawalAmountInCents) {
-        walletService.withdrawFunds(withdrawalAmountInCents);
+    @PostMapping("/wallets/withdraw")
+    public ResponseEntity<MessageResponseDto> initializeWalletWithdrawal(@RequestParam long amountInCents) {
+        walletService.initializeWalletWithdrawal(amountInCents);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_OPERATION_PROCESSED_SUCCESSFULLY));
+                .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_OPERATION_INITIALIZED_SUCCESSFULLY));
     }
 
 }

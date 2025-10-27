@@ -3,10 +3,7 @@ package com.example.schoolmoney.domain.wallet.dto;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
-import org.mapstruct.Mapper;
-import org.mapstruct.Named;
-import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
@@ -16,9 +13,11 @@ import org.mapstruct.ReportingPolicy;
 public interface WalletMapper {
 
     @Named("walletToWalletInfoDto")
+    @Mapping(target = "balanceInCents", expression = "java(entity.getAvailableBalanceInCents())")
     WalletInfoResponseDto toInfoDto(Wallet entity);
 
     @Named("walletToWalletBalanceDto")
+    @Mapping(target = "balanceInCents", expression = "java(entity.getAvailableBalanceInCents())")
     WalletBalanceResponseDto toBalanceDto(Wallet entity);
 
 }

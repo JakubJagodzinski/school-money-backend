@@ -2,7 +2,7 @@ package com.example.schoolmoney.domain.walletoperation.dto.response;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.walletoperation.WalletOperationType;
-import com.example.schoolmoney.finance.payment.ProviderType;
+import com.example.schoolmoney.finance.ProviderType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;

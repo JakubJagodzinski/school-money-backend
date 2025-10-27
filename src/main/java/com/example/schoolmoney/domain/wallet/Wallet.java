@@ -33,8 +33,33 @@ public class Wallet {
     @Column(name = "balance_in_cents", nullable = false)
     private long balanceInCents;
 
+    @NotNull
+    @Min(0)
+    @Column(name = "reserved_balance_in_cents", nullable = false)
+    private long reservedBalanceInCents;
+
     @Size(max = 34)
     @Column(name = "withdrawal_iban", length = 34)
     private String withdrawalIban;
+
+    public long getAvailableBalanceInCents() {
+        return balanceInCents - reservedBalanceInCents;
+    }
+
+    public void increaseBalanceInCents(long amountInCents) {
+        balanceInCents += amountInCents;
+    }
+
+    public void decreaseBalanceInCents(long amountInCents) {
+        balanceInCents -= amountInCents;
+    }
+
+    public void increaseReservedBalanceInCents(long amountInCents) {
+        reservedBalanceInCents += amountInCents;
+    }
+
+    public void decreaseReservedBalanceInCents(long amountInCents) {
+        reservedBalanceInCents -= amountInCents;
+    }
 
 }
