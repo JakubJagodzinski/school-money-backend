@@ -163,7 +163,7 @@ public class FundService {
 
                 Wallet parentWallet = fundOperation.getWallet();
 
-                parentWallet.setBalanceInCents(parentWallet.getBalanceInCents() + fundOperation.getAmountInCents());
+                parentWallet.increaseBalanceInCents(fundOperation.getAmountInCents());
                 walletRepository.save(parentWallet);
                 log.info("Parent wallet updated {}", parentWallet);
 
