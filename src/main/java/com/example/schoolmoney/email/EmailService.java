@@ -1,7 +1,15 @@
 package com.example.schoolmoney.email;
 
 import com.example.schoolmoney.common.constants.messages.EmailMessages;
-import com.example.schoolmoney.email.contentproviders.*;
+import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.account.*;
+import com.example.schoolmoney.email.contentproviders.child.ChildReportEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.fund.FundBlockedEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.fund.FundReportEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.fund.FundUnblockedEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.schoolclass.SchoolClassReportEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.wallet.WalletTopUpEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.wallet.WalletWithdrawalEmailContentProvider;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,38 +57,18 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String to, String firstName, String verificationLink) {
-        EmailContentProvider emailContentProvider = new VerificationEmailContentProvider(firstName, verificationLink);
+        EmailContentProvider emailContentProvider = new AccountVerificationEmailContentProvider(firstName, verificationLink);
         sendEmail(to, "Verify your account", emailContentProvider, null, null);
     }
 
-    public void sendWalletTopUpEmail(String to, String firstName, long amountInCents) {
-        EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents);
-        sendEmail(to, "Wallet top-up", emailContentProvider, null, null);
+    public void sendNewEmailConfirmationEmail(String to, String firstName, String verificationLink) {
+        EmailContentProvider emailContentProvider = new ChangeEmailConfirmationEmailContentProvider(firstName, verificationLink);
+        sendEmail(to, "Confirm your new email", emailContentProvider, null, null);
     }
 
     public void sendPasswordResetEmail(String to, String firstName, String resetPasswordRedirectUrl) {
         EmailContentProvider emailContentProvider = new ResetPasswordEmailContentProvider(firstName, resetPasswordRedirectUrl);
         sendEmail(to, "Reset your password", emailContentProvider, null, null);
-    }
-
-    public void sendFundReportEmail(String to, String firstName, String fundTitle, byte[] report, String reportTitle) {
-        EmailContentProvider emailContentProvider = new FundReportEmailContentProvider(firstName, fundTitle);
-        sendEmail(to, "Fund report", emailContentProvider, report, reportTitle);
-    }
-
-    public void sendChildReportEmail(String to, String firstName, String childFullName, byte[] report, String reportTitle) {
-        EmailContentProvider emailContentProvider = new ChildReportEmailContentProvider(firstName, childFullName);
-        sendEmail(to, "Your child report", emailContentProvider, report, reportTitle);
-    }
-
-    public void sendSchoolClassReportEmail(String to, String firstName, String schoolClassFullName, byte[] report, String reportTitle) {
-        EmailContentProvider emailContentProvider = new SchoolClassReportEmailContentProvider(firstName, schoolClassFullName);
-        sendEmail(to, "School class report", emailContentProvider, report, reportTitle);
-    }
-
-    public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents) {
-        EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents);
-        sendEmail(to, "Wallet withdrawal", emailContentProvider, null, null);
     }
 
     public void sendAccountBlockedEmail(String to, String firstName, String reason, long durationInDays, Instant blockedUntil) {
@@ -96,6 +84,31 @@ public class EmailService {
     public void sendAccountBlockExpiredEmail(String to, String firstName) {
         EmailContentProvider emailContentProvider = new AccountBlockExpiredEmailContentProvider(firstName);
         sendEmail(to, "Account block expired", emailContentProvider, null, null);
+    }
+
+    public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents) {
+        EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents);
+        sendEmail(to, "Wallet withdrawal", emailContentProvider, null, null);
+    }
+
+    public void sendWalletTopUpEmail(String to, String firstName, long amountInCents) {
+        EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents);
+        sendEmail(to, "Wallet top-up", emailContentProvider, null, null);
+    }
+
+    public void sendFundReportEmail(String to, String firstName, String fundTitle, byte[] report, String reportTitle) {
+        EmailContentProvider emailContentProvider = new FundReportEmailContentProvider(firstName, fundTitle);
+        sendEmail(to, "Fund report", emailContentProvider, report, reportTitle);
+    }
+
+    public void sendChildReportEmail(String to, String firstName, String childFullName, byte[] report, String reportTitle) {
+        EmailContentProvider emailContentProvider = new ChildReportEmailContentProvider(firstName, childFullName);
+        sendEmail(to, "Your child report", emailContentProvider, report, reportTitle);
+    }
+
+    public void sendSchoolClassReportEmail(String to, String firstName, String schoolClassFullName, byte[] report, String reportTitle) {
+        EmailContentProvider emailContentProvider = new SchoolClassReportEmailContentProvider(firstName, schoolClassFullName);
+        sendEmail(to, "School class report", emailContentProvider, report, reportTitle);
     }
 
     public void sendFundBlockedEmail(String to, String firstName, String fundName, String schoolClassFullName) {

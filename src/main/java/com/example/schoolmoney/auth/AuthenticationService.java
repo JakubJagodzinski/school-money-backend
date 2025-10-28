@@ -12,12 +12,15 @@ import com.example.schoolmoney.auth.dto.response.RefreshTokenResponseDto;
 import com.example.schoolmoney.auth.jwt.JwtService;
 import com.example.schoolmoney.common.constants.messages.TokenMessages;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
+import com.example.schoolmoney.common.constants.messages.VerificationTokenMessages;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.wallet.WalletService;
+import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.Role;
 import com.example.schoolmoney.user.User;
 import com.example.schoolmoney.user.UserRepository;
-import com.example.schoolmoney.verification.VerificationTokenService;
+import com.example.schoolmoney.verification.*;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,16 +50,25 @@ public class AuthenticationService {
 
     private final WalletService walletService;
 
-    private final VerificationTokenService verificationTokenService;
-
     private final DomainProperties domainProperties;
 
     private final AuthTokenService authTokenService;
 
+    private final VerificationTokenService verificationTokenService;
+
+    private final VerificationTokenRepository verificationTokenRepository;
+
+    private final EmailService emailService;
+
+    private final VerificationLinkService verificationLinkService;
+
     @Transactional
     public void register(RegisterRequestDto registerRequestDto, Role role) throws IllegalArgumentException, AccessDeniedException {
+        log.debug("Enter register");
+
         if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
-            throw new IllegalArgumentException(UserMessages.EMAIL_IS_ALREADY_TAKEN);
+            log.warn(UserMessages.EMAIL_IS_ALREADY_TAKEN);
+            return;
         }
 
         if (!domainProperties.isEmailDomainAuthorized(registerRequestDto.getEmail())) {
@@ -67,6 +79,8 @@ public class AuthenticationService {
         User user = createUser(role, registerRequestDto);
 
         postRegistrationActions(user);
+
+        log.debug("Exit register");
     }
 
     private void populateUserCommonFields(User user, Role role, RegisterRequestDto registerRequestDto) {
@@ -93,7 +107,52 @@ public class AuthenticationService {
             walletService.createWallet(user.getUserId());
         }
 
-        verificationTokenService.sendVerificationEmail(user.getEmail());
+        sendVerificationEmail(user.getEmail());
+    }
+
+    public void sendVerificationEmail(String email) {
+        log.debug("Enter sendVerificationEmail for email: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElse(null);
+
+        if (user == null) {
+            log.debug("User with email {} not found", email);
+            return;
+        }
+
+        if (user.isVerified()) {
+            log.debug("User {} is already verified", email);
+            return;
+        }
+
+        String verificationToken = verificationTokenService.createVerificationToken(user, TokenType.ACCOUNT_VERIFICATION);
+        String verificationLink = verificationLinkService.buildAccountVerificationLink(verificationToken);
+        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationLink);
+
+        log.debug("Exit sendVerificationEmail");
+    }
+
+    @Transactional
+    public void verifyAccount(String token) {
+        log.debug("Enter verifyAccount(token={})", token);
+
+        VerificationToken verificationToken = verificationTokenService.validateToken(token);
+
+        if (verificationToken.getTokenType() != TokenType.ACCOUNT_VERIFICATION) {
+            log.warn(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+            throw new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
+        }
+
+        verificationToken.setUsed(true);
+        verificationTokenRepository.save(verificationToken);
+
+        User user = verificationToken.getUser();
+        user.setVerified(true);
+        userRepository.save(user);
+        log.info("User {} verified", user.getEmail());
+
+        log.debug("Exit verifyAccount");
     }
 
     @Transactional
@@ -130,31 +189,31 @@ public class AuthenticationService {
     }
 
     @Transactional
-    public RefreshTokenResponseDto refreshToken(RefreshTokenRequestDto requestDto) throws IllegalArgumentException {
+    public RefreshTokenResponseDto refreshToken(RefreshTokenRequestDto requestDto) throws BadCredentialsException {
         String refreshToken = requestDto.getRefreshToken();
 
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
+            throw new BadCredentialsException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
         String userEmail = jwtService.extractUsername(refreshToken);
 
         if (userEmail == null) {
-            throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
+            throw new BadCredentialsException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED));
+                .orElseThrow(() -> new BadCredentialsException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED));
 
         AuthToken authToken = authTokenRepository.findByAuthToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED));
+                .orElseThrow(() -> new BadCredentialsException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED));
 
         if (authToken.getAuthTokenType() != AuthTokenType.REFRESH) {
-            throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
+            throw new BadCredentialsException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
         if (!jwtService.isJwtValid(refreshToken, user) || authToken.isRevoked()) {
-            throw new IllegalArgumentException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
+            throw new BadCredentialsException(TokenMessages.PROVIDED_REFRESH_TOKEN_IS_INVALID_OR_EXPIRED);
         }
 
         authTokenService.revokeAllUserAuthTokens(user);

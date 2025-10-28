@@ -68,7 +68,7 @@ public class SuperAdminController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(new MessageResponseDto(UserMessages.ACCOUNT_CREATED_SUCCESSFULLY));
+                .body(new MessageResponseDto(UserMessages.IF_NOT_ALREADY_REGISTERED_ACCOUNT_CREATED_SUCCESSFULLY));
     }
 
 }

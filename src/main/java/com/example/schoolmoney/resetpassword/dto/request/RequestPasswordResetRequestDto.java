@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
         "email",
         "redirectUrl"
 })
-public class CreateResetPasswordTokenRequestDto {
+public class RequestPasswordResetRequestDto {
 
     @JsonProperty("email")
     private String email;

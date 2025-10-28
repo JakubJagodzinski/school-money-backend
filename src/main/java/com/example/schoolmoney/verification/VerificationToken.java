@@ -32,11 +32,16 @@ public class VerificationToken {
     private User user;
 
     @NotNull
-    @Column(name = "expiry_date", nullable = false, updatable = false)
-    private Instant expiryDate;
+    @Column(name = "expires_at", nullable = false, updatable = false)
+    private Instant expiresAt;
 
     @NotNull
     @Column(name = "used", nullable = false)
     private boolean used;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "token_type", nullable = false, updatable = false)
+    private TokenType tokenType;
 
 }

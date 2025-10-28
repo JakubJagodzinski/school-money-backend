@@ -25,8 +25,7 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 public class SecurityConfig {
 
     private static final String[] PUBLIC_API_ENDPOINTS = {
-            "/api/v1/forgot-password",
-            "/api/v1/reset-password",
+            "/api/v1/password-reset/**",
             "/api/v1/payments/webhook/**",
             "/api/v1/payments/status/**",
             "/api/v1/auth/**",

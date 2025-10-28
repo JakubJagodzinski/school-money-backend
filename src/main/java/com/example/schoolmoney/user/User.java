@@ -45,6 +45,11 @@ public class User implements UserDetails {
     @Column(name = "email", nullable = false, unique = true, length = 254)
     private String email;
 
+    @Email
+    @Size(max = 254)
+    @Column(name = "pendingNewEmail", length = 254)
+    private String pendingNewEmail;
+
     @NotBlank
     @Size(min = 12, max = 128)
     @Column(name = "password", nullable = false, length = 128)

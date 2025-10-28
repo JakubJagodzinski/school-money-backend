@@ -2,6 +2,7 @@ package com.example.schoolmoney.user;
 
 import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.PasswordMessages;
+import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.dto.ApiErrorResponseDto;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.user.dto.request.ChangePasswordRequestDto;
@@ -15,10 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Validated
 @RequiredArgsConstructor
@@ -55,13 +53,31 @@ public class UserController {
             )
     })
     @CheckPermission(Permission.USER_PASSWORD_CHANGE)
-    @PatchMapping("/users/change-password")
+    @PatchMapping("/users/password/change")
     public ResponseEntity<MessageResponseDto> changePassword(@Valid @RequestBody ChangePasswordRequestDto changePasswordRequestDto) {
         userService.changePassword(changePasswordRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(PasswordMessages.PASSWORD_CHANGED_SUCCESSFULLY));
+    }
+
+    @PostMapping("/users/email/change/request")
+    public ResponseEntity<MessageResponseDto> requestEmailChange(@RequestParam String newEmail) {
+        userService.requestEmailChange(newEmail);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(UserMessages.EMAIL_CHANGE_REQUESTED));
+    }
+
+    @PostMapping("/users/email/change/confirm")
+    public ResponseEntity<MessageResponseDto> confirmEmailChange(@RequestParam String token) {
+        userService.confirmEmailChange(token);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(UserMessages.EMAIL_CHANGED_SUCCESSFULLY));
     }
 
 }

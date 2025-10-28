@@ -74,11 +74,6 @@ app:
       expiry-hours: ${VERIFICATION_TOKEN_EXPIRY_HOURS:24}
       token-length: ${VERIFICATION_TOKEN_LENGTH:36}
 
-  reset-password:
-    token:
-      expiry-hours: ${RESET_PASSWORD_TOKEN_EXPIRY_HOURS:1}
-      token-length: ${RESET_PASSWORD_TOKEN_LENGTH:36}
-
   finances:
     currency: ${FINANCES_CURRENCY}
 

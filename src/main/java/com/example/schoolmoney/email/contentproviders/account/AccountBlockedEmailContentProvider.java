@@ -1,5 +1,6 @@
-package com.example.schoolmoney.email.contentproviders;
+package com.example.schoolmoney.email.contentproviders.account;
 
+import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import com.example.schoolmoney.utils.DateToStringConverter;
 import lombok.RequiredArgsConstructor;
 

@@ -1,9 +1,10 @@
-package com.example.schoolmoney.email.contentproviders;
+package com.example.schoolmoney.email.contentproviders.account;
 
+import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class VerificationEmailContentProvider implements EmailContentProvider {
+public class AccountVerificationEmailContentProvider implements EmailContentProvider {
 
     private final String firstName;
 

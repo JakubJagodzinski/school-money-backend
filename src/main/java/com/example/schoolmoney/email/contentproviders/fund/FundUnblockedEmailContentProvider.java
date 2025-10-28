@@ -1,9 +1,10 @@
-package com.example.schoolmoney.email.contentproviders;
+package com.example.schoolmoney.email.contentproviders.fund;
 
+import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class FundFinishedEmailContentProvider implements EmailContentProvider {
+public class FundUnblockedEmailContentProvider implements EmailContentProvider {
 
     private final String firstName;
 
@@ -14,8 +15,7 @@ public class FundFinishedEmailContentProvider implements EmailContentProvider {
     @Override
     public String build() {
         return "<p>Hi " + firstName + ",</p>" +
-                "<p>The " + fundTitle + " fund in " + schoolClassFullName + " class has finished.</p>" +
-                "<p>You can view the full operation history in the application.</p>" +
+                "<p>We are happy to inform you that your " + fundTitle + " fund in " + schoolClassFullName + " class has been unblocked and is now active.</p>" +
                 "<p>Best regards,<br>The SchoolMoney Team</p>" +
                 "<p><i>Note: This is an automated message, please do not reply to this email.</i></p>";
     }

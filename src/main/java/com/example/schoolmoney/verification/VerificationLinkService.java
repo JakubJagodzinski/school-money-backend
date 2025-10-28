@@ -13,10 +13,22 @@ public class VerificationLinkService {
 
     private final ServerProperties serverProperties;
 
-    public String buildLink(String verificationToken) {
+    public String buildAccountVerificationLink(String verificationToken) {
         String tokenEncoded = URLEncoder.encode(verificationToken, StandardCharsets.UTF_8);
 
         return serverProperties.getPublicAddress() + "/api/v1/auth/verify?token=" + tokenEncoded;
+    }
+
+    public String buildChangeEmailConfirmationLink(String verificationToken) {
+        String tokenEncoded = URLEncoder.encode(verificationToken, StandardCharsets.UTF_8);
+
+        return serverProperties.getPublicAddress() + "/api/v1/users/email/change/confirm?token=" + tokenEncoded;
+    }
+
+    public String buildResetPasswordLink(String verificationToken) {
+        String tokenEncoded = URLEncoder.encode(verificationToken, StandardCharsets.UTF_8);
+
+        return serverProperties.getPublicAddress() + "/api/v1/password-reset?token=" + tokenEncoded;
     }
 
 }

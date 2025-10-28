@@ -2,7 +2,7 @@ package com.example.schoolmoney.resetpassword;
 
 import com.example.schoolmoney.common.constants.messages.ResetPasswordTokenMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
-import com.example.schoolmoney.resetpassword.dto.request.CreateResetPasswordTokenRequestDto;
+import com.example.schoolmoney.resetpassword.dto.request.RequestPasswordResetRequestDto;
 import com.example.schoolmoney.resetpassword.dto.request.ResetPasswordRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,20 +20,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class ResetPasswordController {
 
-    private final ResetPasswordTokenService resetPasswordTokenService;
+    private final ResetPasswordService resetPasswordService;
 
-    @PostMapping("/forgot-password")
-    public ResponseEntity<MessageResponseDto> requestPasswordReset(@Valid @RequestBody CreateResetPasswordTokenRequestDto createResetPasswordTokenRequestDto) {
-        resetPasswordTokenService.createResetPasswordToken(createResetPasswordTokenRequestDto);
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<MessageResponseDto> requestPasswordReset(@Valid @RequestBody RequestPasswordResetRequestDto requestPasswordResetRequestDto) {
+        resetPasswordService.requestPasswordReset(requestPasswordResetRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new MessageResponseDto(ResetPasswordTokenMessages.RESET_PASSWORD_TOKEN_CREATED_SUCCESSFULLY));
+                .body(new MessageResponseDto(ResetPasswordTokenMessages.PASSWORD_RESET_REQUESTED));
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/password-reset")
     public ResponseEntity<MessageResponseDto> resetPassword(@Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
-        resetPasswordTokenService.resetPassword(resetPasswordRequestDto);
+        resetPasswordService.resetPassword(resetPasswordRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

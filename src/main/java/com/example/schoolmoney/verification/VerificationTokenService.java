@@ -1,9 +1,7 @@
 package com.example.schoolmoney.verification;
 
 import com.example.schoolmoney.common.constants.messages.VerificationTokenMessages;
-import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.User;
-import com.example.schoolmoney.user.UserRepository;
 import com.example.schoolmoney.utils.RandomBase64TokenGenerator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -22,16 +20,10 @@ public class VerificationTokenService {
 
     private final VerificationTokenRepository verificationTokenRepository;
 
-    private final UserRepository userRepository;
-
-    private final EmailService emailService;
-
     private final VerificationTokenProperties verificationTokenProperties;
 
-    private final VerificationLinkService verificationLinkService;
-
-    private void markExistingTokensAsUsed(User user) {
-        List<VerificationToken> tokens = verificationTokenRepository.findAllByUser_UserIdAndUsedFalse(user.getUserId());
+    private void markExistingTokensAsUsed(User user, TokenType tokenType) {
+        List<VerificationToken> tokens = verificationTokenRepository.findAllByUser_UserIdAndTokenTypeAndUsedFalse(user.getUserId(), tokenType);
 
         for (VerificationToken token : tokens) {
             token.setUsed(true);
@@ -40,67 +32,36 @@ public class VerificationTokenService {
         verificationTokenRepository.saveAll(tokens);
     }
 
-    @Transactional
-    public String createVerificationToken(User user) {
-        markExistingTokensAsUsed(user);
-
-        VerificationToken token = VerificationToken
-                .builder()
-                .user(user)
-                .token(RandomBase64TokenGenerator.generate(verificationTokenProperties.getTokenLength()))
-                .expiryDate(Instant.now().plus(verificationTokenProperties.getExpiryHours(), ChronoUnit.HOURS))
-                .build();
-
-        VerificationToken savedToken = verificationTokenRepository.save(token);
-
-        return savedToken.getToken();
-    }
-
-    @Transactional
-    public void verifyUser(String token) throws EntityNotFoundException, IllegalArgumentException {
-        log.debug("Enter verifyUser for token: {}", token);
-
+    public VerificationToken validateToken(String token) throws EntityNotFoundException {
         VerificationToken verificationToken = verificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> {
                     log.warn(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
                     return new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
                 });
 
-        if (verificationToken.getExpiryDate().isBefore(Instant.now()) || verificationToken.isUsed()) {
+        if (verificationToken.getExpiresAt().isBefore(Instant.now()) || verificationToken.isUsed()) {
             log.warn(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
             throw new EntityNotFoundException(VerificationTokenMessages.VERIFICATION_TOKEN_NOT_FOUND);
         }
 
-        verificationToken.setUsed(true);
-        verificationTokenRepository.save(verificationToken);
-
-        User user = verificationToken.getUser();
-        user.setVerified(true);
-        userRepository.save(user);
-
-        log.debug("Exit verifyUser");
+        return verificationToken;
     }
 
     @Transactional
-    public void sendVerificationEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElse(null);
+    public String createVerificationToken(User user, TokenType tokenType) {
+        markExistingTokensAsUsed(user, tokenType);
 
-        if (user == null) {
-            log.debug("User with email {} not found", email);
-            return;
-        }
+        VerificationToken token = VerificationToken
+                .builder()
+                .user(user)
+                .token(RandomBase64TokenGenerator.generate(verificationTokenProperties.getTokenLength()))
+                .expiresAt(Instant.now().plus(verificationTokenProperties.getExpiryHours(), ChronoUnit.HOURS))
+                .tokenType(tokenType)
+                .build();
 
-        if (user.isVerified()) {
-            log.debug("User {} is already verified", email);
-            return;
-        }
+        VerificationToken savedToken = verificationTokenRepository.save(token);
 
-        String verificationToken = createVerificationToken(user);
-
-        String verificationLink = verificationLinkService.buildLink(verificationToken);
-
-        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationLink);
+        return savedToken.getToken();
     }
 
 }

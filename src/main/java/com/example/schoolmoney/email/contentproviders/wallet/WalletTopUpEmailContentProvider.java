@@ -1,5 +1,6 @@
-package com.example.schoolmoney.email.contentproviders;
+package com.example.schoolmoney.email.contentproviders.wallet;
 
+import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
