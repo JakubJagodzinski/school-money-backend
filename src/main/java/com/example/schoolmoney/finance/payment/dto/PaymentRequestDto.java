@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Currency;
 import java.util.UUID;
 
 @Data
@@ -24,7 +25,7 @@ public class PaymentRequestDto {
 
     private long amountInCents;
 
-    private String currency;
+    private Currency currency;
 
     private String successUrl;
 

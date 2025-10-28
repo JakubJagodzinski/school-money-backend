@@ -7,6 +7,7 @@ import com.example.schoolmoney.domain.report.domain.child.dto.ChildReportData;
 import com.example.schoolmoney.domain.report.dto.ReportData;
 import com.example.schoolmoney.domain.report.generator.pdf.ReportPageEvent;
 import com.example.schoolmoney.domain.report.generator.pdf.ReportPdfGenerator;
+import com.example.schoolmoney.utils.AmountFormatter;
 import com.example.schoolmoney.utils.DateToStringConverter;
 import com.lowagie.text.Document;
 import com.lowagie.text.Image;
@@ -90,7 +91,7 @@ public class ChildReportPdfGenerator implements ReportPdfGenerator {
             addDataCell(table, childFundOperation.getFund().getTitle());
             addDataCell(table, childFundOperation.getParent().getFullName());
             addDataCell(table, childFundOperation.getChild().getFullName());
-            addDataCell(table, String.format("%.2f PLN", childFundOperation.getAmountInCents() / 100.0));
+            addDataCell(table, AmountFormatter.format(childFundOperation.getAmountInCents(), childFundOperation.getCurrency()));
             addDataCell(table, childFundOperation.getOperationType().name());
             addDataCell(table, DateToStringConverter.fromInstantToLocal(childFundOperation.getProcessedAt()));
         }

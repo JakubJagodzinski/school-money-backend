@@ -7,6 +7,7 @@ import com.example.schoolmoney.domain.report.domain.fund.dto.FundReportData;
 import com.example.schoolmoney.domain.report.dto.ReportData;
 import com.example.schoolmoney.domain.report.generator.pdf.ReportPageEvent;
 import com.example.schoolmoney.domain.report.generator.pdf.ReportPdfGenerator;
+import com.example.schoolmoney.utils.AmountFormatter;
 import com.example.schoolmoney.utils.DateToStringConverter;
 import com.lowagie.text.Document;
 import com.lowagie.text.Image;
@@ -73,7 +74,7 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
         addRow(table, "Author", fund.getAuthor().getFullName());
         addRow(table, "School class", fund.getSchoolClass().getFullName());
         addRow(table, "Treasurer", fund.getSchoolClass().getTreasurer().getFullName());
-        addRow(table, "Amount per child", String.format("%.2f PLN", fund.getAmountPerChildInCents() / 100.0));
+        addRow(table, "Amount per child", AmountFormatter.format(fund.getAmountPerChildInCents(), fund.getCurrency()));
         addRow(table, "Children participating", String.valueOf(participatingChildrenCount));
         addRow(table, "Start date", DateToStringConverter.fromInstant(fund.getStartsAt()));
         addRow(table, "End date", DateToStringConverter.fromInstant(fund.getEndsAt()));
@@ -105,7 +106,7 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
         for (FundOperation fundOperation : fundOperations) {
             addDataCell(table, fundOperation.getParent().getFullName());
             addDataCell(table, fundOperation.getChild().getFullName());
-            addDataCell(table, String.format("%.2f PLN", fundOperation.getAmountInCents() / 100.0));
+            addDataCell(table, AmountFormatter.format(fundOperation.getAmountInCents(), fundOperation.getCurrency()));
             addDataCell(table, fundOperation.getOperationType().name());
             addDataCell(table, DateToStringConverter.fromInstantToLocal(fundOperation.getProcessedAt()));
         }

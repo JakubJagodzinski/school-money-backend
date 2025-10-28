@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.walletoperation;
 
+import com.example.schoolmoney.converter.CurrencyAttributeConverter;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.finance.ProviderType;
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.Currency;
 import java.util.UUID;
 
 @Getter
@@ -50,8 +52,9 @@ public class WalletOperation {
     private long amountInCents;
 
     @NotNull
+    @Convert(converter = CurrencyAttributeConverter.class)
     @Column(name = "currency", nullable = false, updatable = false)
-    private String currency;
+    private Currency currency;
 
     @Column(name = "processed_at")
     private Instant processedAt;

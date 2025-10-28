@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.wallet;
 
+import com.example.schoolmoney.converter.CurrencyAttributeConverter;
 import com.example.schoolmoney.domain.parent.Parent;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.util.Currency;
 import java.util.UUID;
 
 @Getter
@@ -32,6 +34,11 @@ public class Wallet {
     @Min(0)
     @Column(name = "balance_in_cents", nullable = false)
     private long balanceInCents;
+
+    @NotNull
+    @Convert(converter = CurrencyAttributeConverter.class)
+    @Column(name = "currency", nullable = false, updatable = false)
+    private Currency currency;
 
     @NotNull
     @Min(0)

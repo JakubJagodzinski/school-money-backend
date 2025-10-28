@@ -18,6 +18,8 @@ import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
+import com.example.schoolmoney.email.EmailService;
+import com.example.schoolmoney.finance.FinanceConfiguration;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,10 @@ public class FundService {
 
     private final SecurityUtils securityUtils;
 
+    private final EmailService emailService;
+
+    private final FinanceConfiguration financeConfiguration;
+
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
@@ -75,6 +81,7 @@ public class FundService {
                 .author(parent)
                 .schoolClass(schoolClass)
                 .amountPerChildInCents(createFundRequestDto.getAmountPerChildInCents())
+                .currency(financeConfiguration.getCurrency())
                 .title(createFundRequestDto.getTitle())
                 .description(createFundRequestDto.getDescription())
                 .endsAt(createFundRequestDto.getEndsAt())
@@ -165,7 +172,7 @@ public class FundService {
 
                 parentWallet.increaseBalanceInCents(fundOperation.getAmountInCents());
                 walletRepository.save(parentWallet);
-                log.info("Parent wallet updated {}", parentWallet);
+                log.info("Parent wallet balance updated {}", parentWallet);
 
                 FundOperation parentRefundOperation = FundOperation
                         .builder()
@@ -180,6 +187,18 @@ public class FundService {
 
                 fundOperationRepository.save(parentRefundOperation);
                 log.info("Parent refund operation saved {}", parentRefundOperation);
+
+                Parent parent = parentWallet.getParent();
+
+                emailService.sendFundPaymentRefundEmail(
+                        parent.getEmail(),
+                        parent.getFirstName(),
+                        parentRefundOperation.getFund().getTitle(),
+                        parentRefundOperation.getFund().getSchoolClass().getFullName(),
+                        parentRefundOperation.getChild().getFullName(),
+                        parentRefundOperation.getAmountInCents(),
+                        parentRefundOperation.getCurrency()
+                );
             }
         }
     }

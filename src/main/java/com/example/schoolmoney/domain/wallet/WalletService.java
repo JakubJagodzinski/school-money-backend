@@ -206,7 +206,12 @@ public class WalletService {
                 walletOperation.setProcessedAt(Instant.now());
                 walletOperation.setOperationStatus(FinancialOperationStatus.SUCCESS);
 
-                emailService.sendWalletTopUpEmail(parent.getEmail(), parent.getFirstName(), walletOperation.getAmountInCents());
+                emailService.sendWalletTopUpEmail(
+                        parent.getEmail(),
+                        parent.getFirstName(),
+                        walletOperation.getAmountInCents(),
+                        walletOperation.getCurrency()
+                );
                 break;
             case "payment_intent.payment_failed":
             case "checkout.session.expired":
@@ -309,7 +314,12 @@ public class WalletService {
                 walletOperation.setProcessedAt(Instant.now());
                 walletOperation.setOperationStatus(FinancialOperationStatus.SUCCESS);
 
-                emailService.sendWalletWithdrawalEmail(parent.getEmail(), parent.getFirstName(), walletOperation.getAmountInCents());
+                emailService.sendWalletWithdrawalEmail(
+                        parent.getEmail(),
+                        parent.getFirstName(),
+                        walletOperation.getAmountInCents(),
+                        walletOperation.getCurrency()
+                );
                 break;
             case "payout.failed":
                 wallet.decreaseReservedBalanceInCents(walletOperation.getAmountInCents());

@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.Currency;
 import java.util.UUID;
 
 @Data
@@ -24,6 +25,7 @@ import java.util.UUID;
         "child",
         "fund_id",
         "amount_in_cents",
+        "currency",
         "operation_type",
         "processed_at",
         "operation_status"
@@ -44,6 +46,9 @@ public class FundOperationResponseDto {
 
     @JsonProperty("amount_in_cents")
     private long amountInCents;
+
+    @JsonProperty("currency")
+    private Currency currency;
 
     @JsonProperty("operation_type")
     private FundOperationType operationType;

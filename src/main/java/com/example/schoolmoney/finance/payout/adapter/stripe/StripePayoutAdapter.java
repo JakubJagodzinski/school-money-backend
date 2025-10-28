@@ -33,7 +33,7 @@ public class StripePayoutAdapter implements PayoutAdapter {
 
         PayoutCreateParams params = PayoutCreateParams.builder()
                 .setAmount(payoutRequestDto.getAmountInCents())
-                .setCurrency(payoutRequestDto.getCurrency())
+                .setCurrency(payoutRequestDto.getCurrency().toString())
                 .setDestination(testBankAccountId)
                 .setStatementDescriptor(payoutRequestDto.getPayoutName())
                 .putMetadata("operationId", payoutRequestDto.getOperationId().toString())

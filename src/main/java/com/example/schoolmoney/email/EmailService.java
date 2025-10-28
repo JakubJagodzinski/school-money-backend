@@ -4,9 +4,7 @@ import com.example.schoolmoney.common.constants.messages.EmailMessages;
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.account.*;
 import com.example.schoolmoney.email.contentproviders.child.ChildReportEmailContentProvider;
-import com.example.schoolmoney.email.contentproviders.fund.FundBlockedEmailContentProvider;
-import com.example.schoolmoney.email.contentproviders.fund.FundReportEmailContentProvider;
-import com.example.schoolmoney.email.contentproviders.fund.FundUnblockedEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.fund.*;
 import com.example.schoolmoney.email.contentproviders.schoolclass.SchoolClassReportEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.wallet.WalletTopUpEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.wallet.WalletWithdrawalEmailContentProvider;
@@ -21,6 +19,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Currency;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -86,13 +85,13 @@ public class EmailService {
         sendEmail(to, "Account block expired", emailContentProvider, null, null);
     }
 
-    public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents) {
-        EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents);
+    public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents, Currency currency) {
+        EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents, currency);
         sendEmail(to, "Wallet withdrawal", emailContentProvider, null, null);
     }
 
-    public void sendWalletTopUpEmail(String to, String firstName, long amountInCents) {
-        EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents);
+    public void sendWalletTopUpEmail(String to, String firstName, long amountInCents, Currency currency) {
+        EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents, currency);
         sendEmail(to, "Wallet top-up", emailContentProvider, null, null);
     }
 
@@ -124,6 +123,16 @@ public class EmailService {
     public void sendFundFinishedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
         EmailContentProvider emailContentProvider = new FundUnblockedEmailContentProvider(firstName, fundName, schoolClassFullName);
         sendEmail(to, "Fund finished", emailContentProvider, null, null);
+    }
+
+    public void sendFundCancelledEmail(String to, String firstName, String fundName, String schoolClassFullName) {
+        EmailContentProvider emailContentProvider = new FundCancelledEmailContentProvider(firstName, fundName, schoolClassFullName);
+        sendEmail(to, "Fund cancelled", emailContentProvider, null, null);
+    }
+
+    public void sendFundPaymentRefundEmail(String to, String firstName, String fundName, String schoolClassFullName, String childFullName, long amountInCents, Currency currency) {
+        EmailContentProvider emailContentProvider = new FundPaymentRefundEmailContentProvider(firstName, fundName, schoolClassFullName, childFullName, amountInCents, currency);
+        sendEmail(to, "Fund payment refund", emailContentProvider, null, null);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.fundoperation;
 
+import com.example.schoolmoney.converter.CurrencyAttributeConverter;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
@@ -11,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.Currency;
 import java.util.UUID;
 
 @Getter
@@ -51,6 +53,11 @@ public class FundOperation {
     @Min(0)
     @Column(name = "amount_in_cents", nullable = false, updatable = false)
     private long amountInCents;
+
+    @NotNull
+    @Convert(converter = CurrencyAttributeConverter.class)
+    @Column(name = "currency", nullable = false, updatable = false)
+    private Currency currency;
 
     @NotNull
     @Enumerated(EnumType.STRING)

@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Currency;
 import java.util.UUID;
 
 @Data
@@ -45,7 +46,7 @@ public class PaymentNotificationDto {
     private long amountInCents;
 
     @JsonProperty("currency")
-    private String currency;
+    private Currency currency;
 
     @JsonProperty("raw_event")
     private Object rawEvent;

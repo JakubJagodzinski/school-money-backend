@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Currency;
 import java.util.UUID;
 
 @Slf4j
@@ -44,7 +45,7 @@ public class StripePayoutWebhookService {
                     .userId(userId)
                     .operationId(operationId)
                     .amountInCents(payout.getAmount())
-                    .currency(payout.getCurrency())
+                    .currency(Currency.getInstance(payout.getCurrency()))
                     .rawEvent(payload)
                     .providerType(ProviderType.STRIPE)
                     .build();

@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.Currency;
 import java.util.UUID;
 
 @Data
@@ -23,6 +24,7 @@ import java.util.UUID;
         "provider_type",
         "iban",
         "amount_in_cents",
+        "currency",
         "processed_at",
         "operation_type",
         "operation_status"
@@ -43,6 +45,9 @@ public class WalletOperationResponseDto {
 
     @JsonProperty("amount_in_cents")
     private long amountInCents;
+
+    @JsonProperty("currency")
+    private Currency currency;
 
     @JsonProperty("processed_at")
     private Instant processedAt;

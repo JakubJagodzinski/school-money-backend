@@ -7,20 +7,26 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Currency;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({
+        "withdrawal_iban",
         "balance_in_cents",
-        "withdrawal_iban"
+        "currency"
 })
 public class WalletInfoResponseDto {
 
-    @JsonProperty("balance_in_cents")
-    private Long balanceInCents;
-
     @JsonProperty("withdrawal_iban")
     private String withdrawalIban;
+
+    @JsonProperty("balance_in_cents")
+    private long balanceInCents;
+
+    @JsonProperty("currency")
+    private Currency currency;
 
 }

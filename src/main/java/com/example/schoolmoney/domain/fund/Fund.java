@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.fund;
 
+import com.example.schoolmoney.converter.CurrencyAttributeConverter;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import jakarta.persistence.*;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.util.Currency;
 import java.util.UUID;
 
 @Getter
@@ -64,6 +66,11 @@ public class Fund {
     @Min(0) // allow "free" funds
     @Column(name = "amount_per_child_in_cents", nullable = false, updatable = false)
     private long amountPerChildInCents;
+
+    @NotNull
+    @Convert(converter = CurrencyAttributeConverter.class)
+    @Column(name = "currency", nullable = false, updatable = false)
+    private Currency currency;
 
     @NotBlank
     @Size(max = 34)

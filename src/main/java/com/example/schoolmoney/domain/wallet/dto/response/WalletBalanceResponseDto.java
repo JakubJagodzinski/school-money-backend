@@ -12,11 +12,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({
-        "balance_in_cents"
+        "balance_in_cents",
+        "currency"
 })
 public class WalletBalanceResponseDto {
 
     @JsonProperty("balance_in_cents")
-    private Long balanceInCents;
+    private long balanceInCents;
+
+    @JsonProperty("currency")
+    private String currency;
 
 }

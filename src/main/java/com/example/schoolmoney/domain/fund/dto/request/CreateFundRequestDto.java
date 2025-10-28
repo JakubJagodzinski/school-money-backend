@@ -46,7 +46,7 @@ public class CreateFundRequestDto {
     @NotNull
     @Min(0) // allow "free" funds
     @JsonProperty("amount_per_child_in_cents")
-    private Long amountPerChildInCents;
+    private long amountPerChildInCents;
 
     @NotBlank
     @Size(max = 34)

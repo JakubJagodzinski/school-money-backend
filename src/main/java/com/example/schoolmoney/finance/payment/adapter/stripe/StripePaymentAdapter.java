@@ -39,7 +39,7 @@ public class StripePaymentAdapter implements PaymentAdapter {
                                 .setQuantity(1L)
                                 .setPriceData(
                                         SessionCreateParams.LineItem.PriceData.builder()
-                                                .setCurrency(paymentRequestDto.getCurrency())
+                                                .setCurrency(paymentRequestDto.getCurrency().toString())
                                                 .setUnitAmount(paymentRequestDto.getAmountInCents())
                                                 .setProductData(
                                                         SessionCreateParams.LineItem.PriceData.ProductData.builder()
