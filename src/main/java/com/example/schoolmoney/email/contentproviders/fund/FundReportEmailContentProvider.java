@@ -1,21 +1,23 @@
 package com.example.schoolmoney.email.contentproviders.fund;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
+@Builder
 @RequiredArgsConstructor
 public class FundReportEmailContentProvider implements EmailContentProvider {
-
-    private final String firstName;
 
     private final String fundTitle;
 
     @Override
-    public String build() {
-        return "<p>Hi " + firstName + "!</p>" +
-                "<p>Here is the copy of the generated report for the <i>" + fundTitle + "</i> fund.</p>" +
-                "<p>Best regards,<br>The SchoolMoney Team</p>" +
-                "<p><i>Note: This is an automated message, please do not reply to this email.</i></p>";
+    public String getSubject() {
+        return "Fund financial report";
+    }
+
+    @Override
+    public String getBody() {
+        return "<p>Here is the copy of the generated financial report for the <strong>" + fundTitle + "</strong> fund.</p>";
     }
 
 }

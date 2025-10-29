@@ -45,7 +45,7 @@ public class StripePayoutWebhookService {
                     .userId(userId)
                     .operationId(operationId)
                     .amountInCents(payout.getAmount())
-                    .currency(Currency.getInstance(payout.getCurrency()))
+                    .currency(Currency.getInstance(payout.getCurrency().toUpperCase()))
                     .rawEvent(payload)
                     .providerType(ProviderType.STRIPE)
                     .build();

@@ -1,23 +1,25 @@
 package com.example.schoolmoney.email.contentproviders.account;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
+@Builder
 @RequiredArgsConstructor
 public class ChangeEmailConfirmationEmailContentProvider implements EmailContentProvider {
 
-    private final String firstName;
-
-    private final String verificationLink;
+    private final String newEmailConfirmationLink;
 
     @Override
-    public String build() {
-        return "<p>Hi " + firstName + "!</p>" +
-                "<p>We received a request to change the email address associated with your account.</p>" +
-                "<p>Click <a href=\"" + verificationLink + "\">here</a> to confirm your new email.</p>" +
-                "<p>If you didn’t request this change, please ignore this message. Your account will remain unchanged.</p>" +
-                "<p>Best regards,<br>The SchoolMoney Team</p>" +
-                "<p><i>Note: This is an automated message, please do not reply to this email.</i></p>";
+    public String getSubject() {
+        return "Confirm new email address";
+    }
+
+    @Override
+    public String getBody() {
+        return "<p>We received a request to change the email address associated with your account.</p>" +
+                "<p>Click <a href=\"" + newEmailConfirmationLink + "\">here</a> to confirm your new email.</p>" +
+                "<p>If you didn’t request this change, please ignore this message. Your account will remain unchanged.</p>";
     }
 
 }

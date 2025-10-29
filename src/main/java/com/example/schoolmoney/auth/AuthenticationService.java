@@ -128,7 +128,11 @@ public class AuthenticationService {
 
         String verificationToken = verificationTokenService.createVerificationToken(user, TokenType.ACCOUNT_VERIFICATION);
         String verificationLink = verificationLinkService.buildAccountVerificationLink(verificationToken);
-        emailService.sendVerificationEmail(user.getEmail(), user.getFirstName(), verificationLink);
+        emailService.sendVerificationEmail(
+                user.getEmail(),
+                user.getFirstName(),
+                verificationLink
+        );
 
         log.debug("Exit sendVerificationEmail");
     }

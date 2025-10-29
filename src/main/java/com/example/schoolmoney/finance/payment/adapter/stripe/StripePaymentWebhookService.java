@@ -38,7 +38,7 @@ public class StripePaymentWebhookService {
                     .userId(UUID.fromString(session.getMetadata().get("userId")))
                     .operationId(UUID.fromString(session.getMetadata().get("operationId")))
                     .amountInCents(session.getAmountTotal())
-                    .currency(Currency.getInstance(session.getCurrency()))
+                    .currency(Currency.getInstance(session.getCurrency().toUpperCase()))
                     .rawEvent(payload)
                     .providerType(ProviderType.STRIPE)
                     .build();

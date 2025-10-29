@@ -46,7 +46,11 @@ public class ResetPasswordService {
 
         String resetPasswordRedirectUrl = verificationLinkService.buildResetPasswordLink(verificationToken);
 
-        emailService.sendPasswordResetEmail(user.getEmail(), user.getFirstName(), resetPasswordRedirectUrl);
+        emailService.sendPasswordResetEmail(
+                user.getEmail(),
+                user.getFirstName(),
+                resetPasswordRedirectUrl
+        );
         log.debug("Exit requestPasswordReset");
     }
 

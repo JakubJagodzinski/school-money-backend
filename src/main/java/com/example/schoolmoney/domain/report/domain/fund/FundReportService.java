@@ -79,7 +79,13 @@ public class FundReportService {
 
         Parent parent = parentRepository.getReferenceById(userId);
 
-        emailService.sendFundReportEmail(parent.getEmail(), parent.getFirstName(), fund.getTitle(), reportDto.getReport(), reportDto.getReportFileName());
+        emailService.sendFundReportEmail(
+                parent.getEmail(),
+                parent.getFirstName(),
+                fund.getTitle(),
+                reportDto.getReport(),
+                reportDto.getReportFileName()
+        );
         return reportDto;
     }
 

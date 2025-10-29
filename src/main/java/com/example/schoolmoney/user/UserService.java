@@ -77,7 +77,10 @@ public class UserService {
 
             log.info("User {} unblocked", user.getEmail());
 
-            emailService.sendAccountBlockExpiredEmail(user.getEmail(), user.getFirstName());
+            emailService.sendAccountBlockExpiredEmail(
+                    user.getEmail(),
+                    user.getFirstName()
+            );
         }
 
         log.debug("Exit unblockUsersWithExpiredBlock");
@@ -107,7 +110,11 @@ public class UserService {
         userRepository.save(user);
         log.info("New email ({}) requested for user {}", user.getPendingNewEmail(), user.getEmail());
 
-        emailService.sendNewEmailConfirmationEmail(newEmail, user.getFirstName(), verificationLink);
+        emailService.sendNewEmailConfirmationEmail(
+                newEmail,
+                user.getFirstName(),
+                verificationLink
+        );
 
         log.debug("Exit requestEmailChange");
     }

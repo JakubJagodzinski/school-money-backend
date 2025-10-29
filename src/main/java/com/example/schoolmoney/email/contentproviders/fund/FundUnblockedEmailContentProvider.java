@@ -1,23 +1,26 @@
 package com.example.schoolmoney.email.contentproviders.fund;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
+@Builder
 @RequiredArgsConstructor
 public class FundUnblockedEmailContentProvider implements EmailContentProvider {
-
-    private final String firstName;
 
     private final String fundTitle;
 
     private final String schoolClassFullName;
 
     @Override
-    public String build() {
-        return "<p>Hi " + firstName + ",</p>" +
-                "<p>We are happy to inform you that your " + fundTitle + " fund in " + schoolClassFullName + " class has been unblocked and is now active.</p>" +
-                "<p>Best regards,<br>The SchoolMoney Team</p>" +
-                "<p><i>Note: This is an automated message, please do not reply to this email.</i></p>";
+    public String getSubject() {
+        return "Fund unblocked";
+    }
+
+    @Override
+    public String getBody() {
+        return "<p>We are happy to inform you that your <strong>" + fundTitle +
+                "</strong> fund in <strong>" + schoolClassFullName + "</strong> class has been unblocked and is now active.</p>";
     }
 
 }

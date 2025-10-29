@@ -31,7 +31,7 @@ public class EmailService {
     @Async
     public void sendEmail(
             String to,
-            String subject,
+            String firstName,
             EmailContentProvider contentProvider,
             byte[] attachmentBytes,
             String attachmentFileName
@@ -41,8 +41,8 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(contentProvider.build(), true);
+            helper.setSubject(contentProvider.getSubject());
+            helper.setText(contentProvider.build(firstName), true);
 
             if (attachmentBytes != null && attachmentFileName != null) {
                 helper.addAttachment(attachmentFileName, new ByteArrayResource(attachmentBytes));
@@ -56,83 +56,142 @@ public class EmailService {
     }
 
     public void sendVerificationEmail(String to, String firstName, String verificationLink) {
-        EmailContentProvider emailContentProvider = new AccountVerificationEmailContentProvider(firstName, verificationLink);
-        sendEmail(to, "Verify your account", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = AccountVerificationEmailContentProvider.builder()
+                .verificationLink(verificationLink)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
-    public void sendNewEmailConfirmationEmail(String to, String firstName, String verificationLink) {
-        EmailContentProvider emailContentProvider = new ChangeEmailConfirmationEmailContentProvider(firstName, verificationLink);
-        sendEmail(to, "Confirm your new email", emailContentProvider, null, null);
+    public void sendNewEmailConfirmationEmail(String to, String firstName, String newEmailConfirmationLink) {
+        EmailContentProvider emailContentProvider = ChangeEmailConfirmationEmailContentProvider.builder()
+                .newEmailConfirmationLink(newEmailConfirmationLink)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendPasswordResetEmail(String to, String firstName, String resetPasswordRedirectUrl) {
-        EmailContentProvider emailContentProvider = new ResetPasswordEmailContentProvider(firstName, resetPasswordRedirectUrl);
-        sendEmail(to, "Reset your password", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = PasswordResetEmailContentProvider.builder()
+                .passwordResetUrl(resetPasswordRedirectUrl)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendAccountBlockedEmail(String to, String firstName, String reason, long durationInDays, Instant blockedUntil) {
-        EmailContentProvider emailContentProvider = new AccountBlockedEmailContentProvider(firstName, reason, durationInDays, blockedUntil);
-        sendEmail(to, "Account blocked", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = AccountBlockedEmailContentProvider.builder()
+                .reason(reason)
+                .durationInDays(durationInDays)
+                .blockedUntil(blockedUntil)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendAccountUnblockedEmail(String to, String firstName, String reason) {
-        EmailContentProvider emailContentProvider = new AccountUnblockedEmailContentProvider(firstName, reason);
-        sendEmail(to, "Account unblocked", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = AccountUnblockedEmailContentProvider.builder()
+                .reason(reason)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendAccountBlockExpiredEmail(String to, String firstName) {
-        EmailContentProvider emailContentProvider = new AccountBlockExpiredEmailContentProvider(firstName);
-        sendEmail(to, "Account block expired", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = AccountBlockExpiredEmailContentProvider.builder()
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendWalletWithdrawalEmail(String to, String firstName, long amountInCents, Currency currency) {
-        EmailContentProvider emailContentProvider = new WalletWithdrawalEmailContentProvider(firstName, amountInCents, currency);
-        sendEmail(to, "Wallet withdrawal", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = WalletWithdrawalEmailContentProvider.builder()
+                .amountInCents(amountInCents)
+                .currency(currency)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendWalletTopUpEmail(String to, String firstName, long amountInCents, Currency currency) {
-        EmailContentProvider emailContentProvider = new WalletTopUpEmailContentProvider(firstName, amountInCents, currency);
-        sendEmail(to, "Wallet top-up", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = WalletTopUpEmailContentProvider.builder()
+                .amountInCents(amountInCents)
+                .currency(currency)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendFundReportEmail(String to, String firstName, String fundTitle, byte[] report, String reportTitle) {
-        EmailContentProvider emailContentProvider = new FundReportEmailContentProvider(firstName, fundTitle);
-        sendEmail(to, "Fund report", emailContentProvider, report, reportTitle);
+        EmailContentProvider emailContentProvider = FundReportEmailContentProvider.builder()
+                .fundTitle(fundTitle)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, report, reportTitle);
     }
 
     public void sendChildReportEmail(String to, String firstName, String childFullName, byte[] report, String reportTitle) {
-        EmailContentProvider emailContentProvider = new ChildReportEmailContentProvider(firstName, childFullName);
-        sendEmail(to, "Your child report", emailContentProvider, report, reportTitle);
+        EmailContentProvider emailContentProvider = ChildReportEmailContentProvider.builder()
+                .childFullName(childFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, report, reportTitle);
     }
 
     public void sendSchoolClassReportEmail(String to, String firstName, String schoolClassFullName, byte[] report, String reportTitle) {
-        EmailContentProvider emailContentProvider = new SchoolClassReportEmailContentProvider(firstName, schoolClassFullName);
-        sendEmail(to, "School class report", emailContentProvider, report, reportTitle);
+        EmailContentProvider emailContentProvider = SchoolClassReportEmailContentProvider.builder()
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, report, reportTitle);
     }
 
     public void sendFundBlockedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
-        EmailContentProvider emailContentProvider = new FundBlockedEmailContentProvider(firstName, fundName, schoolClassFullName);
-        sendEmail(to, "Fund blocked", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = FundBlockedEmailContentProvider.builder()
+                .fundTitle(fundName)
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendFundUnblockedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
-        EmailContentProvider emailContentProvider = new FundUnblockedEmailContentProvider(firstName, fundName, schoolClassFullName);
-        sendEmail(to, "Fund unblocked", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = FundUnblockedEmailContentProvider.builder()
+                .fundTitle(fundName)
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendFundFinishedEmail(String to, String firstName, String fundName, String schoolClassFullName) {
-        EmailContentProvider emailContentProvider = new FundUnblockedEmailContentProvider(firstName, fundName, schoolClassFullName);
-        sendEmail(to, "Fund finished", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = FundUnblockedEmailContentProvider.builder()
+                .fundTitle(fundName)
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendFundCancelledEmail(String to, String firstName, String fundName, String schoolClassFullName) {
-        EmailContentProvider emailContentProvider = new FundCancelledEmailContentProvider(firstName, fundName, schoolClassFullName);
-        sendEmail(to, "Fund cancelled", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = FundCancelledEmailContentProvider.builder()
+                .fundTitle(fundName)
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
     public void sendFundPaymentRefundEmail(String to, String firstName, String fundName, String schoolClassFullName, String childFullName, long amountInCents, Currency currency) {
-        EmailContentProvider emailContentProvider = new FundPaymentRefundEmailContentProvider(firstName, fundName, schoolClassFullName, childFullName, amountInCents, currency);
-        sendEmail(to, "Fund payment refund", emailContentProvider, null, null);
+        EmailContentProvider emailContentProvider = FundPaymentRefundEmailContentProvider.builder()
+                .fundTitle(fundName)
+                .schoolClassFullName(schoolClassFullName)
+                .childFullName(childFullName)
+                .amountInCents(amountInCents)
+                .currency(currency)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, null, null);
     }
 
 }

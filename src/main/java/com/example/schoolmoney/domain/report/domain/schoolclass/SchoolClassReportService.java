@@ -81,7 +81,13 @@ public class SchoolClassReportService {
 
         Parent parent = parentRepository.getReferenceById(userId);
 
-        emailService.sendSchoolClassReportEmail(parent.getEmail(), parent.getFirstName(), schoolClass.getFullName(), reportDto.getReport(), reportDto.getReportFileName());
+        emailService.sendSchoolClassReportEmail(
+                parent.getEmail(),
+                parent.getFirstName(),
+                schoolClass.getFullName(),
+                reportDto.getReport(),
+                reportDto.getReportFileName()
+        );
         return reportDto;
     }
 
