@@ -6,13 +6,18 @@ import lombok.RequiredArgsConstructor;
 
 @Builder
 @RequiredArgsConstructor
-public class ChangeEmailConfirmationEmailContentProvider implements EmailContentProvider {
+public class NewEmailConfirmationEmailContentProvider implements EmailContentProvider {
 
     private final String newEmailConfirmationLink;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
-        return "Confirm new email address";
+        return "New email confirmation";
     }
 
     @Override

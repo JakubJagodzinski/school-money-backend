@@ -131,7 +131,8 @@ public class AuthenticationService {
         emailService.sendVerificationEmail(
                 user.getEmail(),
                 user.getFirstName(),
-                verificationLink
+                verificationLink,
+                user.isNotificationsEnabled()
         );
 
         log.debug("Exit sendVerificationEmail");

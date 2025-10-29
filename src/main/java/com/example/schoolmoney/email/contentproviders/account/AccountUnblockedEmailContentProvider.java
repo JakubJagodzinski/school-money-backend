@@ -11,6 +11,11 @@ public class AccountUnblockedEmailContentProvider implements EmailContentProvide
     private final String reason;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Account unblocked";
     }

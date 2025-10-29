@@ -2,6 +2,10 @@ package com.example.schoolmoney.email.contentproviders;
 
 public interface EmailContentProvider {
 
+    default boolean isCritical() {
+        return false;
+    }
+
     String getSubject();
 
     default String getGreeting(String firstName) {

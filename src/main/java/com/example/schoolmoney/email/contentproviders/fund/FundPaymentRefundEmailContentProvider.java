@@ -22,6 +22,11 @@ public class FundPaymentRefundEmailContentProvider implements EmailContentProvid
     private final Currency currency;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Fund payment refund";
     }

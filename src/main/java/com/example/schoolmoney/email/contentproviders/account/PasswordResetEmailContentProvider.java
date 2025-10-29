@@ -11,6 +11,11 @@ public class PasswordResetEmailContentProvider implements EmailContentProvider {
     private final String passwordResetUrl;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Password reset";
     }

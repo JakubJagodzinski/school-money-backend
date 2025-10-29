@@ -197,7 +197,8 @@ public class FundService {
                         parentRefundOperation.getFund().getSchoolClass().getFullName(),
                         parentRefundOperation.getChild().getFullName(),
                         parentRefundOperation.getAmountInCents(),
-                        parentRefundOperation.getCurrency()
+                        parentRefundOperation.getCurrency(),
+                        parent.isNotificationsEnabled()
                 );
             }
         }

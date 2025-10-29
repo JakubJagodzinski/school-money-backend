@@ -14,17 +14,21 @@ import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 
+@Slf4j
 @Service
 public class FundReportPdfGenerator implements ReportPdfGenerator {
 
     @Override
     public byte[] generateReportPdf(ReportData reportData) {
+        log.info("Fund report pdf generator started");
+
         FundReportData fundReportData = (FundReportData) reportData;
         Fund fund = fundReportData.getFund();
         List<FundOperation> fundOperationList = fundReportData.getFundOperationList();
@@ -61,7 +65,10 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
 
             return out.toByteArray();
         } catch (Exception e) {
+            log.error(FundReportMessages.PDF_REPORT_GENERATION_FAILED, e);
             throw new RuntimeException(FundReportMessages.PDF_REPORT_GENERATION_FAILED, e);
+        } finally {
+            log.info("Fund report pdf generator finished");
         }
     }
 

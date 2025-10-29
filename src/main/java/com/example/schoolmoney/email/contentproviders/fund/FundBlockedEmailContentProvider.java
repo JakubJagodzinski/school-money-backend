@@ -13,6 +13,11 @@ public class FundBlockedEmailContentProvider implements EmailContentProvider {
     private final String schoolClassFullName;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Fund blocked";
     }

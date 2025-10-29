@@ -46,6 +46,8 @@ public class FundReportService {
 
     @Transactional
     public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException, AccessDeniedException {
+        log.debug("Enter generateFundReport(fundId={})", fundId);
+
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
                     log.warn(FundMessages.FUND_NOT_FOUND);
@@ -84,8 +86,11 @@ public class FundReportService {
                 parent.getFirstName(),
                 fund.getTitle(),
                 reportDto.getReport(),
-                reportDto.getReportFileName()
+                reportDto.getReportFileName(),
+                parent.isNotificationsEnabled()
         );
+
+        log.debug("Exit generateFundReport()");
         return reportDto;
     }
 

@@ -11,6 +11,11 @@ public class AccountVerificationEmailContentProvider implements EmailContentProv
     private final String verificationLink;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Account verification";
     }

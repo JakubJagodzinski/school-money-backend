@@ -9,6 +9,11 @@ import lombok.RequiredArgsConstructor;
 public class AccountBlockExpiredEmailContentProvider implements EmailContentProvider {
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Account block expired";
     }

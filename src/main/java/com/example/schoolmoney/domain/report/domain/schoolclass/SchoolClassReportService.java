@@ -46,6 +46,8 @@ public class SchoolClassReportService {
 
     @Transactional
     public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
+        log.debug("Enter generateSchoolClassReport(schoolClassId={})", schoolClassId);
+
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
                 .orElseThrow(() -> {
                     log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
@@ -86,8 +88,11 @@ public class SchoolClassReportService {
                 parent.getFirstName(),
                 schoolClass.getFullName(),
                 reportDto.getReport(),
-                reportDto.getReportFileName()
+                reportDto.getReportFileName(),
+                parent.isNotificationsEnabled()
         );
+
+        log.debug("Exit generateSchoolClassReport()");
         return reportDto;
     }
 

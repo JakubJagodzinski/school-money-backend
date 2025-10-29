@@ -84,7 +84,8 @@ public class AdminService {
                 user.getFirstName(),
                 blockUserRequestDto.getReason().toString(),
                 blockUserRequestDto.getDurationInDays(),
-                until
+                until,
+                user.isNotificationsEnabled()
         );
 
         log.debug("Exit blockUser");
@@ -116,7 +117,8 @@ public class AdminService {
         emailService.sendAccountUnblockedEmail(
                 user.getEmail(),
                 user.getFirstName(),
-                unblockUserRequestDto.getReason().toString()
+                unblockUserRequestDto.getReason().toString(),
+                user.isNotificationsEnabled()
         );
 
         log.debug("Exit unblockUser");
@@ -147,7 +149,8 @@ public class AdminService {
                 treasurer.getEmail(),
                 treasurer.getFirstName(),
                 fund.getTitle(),
-                fund.getSchoolClass().getFullName()
+                fund.getSchoolClass().getFullName(),
+                treasurer.isNotificationsEnabled()
         );
 
         log.debug("Exit blockFund");
@@ -178,7 +181,8 @@ public class AdminService {
                 treasurer.getEmail(),
                 treasurer.getFirstName(),
                 fund.getTitle(),
-                fund.getSchoolClass().getFullName()
+                fund.getSchoolClass().getFullName(),
+                treasurer.isNotificationsEnabled()
         );
 
         log.debug("Exit unblockFund");

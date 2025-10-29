@@ -79,7 +79,8 @@ public class UserService {
 
             emailService.sendAccountBlockExpiredEmail(
                     user.getEmail(),
-                    user.getFirstName()
+                    user.getFirstName(),
+                    user.isNotificationsEnabled()
             );
         }
 
@@ -113,7 +114,8 @@ public class UserService {
         emailService.sendNewEmailConfirmationEmail(
                 newEmail,
                 user.getFirstName(),
-                verificationLink
+                verificationLink,
+                user.isNotificationsEnabled()
         );
 
         log.debug("Exit requestEmailChange");
@@ -137,6 +139,32 @@ public class UserService {
         userRepository.save(user);
 
         log.debug("Exit confirmEmailChange");
+    }
+
+    @Transactional
+    public void enableNotifications() {
+        log.debug("Enter enableNotifications");
+
+        User user = securityUtils.getCurrentUser();
+
+        user.setNotificationsEnabled(true);
+        userRepository.save(user);
+        log.info("User {} notifications enabled", user.getEmail());
+
+        log.debug("Exit enableNotifications");
+    }
+
+    @Transactional
+    public void disableNotifications() {
+        log.debug("Enter disableNotifications");
+
+        User user = securityUtils.getCurrentUser();
+
+        user.setNotificationsEnabled(false);
+        userRepository.save(user);
+        log.info("User {} notifications disabled", user.getEmail());
+
+        log.debug("Exit disableNotifications");
     }
 
 }

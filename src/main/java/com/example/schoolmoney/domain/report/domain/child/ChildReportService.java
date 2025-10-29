@@ -46,6 +46,8 @@ public class ChildReportService {
 
     @Transactional
     public ReportDto generateChildReport(UUID childId) throws EntityNotFoundException, AccessDeniedException {
+        log.debug("Enter generateChildReport(childId={})", childId);
+
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
                     log.warn(ChildMessages.CHILD_NOT_FOUND);
@@ -86,8 +88,11 @@ public class ChildReportService {
                 parent.getFirstName(),
                 child.getFullName(),
                 reportDto.getReport(),
-                reportDto.getReportFileName()
+                reportDto.getReportFileName(),
+                parent.isNotificationsEnabled()
         );
+
+        log.debug("Exit generateChildReport()");
         return reportDto;
     }
 

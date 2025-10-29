@@ -1,6 +1,7 @@
 package com.example.schoolmoney.user;
 
 import com.example.schoolmoney.auth.access.CheckPermission;
+import com.example.schoolmoney.common.constants.messages.NotificationMessages;
 import com.example.schoolmoney.common.constants.messages.PasswordMessages;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.dto.ApiErrorResponseDto;
@@ -78,6 +79,24 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(UserMessages.EMAIL_CHANGED_SUCCESSFULLY));
+    }
+
+    @PostMapping("/users/notifications/on")
+    public ResponseEntity<MessageResponseDto> enableNotifications() {
+        userService.enableNotifications();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(NotificationMessages.NOTIFICATIONS_ENABLED));
+    }
+
+    @PostMapping("/users/notifications/off")
+    public ResponseEntity<MessageResponseDto> disableNotifications() {
+        userService.disableNotifications();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(NotificationMessages.NOTIFICATIONS_DISABLED));
     }
 
 }

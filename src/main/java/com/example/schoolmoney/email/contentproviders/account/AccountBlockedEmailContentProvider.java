@@ -18,6 +18,11 @@ public class AccountBlockedEmailContentProvider implements EmailContentProvider 
     private final Instant blockedUntil;
 
     @Override
+    public boolean isCritical() {
+        return true;
+    }
+
+    @Override
     public String getSubject() {
         return "Account blocked";
     }

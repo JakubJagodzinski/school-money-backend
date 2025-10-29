@@ -210,7 +210,8 @@ public class WalletService {
                         parent.getEmail(),
                         parent.getFirstName(),
                         walletOperation.getAmountInCents(),
-                        walletOperation.getCurrency()
+                        walletOperation.getCurrency(),
+                        parent.isNotificationsEnabled()
                 );
                 break;
             case "payment_intent.payment_failed":
@@ -318,7 +319,8 @@ public class WalletService {
                         parent.getEmail(),
                         parent.getFirstName(),
                         walletOperation.getAmountInCents(),
-                        walletOperation.getCurrency()
+                        walletOperation.getCurrency(),
+                        parent.isNotificationsEnabled()
                 );
                 break;
             case "payout.failed":

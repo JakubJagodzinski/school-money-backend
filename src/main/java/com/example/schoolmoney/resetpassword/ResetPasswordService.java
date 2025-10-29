@@ -49,7 +49,8 @@ public class ResetPasswordService {
         emailService.sendPasswordResetEmail(
                 user.getEmail(),
                 user.getFirstName(),
-                resetPasswordRedirectUrl
+                resetPasswordRedirectUrl,
+                user.isNotificationsEnabled()
         );
         log.debug("Exit requestPasswordReset");
     }

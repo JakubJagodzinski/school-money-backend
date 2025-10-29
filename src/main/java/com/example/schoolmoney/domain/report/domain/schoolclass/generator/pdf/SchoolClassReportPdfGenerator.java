@@ -12,16 +12,20 @@ import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 
+@Slf4j
 @Service
 public class SchoolClassReportPdfGenerator implements ReportPdfGenerator {
 
     @Override
     public byte[] generateReportPdf(ReportData reportData) {
+        log.info("School class report pdf generator started");
+
         SchoolClassReportData schoolClassReportData = (SchoolClassReportData) reportData;
         SchoolClass schoolClass = schoolClassReportData.getSchoolClass();
         InputStreamResource schoolClassAvatar = schoolClassReportData.getSchoolClassAvatar();
@@ -54,7 +58,10 @@ public class SchoolClassReportPdfGenerator implements ReportPdfGenerator {
 
             return out.toByteArray();
         } catch (Exception e) {
+            log.error(FundReportMessages.PDF_REPORT_GENERATION_FAILED, e);
             throw new RuntimeException(FundReportMessages.PDF_REPORT_GENERATION_FAILED, e);
+        } finally {
+            log.info("School class report pdf generator finished");
         }
     }
 
