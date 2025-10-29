@@ -12,6 +12,8 @@ import com.example.schoolmoney.domain.fundmedia.dto.request.UpdateFundMediaFileM
 import com.example.schoolmoney.domain.fundmedia.dto.response.FundMediaResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.files.FileCategory;
+import com.example.schoolmoney.files.FileTypeDetector;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -46,25 +48,6 @@ public class FundMediaService {
 
     private final SecurityUtils securityUtils;
 
-    private FundMediaType determineMediaType(String contentType) {
-        if (contentType == null) return FundMediaType.OTHER;
-
-        return switch (contentType.split("/")[0]) {
-            case "image" -> FundMediaType.IMAGE;
-            case "video" -> FundMediaType.VIDEO;
-            case "audio" -> FundMediaType.AUDIO;
-            case "text" -> FundMediaType.DOCUMENT;
-            case "application" -> switch (contentType) {
-                case "application/pdf" -> FundMediaType.DOCUMENT;
-                case "application/zip",
-                     "application/x-rar-compressed",
-                     "application/x-zip-compressed" -> FundMediaType.ARCHIVE;
-                default -> FundMediaType.OTHER;
-            };
-            default -> FundMediaType.OTHER;
-        };
-    }
-
     @Transactional
     public FundMediaResponseDto uploadFundMediaFile(UUID fundId, MultipartFile file) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter uploadFundMedia(fundId={})", fundId);
@@ -85,7 +68,7 @@ public class FundMediaService {
             throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
         }
 
-        String fileId = storageService.uploadFile(file, bucketName);
+        String fileId = storageService.uploadFile(file, bucketName, FileCategory.FUND_MEDIA);
 
         FundMedia fundMedia = FundMedia.builder()
                 .fund(fund)
@@ -94,7 +77,7 @@ public class FundMediaService {
                 .filename(file.getOriginalFilename())
                 .contentType(file.getContentType())
                 .fileSize(file.getSize())
-                .mediaType(determineMediaType(file.getContentType()))
+                .mediaType(FileTypeDetector.determineFileType(file.getContentType()))
                 .build();
 
         fundMediaRepository.save(fundMedia);

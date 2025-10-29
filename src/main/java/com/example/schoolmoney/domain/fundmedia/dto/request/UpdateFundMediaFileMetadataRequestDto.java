@@ -1,6 +1,6 @@
 package com.example.schoolmoney.domain.fundmedia.dto.request;
 
-import com.example.schoolmoney.domain.fundmedia.FundMediaType;
+import com.example.schoolmoney.files.FileType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.EnumType;
@@ -22,7 +22,7 @@ public class UpdateFundMediaFileMetadataRequestDto {
 
     @JsonProperty("media_type")
     @Enumerated(EnumType.STRING)
-    private FundMediaType mediaType;
+    private FileType mediaType;
 
     @JsonProperty("filename")
     private String filename;

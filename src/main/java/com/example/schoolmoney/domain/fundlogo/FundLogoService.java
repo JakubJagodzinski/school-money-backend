@@ -6,6 +6,7 @@ import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
+import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -55,14 +56,14 @@ public class FundLogoService {
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
+        UUID newLogoId = UUID.fromString(storageService.uploadFile(logoFile, bucketName, FileCategory.AVATAR_OR_LOGO));
+
         if (fund.getLogoId() != null) {
             storageService.deleteFile(fund.getLogoId().toString(), bucketName);
             log.debug("Old logo deleted");
         }
 
-        UUID logoId = UUID.fromString(storageService.uploadFile(logoFile, bucketName));
-
-        fund.setLogoId(logoId);
+        fund.setLogoId(newLogoId);
         fundRepository.save(fund);
         log.info("Logo id saved for fund with fundId={}", fundId);
 

@@ -1,7 +1,7 @@
 package com.example.schoolmoney.domain.fundmedia.dto.response;
 
-import com.example.schoolmoney.domain.fundmedia.FundMediaType;
 import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
+import com.example.schoolmoney.files.FileType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
@@ -42,7 +42,7 @@ public class FundMediaResponseDto {
     private String contentType;
 
     @JsonProperty("media_type")
-    private FundMediaType mediaType;
+    private FileType mediaType;
 
     @JsonProperty("filename")
     private String filename;

@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -46,14 +47,14 @@ public class ChildAvatarService {
             throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
         }
 
+        String newAvatarId = storageService.uploadFile(avatarFile, bucketName, FileCategory.AVATAR_OR_LOGO);
+
         if (child.getAvatarId() != null) {
             storageService.deleteFile(child.getAvatarId().toString(), bucketName);
             log.debug("Old avatar deleted");
         }
 
-        String avatarId = storageService.uploadFile(avatarFile, bucketName);
-
-        child.setAvatarId(UUID.fromString(avatarId));
+        child.setAvatarId(UUID.fromString(newAvatarId));
         childRepository.save(child);
         log.info("Avatar id saved for child with childId={}", childId);
 

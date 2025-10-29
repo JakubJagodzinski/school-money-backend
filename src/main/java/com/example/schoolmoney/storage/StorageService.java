@@ -1,5 +1,8 @@
 package com.example.schoolmoney.storage;
 
+import com.example.schoolmoney.files.FileCategory;
+import com.example.schoolmoney.files.validation.FileTypeValidator;
+import com.example.schoolmoney.files.validation.FileValidationRules;
 import com.example.schoolmoney.storage.adapter.StorageAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,14 +17,20 @@ public class StorageService {
 
     private final StorageAdapter storageAdapter;
 
-    public String uploadFile(MultipartFile file, String bucketName) {
-        log.debug("Uploading file {}", file.getOriginalFilename());
-        log.debug("File size: {}", file.getSize());
-        log.debug("File content type: {}", file.getContentType());
+    public String uploadFile(MultipartFile file, String bucketName, FileCategory fileCategory) {
+        log.debug("Enter uploadFile(filename={}, bucketName={}, fileCategory={})", file.getOriginalFilename(), bucketName, fileCategory);
+
+        FileTypeValidator.validate(
+                file,
+                FileValidationRules.getAllowedTypes(fileCategory),
+                FileValidationRules.getMaxSize(fileCategory)
+        );
+        log.debug("File validated successfully: {} ({} bytes)", file.getOriginalFilename(), file.getSize());
 
         String fileUrl = storageAdapter.uploadFile(file, bucketName);
-        log.debug("File {} uploaded", fileUrl);
+        log.info("File uploaded to {}", fileUrl);
 
+        log.debug("Exit uploadFile");
         return fileUrl;
     }
 

@@ -2,6 +2,7 @@ package com.example.schoolmoney.domain.fundmedia;
 
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.files.FileType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -46,7 +47,7 @@ public class FundMedia {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "media_type", nullable = false)
-    private FundMediaType mediaType;
+    private FileType mediaType;
 
     @NotBlank
     @Column(name = "filename", nullable = false)

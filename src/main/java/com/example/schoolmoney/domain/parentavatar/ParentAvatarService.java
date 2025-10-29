@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -33,19 +34,17 @@ public class ParentAvatarService {
     public void updateParentAvatar(MultipartFile file) throws IllegalStateException {
         log.debug("Enter uploadParentAvatar");
 
-        // TODO check image file type
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
+
+        String newAvatarId = storageService.uploadFile(file, bucketName, FileCategory.AVATAR_OR_LOGO);
 
         if (parent.getAvatarId() != null) {
             storageService.deleteFile(parent.getAvatarId().toString(), bucketName);
             log.debug("Old avatar deleted");
         }
 
-        String avatarId = storageService.uploadFile(file, bucketName);
-
-        parent.setAvatarId(UUID.fromString(avatarId));
+        parent.setAvatarId(UUID.fromString(newAvatarId));
         parentRepository.save(parent);
         log.info("Avatar id saved for parent with parentId={}", userId);
 
