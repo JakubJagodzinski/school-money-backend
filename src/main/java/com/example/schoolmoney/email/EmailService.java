@@ -2,6 +2,7 @@ package com.example.schoolmoney.email;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.account.*;
+import com.example.schoolmoney.email.contentproviders.child.ChildAddedToClassEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.child.ChildReportEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.fund.*;
 import com.example.schoolmoney.email.contentproviders.schoolclass.SchoolClassReportEmailContentProvider;
@@ -21,7 +22,7 @@ public class EmailService {
 
     private final AsyncEmailSender asyncEmailSender;
 
-    public void sendEmail(String to, String firstName, EmailContentProvider emailContentProvider, boolean userNotificationsEnabled, byte[] attachmentBytes, String attachmentFileName) {
+    private void sendEmail(String to, String firstName, EmailContentProvider emailContentProvider, boolean userNotificationsEnabled, byte[] attachmentBytes, String attachmentFileName) {
         if (emailContentProvider.isCritical() || userNotificationsEnabled) {
             asyncEmailSender.sendEmail(to, firstName, emailContentProvider, attachmentBytes, attachmentFileName);
         } else {
@@ -29,7 +30,7 @@ public class EmailService {
         }
     }
 
-    public void sendEmail(String to, String firstName, EmailContentProvider emailContentProvider, boolean userNotificationsEnabled) {
+    private void sendEmail(String to, String firstName, EmailContentProvider emailContentProvider, boolean userNotificationsEnabled) {
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled, null, null);
     }
 
@@ -179,6 +180,15 @@ public class EmailService {
                 .childFullName(childFullName)
                 .amountInCents(amountInCents)
                 .currency(currency)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
+    }
+
+    public void sendChildAddedToClassEmail(String to, String firstName, String childFullName, String schoolClassFullName, boolean userNotificationsEnabled) {
+        EmailContentProvider emailContentProvider = ChildAddedToClassEmailContentProvider.builder()
+                .childFullName(childFullName)
+                .schoolClassFullName(schoolClassFullName)
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);

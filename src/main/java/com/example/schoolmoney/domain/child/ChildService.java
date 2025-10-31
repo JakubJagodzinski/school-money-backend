@@ -13,6 +13,7 @@ import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
+import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,8 @@ public class ChildService {
     private final SchoolClassRepository schoolClassRepository;
 
     private final SecurityUtils securityUtils;
+
+    private final EmailService emailService;
 
     @Transactional
     public ChildShortInfoResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
@@ -97,6 +100,16 @@ public class ChildService {
         child.setSchoolClass(schoolClass);
         childRepository.save(child);
         log.info("Child {} assigned to school class {}", child, schoolClass);
+
+        Parent parent = child.getParent();
+
+        emailService.sendChildAddedToClassEmail(
+                parent.getEmail(),
+                parent.getFirstName(),
+                child.getFullName(),
+                schoolClass.getFullName(),
+                parent.isNotificationsEnabled()
+        );
 
         log.debug("Exit assignChildToSchoolClass");
     }
