@@ -14,19 +14,19 @@ import java.util.Currency;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({
-        "withdrawal_iban",
+        "currency",
         "balance_in_cents",
-        "currency"
+        "withdrawal_iban"
 })
 public class WalletInfoResponseDto {
 
-    @JsonProperty("withdrawal_iban")
-    private String withdrawalIban;
+    @JsonProperty("currency")
+    private Currency currency;
 
     @JsonProperty("balance_in_cents")
     private long balanceInCents;
 
-    @JsonProperty("currency")
-    private Currency currency;
+    @JsonProperty("withdrawal_iban")
+    private String withdrawalIban;
 
 }

@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Currency;
 import java.util.UUID;
 
 @Slf4j
@@ -57,7 +58,7 @@ public class WalletService {
 
     private final PayoutService payoutService;
 
-    private final ProviderType providerType = ProviderType.STRIPE;
+    private final ProviderType withdrawalProviderType = ProviderType.STRIPE;
 
     private final FinanceConfiguration financeConfiguration;
 
@@ -66,7 +67,12 @@ public class WalletService {
     private final PaymentProperties paymentProperties;
 
     @Transactional
-    public void createWallet(UUID parentId) throws EntityNotFoundException, EntityExistsException {
+    public void createWallet(UUID parentId) {
+        createWallet(parentId, null);
+    }
+
+    @Transactional
+    public void createWallet(UUID parentId, Currency currency) throws EntityNotFoundException, EntityExistsException {
         log.debug("Enter createWallet(parentId={})", parentId);
 
         Parent parent = parentRepository.findById(parentId)
@@ -80,9 +86,14 @@ public class WalletService {
             throw new EntityExistsException(WalletMessages.WALLET_ALREADY_EXISTS);
         }
 
+        if (currency == null) {
+            currency = financeConfiguration.getCurrency();
+        }
+
         Wallet wallet = Wallet
                 .builder()
                 .parent(parent)
+                .currency(currency)
                 .build();
 
         walletRepository.save(wallet);
@@ -268,7 +279,7 @@ public class WalletService {
                 .currency(financeConfiguration.getCurrency())
                 .operationType(WalletOperationType.WALLET_WITHDRAWAL)
                 .operationStatus(FinancialOperationStatus.PENDING)
-                .providerType(providerType)
+                .providerType(withdrawalProviderType)
                 .iban(IbanMasker.maskIban(wallet.getWithdrawalIban()))
                 .build();
 
@@ -286,7 +297,7 @@ public class WalletService {
 
     private PayoutRequestDto buildPayoutRequest(UUID userId, WalletOperation pendingOperation, String iban) {
         return PayoutRequestDto.builder()
-                .providerType(providerType)
+                .providerType(withdrawalProviderType)
                 .payoutName("Wallet Withdrawal")
                 .operationId(pendingOperation.getWalletOperationId())
                 .userId(userId)
