@@ -103,6 +103,7 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(parentWallet)
                 .amountInCents(fund.getAmountPerChildInCents())
+                .currency(fund.getCurrency())
                 .operationType(FundOperationType.FUND_PAYMENT)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
@@ -182,6 +183,7 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
+                .currency(fund.getCurrency())
                 .operationType(FundOperationType.FUND_DEPOSIT)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
@@ -243,6 +245,7 @@ public class FundOperationService {
                 .fund(fund)
                 .wallet(treasurerWallet)
                 .amountInCents(amountInCents)
+                .currency(fund.getCurrency())
                 .operationType(FundOperationType.FUND_WITHDRAWAL)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
