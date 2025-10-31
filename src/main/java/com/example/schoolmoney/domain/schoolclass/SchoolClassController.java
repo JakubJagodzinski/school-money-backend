@@ -36,7 +36,7 @@ public class SchoolClassController {
     private final SchoolClassService schoolClassService;
 
     @CheckPermission(Permission.SCHOOL_CLASS_READ_ALL)
-    @GetMapping("/school-classes/all")
+    @GetMapping("/school-classes")
     public ResponseEntity<Page<SchoolClassResponseDto>> getAllSchoolClasses(
             @ParameterObject
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
@@ -72,7 +72,7 @@ public class SchoolClassController {
             )
     })
     @CheckPermission(Permission.PARENT_SCHOOL_CLASS_READ_ALL)
-    @GetMapping("/school-classes")
+    @GetMapping("/parents/school-classes")
     public ResponseEntity<Page<SchoolClassResponseDto>> getTreasurerAndParentChildrenSchoolClasses(
             @ParameterObject
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable

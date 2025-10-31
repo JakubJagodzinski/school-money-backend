@@ -22,7 +22,7 @@ public class FinancialOperationController {
     private final FinancialOperationService financialOperationService;
 
     @CheckPermission(Permission.FINANCIAL_OPERATION_HISTORY_READ)
-    @GetMapping("/financial-operations/history")
+    @GetMapping("/parents/finances/history")
     public ResponseEntity<Page<FinancialOperationView>> getUserFinancialOperationHistory(
             @ParameterObject
             @PageableDefault(size = 20, sort = "processed_at", direction = Sort.Direction.DESC) Pageable pageable

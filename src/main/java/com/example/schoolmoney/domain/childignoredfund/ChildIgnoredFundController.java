@@ -19,7 +19,7 @@ public class ChildIgnoredFundController {
     private final ChildIgnoredFundService childIgnoredFundService;
 
     @CheckPermission(Permission.CHILD_FUND_IGNORE)
-    @PostMapping("/children/{childId}/ignored-funds")
+    @PostMapping("/children/{childId}/funds/ignored")
     public ResponseEntity<MessageResponseDto> ignoreFundForChild(@PathVariable UUID childId, @RequestParam UUID fundId) {
         childIgnoredFundService.ignoreFundForChild(childId, fundId);
 
@@ -29,7 +29,7 @@ public class ChildIgnoredFundController {
     }
 
     @CheckPermission(Permission.CHILD_FUND_UNIGNORE)
-    @DeleteMapping("/children/{childId}/ignored-funds/{fundId}")
+    @DeleteMapping("/children/{childId}/funds/{fundId}/ignored")
     public ResponseEntity<MessageResponseDto> unignoreFundForChild(@PathVariable UUID childId, @PathVariable UUID fundId) {
         childIgnoredFundService.unignoreFundForChild(childId, fundId);
 

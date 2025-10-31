@@ -234,8 +234,8 @@ public class FundService {
         fundRepository.saveAll(endedFunds);
     }
 
-    public Page<FundResponseDto> getCreatedFunds(Pageable pageable) {
-        log.debug("Enter getCreatedFunds(pageable={})", pageable);
+    public Page<FundResponseDto> getParentCreatedFunds(Pageable pageable) {
+        log.debug("Enter getParentCreatedFunds(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
 
@@ -278,7 +278,7 @@ public class FundService {
         Fund savedFund = fundRepository.save(fund);
         log.info("Fund saved {}", fund);
 
-        log.debug("Exit updateFund");
+        log.debug("Exit getParentCreatedFunds");
         return fundMapper.toDto(savedFund);
     }
 

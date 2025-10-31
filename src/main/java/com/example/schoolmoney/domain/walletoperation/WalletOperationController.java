@@ -22,9 +22,8 @@ public class WalletOperationController {
 
     private final WalletOperationService walletOperationService;
 
-
     @CheckPermission(Permission.WALLET_HISTORY_READ_ALL)
-    @GetMapping("/wallet/history")
+    @GetMapping("/wallets/history")
     public ResponseEntity<Page<WalletOperationResponseDto>> getWalletHistory(
             @ParameterObject
             @PageableDefault(size = 20, sort = "processedAt", direction = Sort.Direction.DESC) Pageable pageable

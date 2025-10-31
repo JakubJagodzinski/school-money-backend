@@ -145,12 +145,12 @@ public class FundController {
             )
     })
     @CheckPermission(Permission.FUND_CREATED_READ_ALL)
-    @GetMapping("/funds/created")
-    public ResponseEntity<Page<FundResponseDto>> getCreatedFunds(
+    @GetMapping("/parents/funds/created")
+    public ResponseEntity<Page<FundResponseDto>> getParentCreatedFunds(
             @ParameterObject
             @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundResponseDto> fundResponseDtoPage = fundService.getCreatedFunds(pageable);
+        Page<FundResponseDto> fundResponseDtoPage = fundService.getParentCreatedFunds(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -251,7 +251,7 @@ public class FundController {
             ),
     })
     @CheckPermission(Permission.SCHOOL_CLASS_FUND_READ_ALL)
-    @GetMapping("/school-class/{schoolClassId}/funds")
+    @GetMapping("/school-classes/{schoolClassId}/funds")
     public ResponseEntity<Page<FundResponseDto>> getSchoolClassAllFunds(
             @PathVariable UUID schoolClassId,
             @ParameterObject
@@ -286,7 +286,7 @@ public class FundController {
             )
     })
     @CheckPermission(Permission.PARENT_CHILDREN_FUND_READ_ALL)
-    @GetMapping("/parent/children/funds")
+    @GetMapping("/parents/children/funds")
     public ResponseEntity<Page<FundResponseDto>> getParentChildrenAllFunds(
             @ParameterObject
             @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable

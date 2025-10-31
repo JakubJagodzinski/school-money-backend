@@ -20,7 +20,7 @@ public class FundReportController {
     private final FundReportService fundReportService;
 
     @CheckPermission(Permission.FUND_REPORT_GENERATE)
-    @GetMapping("/fund/{fundId}/report")
+    @GetMapping("/funds/{fundId}/report")
     public ResponseEntity<byte[]> generateFundReport(@PathVariable UUID fundId) {
         ReportDto reportDto = fundReportService.generateFundReport(fundId);
 

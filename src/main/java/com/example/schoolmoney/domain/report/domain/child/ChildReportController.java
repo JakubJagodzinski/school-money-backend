@@ -20,7 +20,7 @@ public class ChildReportController {
     private final ChildReportService childReportService;
 
     @CheckPermission(Permission.CHILD_REPORT_GENERATE)
-    @GetMapping("/child/{childId}/report")
+    @GetMapping("/children/{childId}/report")
     public ResponseEntity<byte[]> generateChildReport(@PathVariable UUID childId) {
         ReportDto reportDto = childReportService.generateChildReport(childId);
 

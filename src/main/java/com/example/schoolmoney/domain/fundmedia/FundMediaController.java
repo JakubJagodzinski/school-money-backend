@@ -34,7 +34,7 @@ public class FundMediaController {
     )
     @CheckPermission(Permission.FUND_MEDIA_FILE_UPLOAD)
     @PostMapping(
-            value = "/funds/{fundId}/media/file",
+            value = "/funds/{fundId}/media",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<FundMediaResponseDto> uploadFundMediaFile(@PathVariable UUID fundId, @RequestParam("mediaFile") MultipartFile mediaFile) {
@@ -49,7 +49,7 @@ public class FundMediaController {
             summary = "Get fund all media metadata"
     )
     @CheckPermission(Permission.FUND_MEDIA_METADATA_READ)
-    @GetMapping("/funds/{fundId}/media/file/metadata")
+    @GetMapping("/funds/{fundId}/media/metadata")
     public ResponseEntity<Page<FundMediaResponseDto>> getFundMediaMetadataPage(
             @PathVariable UUID fundId,
             @ParameterObject
@@ -66,7 +66,7 @@ public class FundMediaController {
             summary = "Get fund media file if exists"
     )
     @CheckPermission(Permission.FUND_MEDIA_FILE_READ)
-    @GetMapping("/funds/{fundId}/media/{fundMediaId}/file")
+    @GetMapping("/funds/{fundId}/media/{fundMediaId}")
     public ResponseEntity<InputStreamResource> getFundMediaFile(@PathVariable UUID fundId, @PathVariable UUID fundMediaId) {
         FileWithMetadata file = fundMediaService.getFundMediaFileWithMetadata(fundId, fundMediaId);
 
@@ -78,7 +78,7 @@ public class FundMediaController {
     }
 
     @CheckPermission(Permission.FUND_MEDIA_METADATA_UPDATE)
-    @PatchMapping("/funds/{fundId}/media/{fundMediaId}/file/metadata")
+    @PatchMapping("/funds/{fundId}/media/{fundMediaId}/metadata")
     public ResponseEntity<FundMediaResponseDto> updateFundMediaFileMetadata(
             @PathVariable UUID fundId,
             @PathVariable UUID fundMediaId,
@@ -95,7 +95,7 @@ public class FundMediaController {
             summary = "Delete fund media file if exists"
     )
     @CheckPermission(Permission.FUND_MEDIA_FILE_DELETE)
-    @DeleteMapping("/funds/{fundId}/media/{fundMediaId}/file")
+    @DeleteMapping("/funds/{fundId}/media/{fundMediaId}")
     public ResponseEntity<Void> deleteFundMediaFile(@PathVariable UUID fundId, @PathVariable UUID fundMediaId) {
         fundMediaService.deleteFundMediaFile(fundId, fundMediaId);
 
