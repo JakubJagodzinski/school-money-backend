@@ -63,7 +63,7 @@ public class FundService {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent fundAuthor = parentRepository.getReferenceById(userId);
 
         SchoolClass schoolClass = schoolClassRepository.findById(createFundRequestDto.getSchoolClassId())
                 .orElseThrow(() -> {
@@ -78,7 +78,7 @@ public class FundService {
 
         Fund fund = Fund
                 .builder()
-                .author(parent)
+                .author(fundAuthor)
                 .schoolClass(schoolClass)
                 .amountPerChildInCents(createFundRequestDto.getAmountPerChildInCents())
                 .currency(financeConfiguration.getCurrency())
@@ -90,6 +90,22 @@ public class FundService {
 
         fundRepository.save(fund);
         log.info("Fund saved {}", fund);
+
+        List<Parent> schoolClassParents = childRepository.findSchoolClassDistinctParents(schoolClass.getSchoolClassId());
+        log.debug("Number of parents in school class {}", schoolClassParents.size());
+
+        log.debug("Sending emails to parents in school class");
+        for (Parent parent : schoolClassParents) {
+            emailService.sendFundCreatedEmail(
+                    parent.getEmail(),
+                    parent.getFirstName(),
+                    fundAuthor.getFullName(),
+                    fund.getTitle(),
+                    schoolClass.getFullName(),
+                    parent.isNotificationsEnabled()
+            );
+        }
+        log.debug("Emails sent");
 
         log.debug("Exit createFund");
         return fundMapper.toDto(fund);
@@ -181,6 +197,7 @@ public class FundService {
                         .fund(fundOperation.getFund())
                         .wallet(parentWallet)
                         .amountInCents(fundOperation.getAmountInCents())
+                        .currency(fundOperation.getCurrency())
                         .operationType(FundOperationType.FUND_REFUND)
                         .operationStatus(FinancialOperationStatus.SUCCESS)
                         .build();
@@ -211,6 +228,7 @@ public class FundService {
         for (Fund fund : endedFunds) {
             fund.setFundStatus(FundStatus.FINISHED);
             fund.setEndedAt(Instant.now());
+            log.info("Finished fund with fundId={}", fund);
         }
 
         fundRepository.saveAll(endedFunds);

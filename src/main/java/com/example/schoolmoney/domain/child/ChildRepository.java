@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.child;
 
+import com.example.schoolmoney.domain.parent.Parent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,6 +26,13 @@ public interface ChildRepository extends JpaRepository<Child, UUID> {
                 WHERE c.parent.userId = :userId
             """)
     List<UUID> findDistinctSchoolClassIdsByParentUserId(@Param("userId") UUID userId);
+
+    @Query("""
+                SELECT DISTINCT c.parent
+                FROM Child c
+                WHERE c.schoolClass IS NOT NULL AND c.schoolClass.schoolClassId = :schoolClassId
+            """)
+    List<Parent> findSchoolClassDistinctParents(@Param("schoolClassId") UUID schoolClassId);
 
     long countBySchoolClass_SchoolClassId(UUID schoolClassId);
 

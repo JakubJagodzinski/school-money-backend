@@ -34,6 +34,7 @@ public class AsyncEmailSender {
             }
 
             mailSender.send(message);
+            log.debug("Email {} sent to {}", contentProvider.getClass().getName(), to);
         } catch (Exception e) {
             log.error(EmailMessages.FAILED_TO_SEND_EMAIL, e);
             throw new MailSendException(EmailMessages.FAILED_TO_SEND_EMAIL);

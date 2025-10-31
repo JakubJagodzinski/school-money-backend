@@ -194,4 +194,14 @@ public class EmailService {
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
+    public void sendFundCreatedEmail(String to, String firstName, String fundAuthorFullName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
+        EmailContentProvider emailContentProvider = FundCreatedEmailContentProvider.builder()
+                .fundAuthorFullName(fundAuthorFullName)
+                .fundTitle(fundTitle)
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
+    }
+
 }
