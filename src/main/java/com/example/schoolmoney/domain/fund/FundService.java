@@ -160,6 +160,21 @@ public class FundService {
         fundRepository.save(fund);
         log.info("Fund cancelled {}", fund);
 
+        List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
+
+        log.debug("Sending emails about cancelled fund to parents in school class");
+        for (Parent parent : parents) {
+            // TODO check if parent has any child in that class that isn't ignoring the fund
+            emailService.sendFundCancelledEmail(
+                    parent.getEmail(),
+                    parent.getFirstName(),
+                    fund.getTitle(),
+                    fund.getSchoolClass().getFullName(),
+                    parent.isNotificationsEnabled()
+            );
+        }
+        log.debug("Emails sent");
+
         processParentRefunds(fundOperations);
 
         log.debug("Exit cancelFund");
