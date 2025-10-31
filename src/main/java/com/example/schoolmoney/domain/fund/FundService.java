@@ -4,6 +4,7 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.domain.childignoredfund.ChildIgnoredFundRepository;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
@@ -223,15 +224,32 @@ public class FundService {
 
     @Transactional
     public void markEndedFundsAsFinished() {
+        log.debug("Enter markEndedFundsAsFinished");
+
         List<Fund> endedFunds = fundRepository.findAllByEndsAtBeforeAndFundStatus(Instant.now(), FundStatus.ACTIVE);
 
         for (Fund fund : endedFunds) {
             fund.setFundStatus(FundStatus.FINISHED);
             fund.setEndedAt(Instant.now());
             log.info("Finished fund with fundId={}", fund);
+
+            List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
+
+            log.debug("Sending emails about finished fund to parents in school class");
+            for (Parent parent : parents) {
+                emailService.sendFundFinishedEmail(
+                        parent.getEmail(),
+                        parent.getFirstName(),
+                        fund.getTitle(),
+                        fund.getSchoolClass().getFullName(),
+                        parent.isNotificationsEnabled()
+                );
+            }
+            log.debug("Emails sent");
         }
 
         fundRepository.saveAll(endedFunds);
+        log.debug("Exit markEndedFundsAsFinished");
     }
 
     public Page<FundResponseDto> getParentCreatedFunds(Pageable pageable) {

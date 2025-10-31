@@ -125,45 +125,45 @@ public class EmailService {
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled, report, reportTitle);
     }
 
-    public void sendFundBlockedEmail(String to, String firstName, String fundName, String schoolClassFullName, boolean userNotificationsEnabled) {
+    public void sendFundBlockedEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundBlockedEmailContentProvider.builder()
-                .fundTitle(fundName)
+                .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
-    public void sendFundUnblockedEmail(String to, String firstName, String fundName, String schoolClassFullName, boolean userNotificationsEnabled) {
+    public void sendFundUnblockedEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundUnblockedEmailContentProvider.builder()
-                .fundTitle(fundName)
+                .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
-    public void sendFundFinishedEmail(String to, String firstName, String fundName, String schoolClassFullName, boolean userNotificationsEnabled) {
+    public void sendFundFinishedEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundUnblockedEmailContentProvider.builder()
-                .fundTitle(fundName)
+                .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
-    public void sendFundCancelledEmail(String to, String firstName, String fundName, String schoolClassFullName, boolean userNotificationsEnabled) {
+    public void sendFundCancelledEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundCancelledEmailContentProvider.builder()
-                .fundTitle(fundName)
+                .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
-    public void sendFundPaymentRefundEmail(String to, String firstName, String fundName, String schoolClassFullName, String childFullName, long amountInCents, Currency currency, boolean userNotificationsEnabled) {
+    public void sendFundPaymentRefundEmail(String to, String firstName, String fundTitle, String schoolClassFullName, String childFullName, long amountInCents, Currency currency, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundPaymentRefundEmailContentProvider.builder()
-                .fundTitle(fundName)
+                .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .childFullName(childFullName)
                 .amountInCents(amountInCents)
@@ -173,9 +173,9 @@ public class EmailService {
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
-    public void sendFundPaymentEmail(String to, String firstName, String fundName, String schoolClassFullName, String childFullName, long amountInCents, Currency currency, boolean userNotificationsEnabled) {
+    public void sendFundPaymentEmail(String to, String firstName, String fundTitle, String schoolClassFullName, String childFullName, long amountInCents, Currency currency, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundPaymentEmailContentProvider.builder()
-                .fundTitle(fundName)
+                .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .childFullName(childFullName)
                 .amountInCents(amountInCents)
