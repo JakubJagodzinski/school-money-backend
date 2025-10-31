@@ -46,8 +46,8 @@ public class FundOperationService {
     private final EmailService emailService;
 
     @Transactional
-    public void performPayment(UUID fundId, UUID childId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
-        log.debug("Enter performPayment(fundId={}, childId={}, amountInCents={})", fundId, childId, amountInCents);
+    public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+        log.debug("Enter performPayment(fundId={}, childId={})", fundId, childId);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
@@ -85,24 +85,14 @@ public class FundOperationService {
             throw new IllegalStateException(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
         }
 
-        if (amountInCents < 0) {
-            log.warn(FundOperationMessages.PAYMENT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
-            throw new IllegalArgumentException(FundOperationMessages.PAYMENT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
-        }
-
-        if (amountInCents != fund.getAmountPerChildInCents()) {
-            log.warn(FundOperationMessages.PAYMENT_AMOUNT_MUST_MATCH_FUND_AMOUNT);
-            throw new IllegalArgumentException(FundOperationMessages.PAYMENT_AMOUNT_MUST_MATCH_FUND_AMOUNT);
-        }
-
         Wallet parentWallet = walletRepository.findByParent_UserId(userId);
 
-        if (parentWallet.getAvailableBalanceInCents() < amountInCents) {
+        if (parentWallet.getAvailableBalanceInCents() < fund.getAmountPerChildInCents()) {
             log.warn(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
             throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
         }
 
-        parentWallet.decreaseBalanceInCents(amountInCents);
+        parentWallet.decreaseBalanceInCents(fund.getAmountPerChildInCents());
         walletRepository.save(parentWallet);
         log.info("Wallet updated {}", parentWallet);
 
@@ -112,7 +102,7 @@ public class FundOperationService {
                 .child(child)
                 .fund(fund)
                 .wallet(parentWallet)
-                .amountInCents(amountInCents)
+                .amountInCents(fund.getAmountPerChildInCents())
                 .operationType(FundOperationType.FUND_PAYMENT)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();

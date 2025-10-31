@@ -61,7 +61,7 @@ public class FundOperationController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "Conflict - Payment amount does not match the child's contribution amount or Contribution already paid",
+                    description = "Conflict - Contribution already paid",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = MessageResponseDto.class)
@@ -70,8 +70,8 @@ public class FundOperationController {
     })
     @CheckPermission(Permission.FUND_PAY)
     @PostMapping("/funds/{fundId}/pay")
-    public ResponseEntity<MessageResponseDto> performPayment(@PathVariable UUID fundId, @RequestParam UUID childId, @RequestParam long amountInCents) {
-        fundOperationService.performPayment(fundId, childId, amountInCents);
+    public ResponseEntity<MessageResponseDto> performPayment(@PathVariable UUID fundId, @RequestParam UUID childId) {
+        fundOperationService.performPayment(fundId, childId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
