@@ -10,6 +10,8 @@ import com.example.schoolmoney.domain.fundmedia.dto.FundMediaMapper;
 import com.example.schoolmoney.domain.fundmedia.dto.internal.FileWithMetadata;
 import com.example.schoolmoney.domain.fundmedia.dto.request.UpdateFundMediaFileMetadataRequestDto;
 import com.example.schoolmoney.domain.fundmedia.dto.response.FundMediaResponseDto;
+import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperationService;
+import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperationType;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.files.FileCategory;
@@ -48,6 +50,8 @@ public class FundMediaService {
 
     private final SecurityUtils securityUtils;
 
+    private final FundMediaOperationService fundMediaOperationService;
+
     @Transactional
     public FundMediaResponseDto uploadFundMediaFile(UUID fundId, MultipartFile file) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter uploadFundMedia(fundId={})", fundId);
@@ -82,6 +86,13 @@ public class FundMediaService {
 
         fundMediaRepository.save(fundMedia);
         log.info("Fund media saved {}", fundMedia);
+
+        fundMediaOperationService.saveFundMediaOperation(
+                parent,
+                fundMedia.getFundMediaId(),
+                fundMedia.getFund().getFundId(),
+                FundMediaOperationType.UPLOAD
+        );
 
         log.debug("Exit uploadFundMedia");
         return fundMediaMapper.toDto(fundMedia);
@@ -154,6 +165,7 @@ public class FundMediaService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
@@ -177,6 +189,13 @@ public class FundMediaService {
         fundMediaRepository.save(fundMedia);
         log.info("Fund media updated {}", fundMedia);
 
+        fundMediaOperationService.saveFundMediaOperation(
+                parent,
+                fundMedia.getFundMediaId(),
+                fundMedia.getFund().getFundId(),
+                FundMediaOperationType.UPDATE
+        );
+
         log.debug("Exit updateFundMediaFileMetadata");
         return fundMediaMapper.toDto(fundMedia);
     }
@@ -192,6 +211,7 @@ public class FundMediaService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
@@ -217,6 +237,13 @@ public class FundMediaService {
 
         fundMediaRepository.deleteById(fundMediaId);
         log.info("Fund media deleted {}", fundMedia);
+
+        fundMediaOperationService.saveFundMediaOperation(
+                parent,
+                fundMedia.getFundMediaId(),
+                fundMedia.getFund().getFundId(),
+                FundMediaOperationType.DELETE
+        );
 
         log.debug("Exit deleteFundMediaFile");
     }

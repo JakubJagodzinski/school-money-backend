@@ -83,6 +83,8 @@ public enum Role {
                     Permission.FUND_MEDIA_METADATA_UPDATE,
                     Permission.FUND_MEDIA_FILE_DELETE,
 
+                    Permission.FUND_MEDIA_OPERATION_READ_ALL,
+
                     Permission.FUND_PAY,
                     Permission.FUND_WITHDRAW,
                     Permission.FUND_DEPOSIT,

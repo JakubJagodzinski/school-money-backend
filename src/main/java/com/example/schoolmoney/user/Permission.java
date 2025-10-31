@@ -80,6 +80,8 @@ public enum Permission {
     FUND_MEDIA_METADATA_UPDATE("fund_media:metadata:update"),
     FUND_MEDIA_FILE_DELETE("fund_media:file:delete"),
 
+    FUND_MEDIA_OPERATION_READ_ALL("fund_media:operation:read:all"),
+
     FUND_PAY("fund:pay"),
     FUND_WITHDRAW("fund:withdraw"),
     FUND_DEPOSIT("fund:deposit"),
