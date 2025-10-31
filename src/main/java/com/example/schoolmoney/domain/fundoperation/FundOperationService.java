@@ -10,8 +10,10 @@ import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundoperation.dto.FundOperationMapper;
 import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
+import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
+import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,8 @@ public class FundOperationService {
     private final ChildRepository childRepository;
 
     private final SecurityUtils securityUtils;
+
+    private final EmailService emailService;
 
     @Transactional
     public void performPayment(UUID fundId, UUID childId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
@@ -115,6 +119,19 @@ public class FundOperationService {
 
         fundOperationRepository.save(fundOperation);
         log.info("Fund operation saved {}", fundOperation);
+
+        Parent parent = child.getParent();
+
+        emailService.sendFundPaymentEmail(
+                parent.getEmail(),
+                parent.getFirstName(),
+                fund.getTitle(),
+                fund.getSchoolClass().getFullName(),
+                child.getFullName(),
+                fund.getAmountPerChildInCents(),
+                fund.getCurrency(),
+                parent.isNotificationsEnabled()
+        );
 
         log.debug("Exit performPayment");
     }
