@@ -4,7 +4,10 @@ import com.example.schoolmoney.converter.CurrencyAttributeConverter;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Instant;
@@ -52,7 +55,6 @@ public class Fund {
     private Instant startsAt;
 
     @NotNull
-    @Future
     @Column(name = "ends_at", nullable = false)
     private Instant endsAt;
 

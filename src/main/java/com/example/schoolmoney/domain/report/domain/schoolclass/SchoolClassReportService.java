@@ -2,8 +2,14 @@ package com.example.schoolmoney.domain.report.domain.schoolclass;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
+import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
-import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
+import com.example.schoolmoney.domain.child.dto.ChildMapper;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
+import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundService;
+import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.report.ReportFilenameGenerator;
@@ -19,17 +25,19 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 public class SchoolClassReportService {
-
-    private final FundOperationRepository fundOperationRepository;
 
     private final ParentRepository parentRepository;
 
@@ -46,6 +54,12 @@ public class SchoolClassReportService {
     private final ChildRepository childRepository;
 
     private final SchoolClassService schoolClassService;
+
+    private final FundRepository fundRepository;
+
+    private final ChildMapper childMapper;
+
+    private final FundService fundService;
 
     @Transactional
     public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException {
@@ -64,14 +78,24 @@ public class SchoolClassReportService {
         }
 
         InputStreamResource schoolClassAvatar = schoolClassAvatarService.getSchoolClassAvatar(schoolClassId);
-        long schoolClassTotalFunds = fundOperationRepository.countDistinctFundsBySchoolClassId(schoolClassId);
-        long schoolClassTotalChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
+
+        Map<Fund, List<FundChildStatusResponseDto>> schoolClassFundsWithChildrenStatuses = new HashMap<>();
+
+        List<Fund> schoolClassFunds = fundRepository.findAllBySchoolClass_SchoolClassId(schoolClassId);
+
+        for (Fund fund : schoolClassFunds) {
+            List<FundChildStatusResponseDto> fundChildStatusResponseDtoList = fundService.getFundChildrenStatuses(fund.getFundId(), Pageable.unpaged()).getContent();
+            schoolClassFundsWithChildrenStatuses.put(fund, fundChildStatusResponseDtoList);
+        }
+
+        List<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId);
+        List<ChildWithParentInfoResponseDto> schoolClassChildrenWithParentInfo = schoolClassChildren.stream().map(childMapper::toWithParentInfoDto).toList();
 
         SchoolClassReportData schoolClassReportData = SchoolClassReportData.builder()
                 .schoolClass(schoolClass)
                 .schoolClassAvatar(schoolClassAvatar)
-                .schoolClassTotalFunds(schoolClassTotalFunds)
-                .schoolClassTotalChildren(schoolClassTotalChildren)
+                .schoolClassFundsWithChildrenStatuses(schoolClassFundsWithChildrenStatuses)
+                .schoolClassChildrenWithParentInfo(schoolClassChildrenWithParentInfo)
                 .build();
 
         byte[] schoolClassReport = schoolClassReportPdfGenerator.generateReportPdf(schoolClassReportData);

@@ -16,6 +16,8 @@ public interface ChildRepository extends JpaRepository<Child, UUID> {
 
     Page<Child> findAllBySchoolClass_SchoolClassId(UUID schoolClassId, Pageable pageable);
 
+    List<Child> findAllBySchoolClass_SchoolClassId(UUID schoolClassId);
+
     boolean existsByParent_UserIdAndSchoolClass_SchoolClassId(UUID userId, UUID schoolClassId);
 
     Page<Child> findAllByParent_UserId(UUID userId, Pageable pageable);

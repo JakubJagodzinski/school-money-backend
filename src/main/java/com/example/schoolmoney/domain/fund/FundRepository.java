@@ -22,6 +22,8 @@ public interface FundRepository extends JpaRepository<Fund, UUID> {
 
     Page<Fund> findAllBySchoolClass_SchoolClassId(UUID schoolClassId, Pageable pageable);
 
+    List<Fund> findAllBySchoolClass_SchoolClassId(UUID schoolClassId);
+
     @Query("""
                 SELECT f
                 FROM Fund f
