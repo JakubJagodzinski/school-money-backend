@@ -91,6 +91,8 @@ public enum Role {
 
                     Permission.FUND_OPERATIONS_READ_ALL,
 
+                    Permission.FUND_CHILDREN_STATUSES_READ_ALL,
+
                     Permission.FUND_REPORT_GENERATE,
                     Permission.SCHOOL_CLASS_REPORT_GENERATE,
                     Permission.CHILD_REPORT_GENERATE,

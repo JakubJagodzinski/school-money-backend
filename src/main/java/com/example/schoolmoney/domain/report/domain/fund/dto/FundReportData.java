@@ -1,6 +1,8 @@
 package com.example.schoolmoney.domain.report.domain.fund.dto;
 
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
+import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.report.dto.ReportData;
 import lombok.AllArgsConstructor;
@@ -23,6 +25,8 @@ public class FundReportData implements ReportData {
 
     private List<FundOperation> fundOperationList;
 
-    private long fundParticipatingChildrenCount;
+    private List<FundChildStatusResponseDto> fundChildrenStatuses;
+
+    private List<FundMediaOperation> fundMediaOperations;
 
 }

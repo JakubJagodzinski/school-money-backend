@@ -53,7 +53,7 @@ public class ReportPageEvent extends PdfPageEventHelper {
                 Element.ALIGN_CENTER,
                 new Phrase(reportTitle, headerTitleFont),
                 centerX,
-                document.top() + 15, // slightly lower than the top margin
+                document.top() + 15,
                 0
         );
 
@@ -63,7 +63,7 @@ public class ReportPageEvent extends PdfPageEventHelper {
                 Element.ALIGN_CENTER,
                 new Phrase(this.generatedAtText, this.headerGeneratedAtFont),
                 centerX,
-                document.top() + 5,
+                document.top(),
                 0
         );
 

@@ -4,7 +4,11 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundService;
+import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.fundlogo.FundLogoService;
+import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperation;
+import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperationRepository;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.parent.Parent;
@@ -18,6 +22,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +49,10 @@ public class FundReportService {
 
     private final FundLogoService fundLogoService;
 
+    private final FundMediaOperationRepository fundMediaOperationRepository;
+
+    private final FundService fundService;
+
     @Transactional
     public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter generateFundReport(fundId={})", fundId);
@@ -62,13 +71,16 @@ public class FundReportService {
 
         List<FundOperation> fundOperationList = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtAsc(fundId);
 
-        long fundParticipatingChildrenCount = fundOperationRepository.countDistinctChildrenByFundId(fundId);
+        List<FundMediaOperation> fundMediaOperations = fundMediaOperationRepository.findAllByFundIdOrderByProcessedAtDesc(fundId);
+
+        List<FundChildStatusResponseDto> fundChildrenStatuses = fundService.getFundChildrenStatuses(fundId, Pageable.unpaged()).getContent();
 
         FundReportData fundReportData = FundReportData.builder()
                 .fund(fund)
                 .fundLogo(fundLogo)
                 .fundOperationList(fundOperationList)
-                .fundParticipatingChildrenCount(fundParticipatingChildrenCount)
+                .fundChildrenStatuses(fundChildrenStatuses)
+                .fundMediaOperations(fundMediaOperations)
                 .build();
 
         byte[] fundReport = fundReportPdfGenerator.generateReportPdf(fundReportData);

@@ -1,5 +1,6 @@
 package com.example.schoolmoney.domain.fundmediaoperation;
 
+import com.example.schoolmoney.files.FileType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -32,6 +33,15 @@ public class FundMediaOperation {
     @NotNull
     @Column(name = "fund_media_id", nullable = false, updatable = false)
     private UUID fundMediaId;
+
+    @NotNull
+    @Column(name = "filename", nullable = false, updatable = false)
+    private String filename;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "media_type", nullable = false, updatable = false)
+    private FileType mediaType;
 
     @NotNull
     @Column(name = "fund_id", nullable = false, updatable = false)

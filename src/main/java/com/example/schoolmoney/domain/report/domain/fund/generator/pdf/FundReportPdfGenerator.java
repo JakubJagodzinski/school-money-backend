@@ -1,8 +1,12 @@
 package com.example.schoolmoney.domain.report.domain.fund.generator.pdf;
 
 import com.example.schoolmoney.common.constants.messages.domain.FundReportMessages;
+import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
+import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
+import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
 import com.example.schoolmoney.domain.report.domain.fund.dto.FundReportData;
 import com.example.schoolmoney.domain.report.dto.ReportData;
 import com.example.schoolmoney.domain.report.generator.pdf.ReportPageEvent;
@@ -32,7 +36,9 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
         FundReportData fundReportData = (FundReportData) reportData;
         Fund fund = fundReportData.getFund();
         List<FundOperation> fundOperationList = fundReportData.getFundOperationList();
-        long fundParticipatingChildrenCount = fundReportData.getFundParticipatingChildrenCount();
+        List<FundChildStatusResponseDto> fundChildrenStatuses = fundReportData.getFundChildrenStatuses();
+        List<FundMediaOperation> fundMediaOperations = fundReportData.getFundMediaOperations();
+        long fundParticipatingChildrenCount = fundChildrenStatuses.size();
         InputStreamResource fundLogo = fundReportData.getFundLogo();
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -54,12 +60,17 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
             document.newPage();
 
             document.add(createTitle("Participants"));
-            // TODO add participants table
+            document.add(createParticipantsTable(fundChildrenStatuses));
 
             document.newPage();
 
             document.add(createTitle("Fund operations history"));
             document.add(createFundOperationsTable(fundOperationList));
+
+            document.newPage();
+
+            document.add(createTitle("Fund media operations history"));
+            document.add(createFundMediaOperationsTable(fundMediaOperations));
 
             document.close();
 
@@ -99,6 +110,30 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
         return table;
     }
 
+    private PdfPTable createParticipantsTable(List<FundChildStatusResponseDto> fundChildStatusResponseDtoList) {
+        PdfPTable table = new PdfPTable(3);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(20);
+
+        addHeaderCell(table, "Child");
+        addHeaderCell(table, "Parent");
+        addHeaderCell(table, "Status");
+
+        for (FundChildStatusResponseDto fundChildStatusResponseDto : fundChildStatusResponseDtoList) {
+            ChildWithParentInfoResponseDto child = fundChildStatusResponseDto.getChild();
+            ParentResponseDto parent = child.getParent();
+
+            String childFullName = child.getFirstName() + " " + child.getLastName();
+            String parentFullName = parent.getFirstName() + " " + parent.getLastName();
+
+            addDataCell(table, childFullName);
+            addDataCell(table, parentFullName);
+            addDataCell(table, fundChildStatusResponseDto.getStatus().name());
+        }
+
+        return table;
+    }
+
     private PdfPTable createFundOperationsTable(List<FundOperation> fundOperations) {
         PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
@@ -116,6 +151,28 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
             addDataCell(table, AmountFormatter.format(fundOperation.getAmountInCents(), fundOperation.getCurrency()));
             addDataCell(table, fundOperation.getOperationType().name());
             addDataCell(table, DateToStringConverter.fromInstantToLocal(fundOperation.getProcessedAt()));
+        }
+
+        return table;
+    }
+
+    private PdfPTable createFundMediaOperationsTable(List<FundMediaOperation> fundMediaOperations) {
+        PdfPTable table = new PdfPTable(5);
+        table.setWidthPercentage(100);
+        table.setSpacingBefore(20);
+
+        addHeaderCell(table, "Operation");
+        addHeaderCell(table, "Processed At");
+        addHeaderCell(table, "Media type");
+        addHeaderCell(table, "Filename");
+        addHeaderCell(table, "Performed by");
+
+        for (FundMediaOperation fundMediaOperation : fundMediaOperations) {
+            addDataCell(table, fundMediaOperation.getOperationType().name());
+            addDataCell(table, DateToStringConverter.fromInstantToLocal(fundMediaOperation.getProcessedAt()));
+            addDataCell(table, fundMediaOperation.getMediaType().name());
+            addDataCell(table, fundMediaOperation.getFilename());
+            addDataCell(table, fundMediaOperation.getPerformedByFullName());
         }
 
         return table;

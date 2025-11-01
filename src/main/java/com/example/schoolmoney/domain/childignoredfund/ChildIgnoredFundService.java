@@ -52,6 +52,11 @@ public class ChildIgnoredFundService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
+        if (!fund.getSchoolClass().getSchoolClassId().equals(child.getSchoolClass().getSchoolClassId())) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+
         ChildIgnoredFundId id = new ChildIgnoredFundId(childId, fundId);
 
         if (childIgnoredFundRepository.existsById(id)) {

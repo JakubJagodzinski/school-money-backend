@@ -91,6 +91,8 @@ public enum Permission {
 
     FUND_OPERATIONS_READ_ALL("fund:operations:read:all"),
 
+    FUND_CHILDREN_STATUSES_READ_ALL("fund:children_statuses:read:all"),
+
     FUND_REPORT_GENERATE("fund:report:generate"),
     CHILD_REPORT_GENERATE("child:report:generate"),
     SCHOOL_CLASS_REPORT_GENERATE("school_class:report:generate"),

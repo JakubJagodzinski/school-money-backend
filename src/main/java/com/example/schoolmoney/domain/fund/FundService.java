@@ -3,11 +3,15 @@ package com.example.schoolmoney.domain.fund;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
+import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.domain.child.dto.ChildMapper;
+import com.example.schoolmoney.domain.childignoredfund.ChildIgnoredFundRepository;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
+import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
@@ -24,6 +28,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -31,7 +36,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -57,6 +64,10 @@ public class FundService {
     private final EmailService emailService;
 
     private final FinanceConfiguration financeConfiguration;
+
+    private final ChildIgnoredFundRepository childIgnoredFundRepository;
+
+    private final ChildMapper childMapper;
 
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
@@ -348,6 +359,59 @@ public class FundService {
 
         log.debug("Exit getParentChildrenAllFunds");
         return parentChildrenFundPage.map(fundMapper::toDto);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) {
+        log.debug("Enter getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
+
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
+
+        Page<Child> childrenPage = childRepository.findAllBySchoolClass_SchoolClassId(fund.getSchoolClass().getSchoolClassId(), pageable);
+
+        Set<UUID> ignoredChildrenIds = getIgnoredChildIds(fundId);
+        log.debug("Ignored children ids count: {}", ignoredChildrenIds.size());
+        Set<UUID> paidChildrenIds = getPaidChildIds(fundId);
+        log.debug("Paid children ids count: {}", paidChildrenIds.size());
+
+        List<FundChildStatusResponseDto> fundChildStatusResponseDtoList = childrenPage.getContent().stream()
+                .map(child -> {
+                    FundChildStatus fundChildStatus = resolveChildStatus(child.getChildId(), ignoredChildrenIds, paidChildrenIds);
+                    return toStatusResponseDto(child, fundChildStatus);
+                })
+                .toList();
+
+        log.debug("Exit getFundChildrenStatuses");
+        return new PageImpl<>(fundChildStatusResponseDtoList, pageable, childrenPage.getTotalElements());
+    }
+
+    private Set<UUID> getIgnoredChildIds(UUID fundId) {
+        return childIgnoredFundRepository.findAllByFund_FundId(fundId).stream()
+                .map(c -> c.getChild().getChildId())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<UUID> getPaidChildIds(UUID fundId) {
+        return fundOperationRepository.findAllByFund_FundId(fundId).stream()
+                .map(f -> f.getChild().getChildId())
+                .collect(Collectors.toSet());
+    }
+
+    private FundChildStatus resolveChildStatus(UUID childId, Set<UUID> ignoredIds, Set<UUID> paidIds) {
+        if (ignoredIds.contains(childId)) return FundChildStatus.DECLINED;
+        if (paidIds.contains(childId)) return FundChildStatus.PAID;
+        return FundChildStatus.UNPAID;
+    }
+
+    private FundChildStatusResponseDto toStatusResponseDto(Child child, FundChildStatus status) {
+        return FundChildStatusResponseDto.builder()
+                .child(childMapper.toWithParentInfoDto(child))
+                .status(status)
+                .build();
     }
 
 }

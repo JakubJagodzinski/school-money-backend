@@ -5,6 +5,7 @@ import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fundmediaoperation.dto.FundMediaOperationMapper;
 import com.example.schoolmoney.domain.fundmediaoperation.dto.response.FundMediaOperationResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.files.FileType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,15 +29,17 @@ public class FundMediaOperationService {
     private final FundRepository fundRepository;
 
     @Transactional
-    public void saveFundMediaOperation(Parent parent, UUID fundMediaId, UUID fundId, FundMediaOperationType type) {
-        log.debug("Enter saveFundMediaOperation(parent={}, fundMediaId={}, fundId={}, type={})", parent, fundMediaId, fundId, type);
+    public void saveFundMediaOperation(Parent parent, UUID fundMediaId, String filename, FileType mediaType, UUID fundId, FundMediaOperationType operationType) {
+        log.debug("Enter saveFundMediaOperation");
 
         FundMediaOperation fundMediaOperation = FundMediaOperation.builder()
                 .performedById(parent.getUserId())
                 .performedByFullName(parent.getFullName())
                 .fundMediaId(fundMediaId)
+                .filename(filename)
+                .mediaType(mediaType)
                 .fundId(fundId)
-                .operationType(type)
+                .operationType(operationType)
                 .build();
 
         fundMediaOperationRepository.save(fundMediaOperation);

@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
+import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -296,6 +297,20 @@ public class FundController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fundResponseDtoPage);
+    }
+
+    @CheckPermission(Permission.FUND_CHILDREN_STATUSES_READ_ALL)
+    @GetMapping("/funds/{fundId}/children/statuses")
+    public ResponseEntity<Page<FundChildStatusResponseDto>> getFundChildrenStatuses(
+            @PathVariable UUID fundId,
+            @ParameterObject
+            @PageableDefault(size = 20, sort = "childId", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = fundService.getFundChildrenStatuses(fundId, pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fundChildStatusResponseDtoPage);
     }
 
 }

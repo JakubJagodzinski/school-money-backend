@@ -90,6 +90,8 @@ public class FundMediaService {
         fundMediaOperationService.saveFundMediaOperation(
                 parent,
                 fundMedia.getFundMediaId(),
+                fundMedia.getFilename(),
+                fundMedia.getMediaType(),
                 fundMedia.getFund().getFundId(),
                 FundMediaOperationType.UPLOAD
         );
@@ -192,6 +194,8 @@ public class FundMediaService {
         fundMediaOperationService.saveFundMediaOperation(
                 parent,
                 fundMedia.getFundMediaId(),
+                fundMedia.getFilename(),
+                fundMedia.getMediaType(),
                 fundMedia.getFund().getFundId(),
                 FundMediaOperationType.UPDATE
         );
@@ -241,6 +245,8 @@ public class FundMediaService {
         fundMediaOperationService.saveFundMediaOperation(
                 parent,
                 fundMedia.getFundMediaId(),
+                fundMedia.getFilename(),
+                fundMedia.getMediaType(),
                 fundMedia.getFund().getFundId(),
                 FundMediaOperationType.DELETE
         );
