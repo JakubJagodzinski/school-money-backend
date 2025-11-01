@@ -35,7 +35,9 @@ public enum Role {
                     Permission.CHILD_READ_ALL,
                     Permission.CHILD_UPDATE,
                     Permission.CHILD_DELETE,
-                    Permission.CHILD_CLASS_JOIN,
+
+                    Permission.CHILD_SCHOOL_CLASS_JOIN,
+                    Permission.CHILD_SCHOOL_CLASS_LEAVE,
 
                     Permission.CHILD_AVATAR_UPDATE,
                     Permission.CHILD_AVATAR_READ,
@@ -123,7 +125,7 @@ public enum Role {
                     Permission.CHILD_READ_ALL,
                     Permission.CHILD_UPDATE,
                     Permission.CHILD_DELETE,
-                    Permission.CHILD_CLASS_JOIN,
+                    Permission.CHILD_SCHOOL_CLASS_JOIN,
 
                     Permission.CHILD_AVATAR_READ,
 

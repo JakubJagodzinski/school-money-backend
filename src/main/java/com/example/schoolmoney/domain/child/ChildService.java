@@ -114,6 +114,32 @@ public class ChildService {
         log.debug("Exit assignChildToSchoolClass");
     }
 
+    @Transactional
+    public void unassignChildFromSchoolClass(UUID childId) throws EntityNotFoundException, AccessDeniedException {
+        log.debug("Enter unassignChildFromSchoolClass(childId={})", childId);
+
+        Child child = childRepository.findById(childId)
+                .orElseThrow(() -> {
+                    log.warn(ChildMessages.CHILD_NOT_FOUND);
+                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
+                });
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        if (!child.getParent().getUserId().equals(userId)) {
+            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+        }
+
+        // TODO check active funds
+
+        child.setSchoolClass(null);
+        childRepository.save(child);
+        log.info("Child {} removed from school class {}", child, child.getSchoolClass());
+
+        log.debug("Exit unassignChildFromSchoolClass");
+    }
+
     public Page<ChildWithSchoolClassInfoResponseDto> getParentAllChildren(Pageable pageable) {
         log.debug("Enter getParentAllChildren(pageable={}", pageable);
 

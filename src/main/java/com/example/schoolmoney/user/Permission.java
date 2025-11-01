@@ -30,7 +30,9 @@ public enum Permission {
     CHILD_READ_ALL("child:read:all"),
     CHILD_UPDATE("child:update"),
     CHILD_DELETE("child:delete"),
-    CHILD_CLASS_JOIN("child:class:join"),
+
+    CHILD_SCHOOL_CLASS_JOIN("child:school_class:join"),
+    CHILD_SCHOOL_CLASS_LEAVE("child:school_class:leave"),
 
     CHILD_AVATAR_UPDATE("child:avatar:update"),
     CHILD_AVATAR_READ("child:avatar:read"),

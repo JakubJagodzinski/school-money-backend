@@ -40,14 +40,24 @@ public class ChildController {
                 .body(childShortInfoResponseDto);
     }
 
-    @CheckPermission(Permission.CHILD_CLASS_JOIN)
+    @CheckPermission(Permission.CHILD_SCHOOL_CLASS_JOIN)
     @PostMapping("/children/{childId}/school-class")
-    public ResponseEntity<MessageResponseDto> joinClass(@PathVariable UUID childId, @RequestParam String invitationCode) {
+    public ResponseEntity<MessageResponseDto> joinSchoolClass(@PathVariable UUID childId, @RequestParam String invitationCode) {
         childService.assignChildToSchoolClass(childId, invitationCode);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new MessageResponseDto(ChildMessages.CHILD_ADDED_TO_SCHOOL_CLASS));
+    }
+
+    @CheckPermission(Permission.CHILD_SCHOOL_CLASS_LEAVE)
+    @DeleteMapping("/children/{childId}/school-class")
+    public ResponseEntity<MessageResponseDto> leaveSchoolClass(@PathVariable UUID childId) {
+        childService.unassignChildFromSchoolClass(childId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(ChildMessages.CHILD_REMOVED_FROM_SCHOOL_CLASS));
     }
 
     @CheckPermission(Permission.PARENT_CHILDREN_READ_ALL)
