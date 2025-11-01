@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.fundmediaoperation;
 
+import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fundmediaoperation.dto.FundMediaOperationMapper;
 import com.example.schoolmoney.domain.fundmediaoperation.dto.response.FundMediaOperationResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
@@ -11,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,10 @@ public class FundMediaOperationService {
     private final FundMediaOperationMapper fundMediaOperationMapper;
 
     private final FundRepository fundRepository;
+
+    private final SecurityUtils securityUtils;
+
+    private final FundService fundService;
 
     @Transactional
     public void saveFundMediaOperation(Parent parent, UUID fundMediaId, String filename, FileType mediaType, UUID fundId, FundMediaOperationType operationType) {
@@ -49,7 +54,7 @@ public class FundMediaOperationService {
     }
 
     @Transactional
-    public Page<FundMediaOperationResponseDto> getFundMediaOperations(UUID fundId, Pageable pageable) throws EntityNotFoundException, AccessDeniedException {
+    public Page<FundMediaOperationResponseDto> getFundMediaOperations(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundMediaOperations(fundId={})", fundId);
 
         if (!fundRepository.existsById(fundId)) {
@@ -57,7 +62,11 @@ public class FundMediaOperationService {
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        // TODO add check if parent can access fund
+        UUID userId = securityUtils.getCurrentUserId();
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         Page<FundMediaOperation> fundMediaOperationPage = fundMediaOperationRepository.findAllByFundId(fundId, pageable);
 

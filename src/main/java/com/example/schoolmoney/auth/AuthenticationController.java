@@ -152,7 +152,7 @@ public class AuthenticationController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new MessageResponseDto(EmailMessages.VERIFICATION_EMAIL_RESEND));
+                .body(new MessageResponseDto(EmailMessages.VERIFICATION_EMAIL_RESENT));
     }
 
     @Operation(

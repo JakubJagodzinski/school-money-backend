@@ -23,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +53,7 @@ public class FundReportService {
     private final FundService fundService;
 
     @Transactional
-    public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException, AccessDeniedException {
+    public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter generateFundReport(fundId={})", fundId);
 
         Fund fund = fundRepository.findById(fundId)
@@ -64,8 +63,10 @@ public class FundReportService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-
-        // TODO add parent fund access check
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         InputStreamResource fundLogo = fundLogoService.getFundLogo(fundId);
 

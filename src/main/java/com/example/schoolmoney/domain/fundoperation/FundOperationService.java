@@ -7,6 +7,7 @@ import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundoperation.dto.FundOperationMapper;
 import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
@@ -45,8 +46,10 @@ public class FundOperationService {
 
     private final EmailService emailService;
 
+    private final FundService fundService;
+
     @Transactional
-    public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter performPayment(fundId={}, childId={})", fundId, childId);
 
         Fund fund = fundRepository.findById(fundId)
@@ -62,10 +65,9 @@ public class FundOperationService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-
         if (!child.getParent().getUserId().equals(userId)) {
-            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_NOT_FOUND);
+            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
@@ -131,13 +133,18 @@ public class FundOperationService {
     public void depositToFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
         log.debug("Enter depositToFund(fundId={}, amountInCents={})", fundId, amountInCents);
 
-        UUID userId = securityUtils.getCurrentUserId();
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
                     log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
+
+        UUID userId = securityUtils.getCurrentUserId();
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
@@ -206,6 +213,11 @@ public class FundOperationService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+
         if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
@@ -256,7 +268,7 @@ public class FundOperationService {
         log.debug("Exit withdrawFromFund");
     }
 
-    public long getFundActualAmountInCents(UUID fundId) {
+    private long getFundActualAmountInCents(UUID fundId) {
         List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
 
         long fundActualAmountInCents = 0;
@@ -264,6 +276,7 @@ public class FundOperationService {
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getOperationType();
+
                 switch (fundOperationType) {
                     case FUND_PAYMENT:
                     case FUND_DEPOSIT:
@@ -282,7 +295,7 @@ public class FundOperationService {
         return fundActualAmountInCents;
     }
 
-    public long getFundRemainingDepositLimitInCents(UUID fundId) {
+    private long getFundRemainingDepositLimitInCents(UUID fundId) {
         List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
 
         long remainingDepositLimitInCents = 0;
@@ -290,6 +303,7 @@ public class FundOperationService {
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
                 FundOperationType fundOperationType = fundOperation.getOperationType();
+
                 if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
                     remainingDepositLimitInCents -= fundOperation.getAmountInCents();
                 } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
@@ -310,7 +324,11 @@ public class FundOperationService {
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        // TODO add check if parent can access fund
+        UUID userId = securityUtils.getCurrentUserId();
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         Page<FundOperation> fundOperationPage = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtDesc(fundId, pageable);
 

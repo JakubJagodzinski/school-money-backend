@@ -42,8 +42,8 @@ public class ChildIgnoredFundService {
         UUID userId = securityUtils.getCurrentUserId();
 
         if (!child.getParent().getUserId().equals(userId)) {
-            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_NOT_FOUND);
+            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
         Fund fund = fundRepository.findById(fundId)
@@ -78,7 +78,7 @@ public class ChildIgnoredFundService {
     }
 
     @Transactional
-    public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter unignoreFundForChild(childId={}, fundId={})", childId, fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -92,8 +92,8 @@ public class ChildIgnoredFundService {
                 });
 
         if (!child.getParent().getUserId().equals(userId)) {
-            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_NOT_FOUND);
+            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
         int deleted = childIgnoredFundRepository.deleteByChild_ChildIdAndFund_FundId(childId, fundId);

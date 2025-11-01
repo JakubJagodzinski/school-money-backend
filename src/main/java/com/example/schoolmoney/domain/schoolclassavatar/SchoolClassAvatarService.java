@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassService;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,6 +32,8 @@ public class SchoolClassAvatarService {
 
     private final SecurityUtils securityUtils;
 
+    private final SchoolClassService schoolClassService;
+
     @Transactional
     public void updateSchoolClassAvatar(UUID schoolClassId, MultipartFile avatarFile) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter updateSchoolClassAvatar(schoolClassId={})", schoolClassId);
@@ -42,6 +45,11 @@ public class SchoolClassAvatarService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
+
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
@@ -93,6 +101,11 @@ public class SchoolClassAvatarService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
+
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);

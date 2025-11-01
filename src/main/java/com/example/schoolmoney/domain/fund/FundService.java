@@ -20,6 +20,7 @@ import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassService;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
@@ -69,12 +70,28 @@ public class FundService {
 
     private final ChildMapper childMapper;
 
+    private final SchoolClassService schoolClassService;
+
+    public boolean canParentAccessFund(UUID parentId, UUID fundId) throws EntityNotFoundException {
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
+
+        boolean hasChildInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(parentId, fund.getSchoolClass().getSchoolClassId());
+        boolean isSchoolClassTreasurer = fund.getSchoolClass().getTreasurer() != null && fund.getSchoolClass().getTreasurer().getUserId().equals(parentId);
+        boolean isFundAuthor = fund.getAuthor().getUserId().equals(parentId);
+
+        return hasChildInSchoolClass || isSchoolClassTreasurer || isFundAuthor;
+    }
+
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent fundAuthor = parentRepository.getReferenceById(userId);
+
 
         SchoolClass schoolClass = schoolClassRepository.findById(createFundRequestDto.getSchoolClassId())
                 .orElseThrow(() -> {
@@ -82,11 +99,17 @@ public class FundService {
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
+        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClass.getSchoolClassId())) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
+
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
+        Parent fundAuthor = parentRepository.getReferenceById(userId);
         Fund fund = Fund
                 .builder()
                 .author(fundAuthor)
@@ -132,6 +155,17 @@ public class FundService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
+        UUID userId = securityUtils.getCurrentUserId();
+        if (!canParentAccessFund(securityUtils.getCurrentUserId(), fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+
+        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
+            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        }
+
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
             log.warn(FundMessages.FUND_IS_BLOCKED);
             throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
@@ -140,15 +174,6 @@ public class FundService {
         if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
-
-        UUID userId = securityUtils.getCurrentUserId();
-
-        SchoolClass schoolClass = fund.getSchoolClass();
-
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
         List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
@@ -298,6 +323,17 @@ public class FundService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
+        UUID userId = securityUtils.getCurrentUserId();
+        if (!canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+
+        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
+            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        }
+
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
             log.warn(FundMessages.FUND_IS_BLOCKED);
             throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
@@ -308,15 +344,6 @@ public class FundService {
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
-        UUID userId = securityUtils.getCurrentUserId();
-
-        SchoolClass schoolClass = fund.getSchoolClass();
-
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-        }
-
         fundMapper.updateEntityFromDto(updateFundRequestDto, fund);
         Fund savedFund = fundRepository.save(fund);
         log.info("Fund saved {}", fund);
@@ -325,23 +352,18 @@ public class FundService {
         return fundMapper.toDto(savedFund);
     }
 
-    public Page<FundResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException, AccessDeniedException {
+    public Page<FundResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
+        if (!schoolClassRepository.existsById(schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
+
         UUID userId = securityUtils.getCurrentUserId();
-
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
-
-        boolean hasAnyChildrenInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId);
-        boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
-
-        if (!hasAnyChildrenInSchoolClass && !isTreasurer) {
-            log.warn(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
         Page<Fund> fundPage = fundRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
@@ -362,7 +384,7 @@ public class FundService {
     }
 
     @Transactional(readOnly = true)
-    public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) {
+    public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
 
         Fund fund = fundRepository.findById(fundId)
@@ -370,6 +392,13 @@ public class FundService {
                     log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
+
+        UUID userId = securityUtils.getCurrentUserId();
+
+        if (!canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         Page<Child> childrenPage = childRepository.findAllBySchoolClass_SchoolClassId(fund.getSchoolClass().getSchoolClassId(), pageable);
 

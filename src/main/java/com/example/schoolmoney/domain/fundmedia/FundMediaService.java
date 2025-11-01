@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.FundMediaMessage
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundmedia.dto.FundMediaMapper;
 import com.example.schoolmoney.domain.fundmedia.dto.internal.FileWithMetadata;
@@ -52,6 +53,8 @@ public class FundMediaService {
 
     private final FundMediaOperationService fundMediaOperationService;
 
+    private final FundService fundService;
+
     @Transactional
     public FundMediaResponseDto uploadFundMediaFile(UUID fundId, MultipartFile file) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter uploadFundMedia(fundId={})", fundId);
@@ -63,17 +66,21 @@ public class FundMediaService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
         if (!isAuthor && !isTreasurer) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
+            log.warn(FundMediaMessages.NO_PERMISSION_TO_UPLOAD_MEDIA);
+            throw new AccessDeniedException(FundMediaMessages.NO_PERMISSION_TO_UPLOAD_MEDIA);
         }
 
         String fileId = storageService.uploadFile(file, bucketName, FileCategory.FUND_MEDIA);
 
+        Parent parent = parentRepository.getReferenceById(userId);
         FundMedia fundMedia = FundMedia.builder()
                 .fund(fund)
                 .uploadedBy(parent)
@@ -104,13 +111,16 @@ public class FundMediaService {
     public Page<FundMediaResponseDto> getFundMediaMetadataPage(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundMediaPage(fundId={}, pageable={})", fundId, pageable);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        if (!fundRepository.existsById(fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
-        // TODO add check if parent has access to this fund
+        UUID userId = securityUtils.getCurrentUserId();
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         Page<FundMedia> fundMediaPage = fundMediaRepository.findAllByFund_FundId(fundId, pageable);
 
@@ -121,15 +131,16 @@ public class FundMediaService {
     public FileWithMetadata getFundMediaFileWithMetadata(UUID fundId, UUID fundMediaId) throws EntityNotFoundException {
         log.debug("Enter getFundMediaFileWithMetadata(fundMediaId={})", fundMediaId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        if (!fundRepository.existsById(fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         UUID userId = securityUtils.getCurrentUserId();
-
-        // TODO check access to the fund
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         FundMedia fundMedia = fundMediaRepository.findById(fundMediaId)
                 .orElseThrow(() -> {
@@ -167,13 +178,16 @@ public class FundMediaService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
         if (!isAuthor && !isTreasurer) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
+            log.warn(FundMediaMessages.NO_PERMISSION_TO_EDIT_MEDIA_METADATA);
+            throw new AccessDeniedException(FundMediaMessages.NO_PERMISSION_TO_EDIT_MEDIA_METADATA);
         }
 
         if (fund.getFundStatus() != FundStatus.ACTIVE) {
@@ -191,6 +205,7 @@ public class FundMediaService {
         fundMediaRepository.save(fundMedia);
         log.info("Fund media updated {}", fundMedia);
 
+        Parent parent = parentRepository.getReferenceById(userId);
         fundMediaOperationService.saveFundMediaOperation(
                 parent,
                 fundMedia.getFundMediaId(),
@@ -215,13 +230,16 @@ public class FundMediaService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
         if (!isAuthor && !isTreasurer) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
+            log.warn(FundMediaMessages.NO_PERMISSION_TO_DELETE_FUND_MEDIA);
+            throw new AccessDeniedException(FundMediaMessages.NO_PERMISSION_TO_DELETE_FUND_MEDIA);
         }
 
         if (fund.getFundStatus() != FundStatus.ACTIVE) {
@@ -243,7 +261,7 @@ public class FundMediaService {
         log.info("Fund media deleted {}", fundMedia);
 
         fundMediaOperationService.saveFundMediaOperation(
-                parent,
+                parentRepository.getReferenceById(userId),
                 fundMedia.getFundMediaId(),
                 fundMedia.getFilename(),
                 fundMedia.getMediaType(),

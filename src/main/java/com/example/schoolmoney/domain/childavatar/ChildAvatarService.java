@@ -11,7 +11,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +31,7 @@ public class ChildAvatarService {
     private final SecurityUtils securityUtils;
 
     @Transactional
-    public void updateChildAvatar(UUID childId, MultipartFile avatarFile) throws EntityNotFoundException, AccessDeniedException {
+    public void updateChildAvatar(UUID childId, MultipartFile avatarFile) throws EntityNotFoundException {
         log.debug("Enter uploadChildAvatar(childId={})", childId);
 
         Child child = childRepository.findById(childId)
@@ -43,8 +42,8 @@ public class ChildAvatarService {
 
         UUID userId = securityUtils.getCurrentUserId();
         if (!child.getParent().getUserId().equals(userId)) {
-            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_NOT_FOUND);
+            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
         String newAvatarId = storageService.uploadFile(avatarFile, bucketName, FileCategory.AVATAR_OR_LOGO);
@@ -83,7 +82,7 @@ public class ChildAvatarService {
     }
 
     @Transactional
-    public void deleteChildAvatar(UUID childId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void deleteChildAvatar(UUID childId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter deleteChildAvatar(childId={})", childId);
 
         Child child = childRepository.findById(childId)
@@ -94,8 +93,8 @@ public class ChildAvatarService {
 
         UUID userId = securityUtils.getCurrentUserId();
         if (!child.getParent().getUserId().equals(userId)) {
-            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_NOT_FOUND);
+            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
         if (child.getAvatarId() == null) {

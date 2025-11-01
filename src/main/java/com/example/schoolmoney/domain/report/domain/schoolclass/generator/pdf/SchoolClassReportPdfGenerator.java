@@ -52,7 +52,7 @@ public class SchoolClassReportPdfGenerator implements ReportPdfGenerator {
             document.newPage();
 
             document.add(createTitle("School class funds operations history"));
-            // TODO
+            // TODO add school class funds operations history
 
             document.close();
 

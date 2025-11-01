@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.FundLogoMessages
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
@@ -32,6 +33,8 @@ public class FundLogoService {
 
     private final SecurityUtils securityUtils;
 
+    private final FundService fundService;
+
     @Transactional
     public void updateFundLogo(UUID fundId, MultipartFile logoFile) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter updateFundLogo(fundId={})", fundId);
@@ -43,6 +46,10 @@ public class FundLogoService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
@@ -102,6 +109,10 @@ public class FundLogoService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        if (!fundService.canParentAccessFund(userId, fundId)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
         boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);

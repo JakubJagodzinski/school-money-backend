@@ -12,13 +12,13 @@ import com.example.schoolmoney.domain.report.domain.schoolclass.generator.pdf.Sc
 import com.example.schoolmoney.domain.report.dto.ReportDto;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassService;
 import com.example.schoolmoney.domain.schoolclassavatar.SchoolClassAvatarService;
 import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,10 +42,13 @@ public class SchoolClassReportService {
     private final EmailService emailService;
 
     private final SchoolClassAvatarService schoolClassAvatarService;
+
     private final ChildRepository childRepository;
 
+    private final SchoolClassService schoolClassService;
+
     @Transactional
-    public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
+    public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException {
         log.debug("Enter generateSchoolClassReport(schoolClassId={})", schoolClassId);
 
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
@@ -55,15 +58,13 @@ public class SchoolClassReportService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-
-        // TODO add check if parent has access to this class
+        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
 
         InputStreamResource schoolClassAvatar = schoolClassAvatarService.getSchoolClassAvatar(schoolClassId);
-
-        // TODO add school class operation list grouped by fund - maybe dict?
-
         long schoolClassTotalFunds = fundOperationRepository.countDistinctFundsBySchoolClassId(schoolClassId);
-
         long schoolClassTotalChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
 
         SchoolClassReportData schoolClassReportData = SchoolClassReportData.builder()

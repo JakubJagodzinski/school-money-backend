@@ -47,23 +47,36 @@ public class SchoolClassService {
 
     private final SecurityUtils securityUtils;
 
+    public boolean canParentAccessSchoolClass(UUID parentId, UUID schoolClassId) throws EntityNotFoundException {
+        log.debug("Enter canParentAccessSchoolClass(parentId={}, schoolClassId={})", parentId, schoolClassId);
+
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
+
+        boolean hasAnyChildrenInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(parentId, schoolClassId);
+        boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(parentId);
+
+        log.debug("Exit canParentAccessSchoolClass");
+        return hasAnyChildrenInSchoolClass || isTreasurer;
+    }
+
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
         log.debug("Enter createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-
-        log.debug("Creating school class for user with userId={}", userId);
         Parent parent = parentRepository.getReferenceById(userId);
-
-        String invitationCode = InvitationCodeGenerator.generate();
+        log.debug("Creating school class for user with userId={}", userId);
 
         SchoolClass schoolClass = SchoolClass
                 .builder()
                 .treasurer(parent)
                 .schoolClassName(createSchoolClassRequestDto.getSchoolClassName())
                 .schoolClassYear(createSchoolClassRequestDto.getSchoolClassYear())
-                .invitationCode(invitationCode)
+                .invitationCode(InvitationCodeGenerator.generate())
                 .build();
 
         schoolClassRepository.save(schoolClass);
@@ -78,7 +91,6 @@ public class SchoolClassService {
 
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAll(pageable);
 
-        log.debug("Fetched {} school classes for pageable={}", schoolClassPage.getTotalElements(), pageable);
         log.debug("Exit getAllSchoolClasses");
         return schoolClassPage.map(schoolClassMapper::toDto);
     }
@@ -109,23 +121,18 @@ public class SchoolClassService {
         return schoolClassResponseDtoPage;
     }
 
-    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException, AccessDeniedException {
+    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
+        if (!schoolClassRepository.existsById(schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
+
         UUID userId = securityUtils.getCurrentUserId();
-
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
-
-        boolean hasAnyChildrenInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(userId, schoolClassId);
-        boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(userId);
-
-        if (!hasAnyChildrenInSchoolClass && !isTreasurer) {
-            log.warn(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_DOES_NOT_HAVE_ACCESS_TO_THIS_CLASS);
+        if (!canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
@@ -146,6 +153,10 @@ public class SchoolClassService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        if (!canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
@@ -153,7 +164,6 @@ public class SchoolClassService {
         }
 
         schoolClassMapper.updateEntityFromDto(updateSchoolClassRequestDto, schoolClass);
-
         SchoolClass updatedSchoolClass = schoolClassRepository.save(schoolClass);
         log.info("School class updated {}", updatedSchoolClass);
 
@@ -172,15 +182,17 @@ public class SchoolClassService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        if (!canParentAccessSchoolClass(userId, schoolClassId)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
 
         if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
             log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
             throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
         }
 
-        String invitationCode = InvitationCodeGenerator.generate();
-
-        schoolClass.setInvitationCode(invitationCode);
+        schoolClass.setInvitationCode(InvitationCodeGenerator.generate());
         schoolClassRepository.save(schoolClass);
         log.info("Invitation code regenerated for school class {}", schoolClass);
 

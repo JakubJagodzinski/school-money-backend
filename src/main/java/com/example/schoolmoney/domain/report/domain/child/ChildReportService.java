@@ -18,7 +18,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +44,7 @@ public class ChildReportService {
     private final ChildAvatarService childAvatarService;
 
     @Transactional
-    public ReportDto generateChildReport(UUID childId) throws EntityNotFoundException, AccessDeniedException {
+    public ReportDto generateChildReport(UUID childId) throws EntityNotFoundException {
         log.debug("Enter generateChildReport(childId={})", childId);
 
         Child child = childRepository.findById(childId)
@@ -56,8 +55,8 @@ public class ChildReportService {
 
         UUID userId = securityUtils.getCurrentUserId();
         if (!child.getParent().getUserId().equals(userId)) {
-            log.warn(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
-            throw new AccessDeniedException(ChildMessages.CHILD_DOES_NOT_BELONG_TO_PARENT);
+            log.warn(ChildMessages.CHILD_NOT_FOUND);
+            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
         InputStreamResource childAvatar = childAvatarService.getChildAvatar(childId);
