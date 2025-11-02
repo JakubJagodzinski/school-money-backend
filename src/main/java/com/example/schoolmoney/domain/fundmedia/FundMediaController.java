@@ -6,6 +6,7 @@ import com.example.schoolmoney.domain.fundmedia.dto.request.UpdateFundMediaFileM
 import com.example.schoolmoney.domain.fundmedia.dto.response.FundMediaResponseDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.core.io.InputStreamResource;
@@ -17,11 +18,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
+@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1")
@@ -82,7 +85,7 @@ public class FundMediaController {
     public ResponseEntity<FundMediaResponseDto> updateFundMediaFileMetadata(
             @PathVariable UUID fundId,
             @PathVariable UUID fundMediaId,
-            @RequestBody UpdateFundMediaFileMetadataRequestDto updateFundMediaFileMetadataRequestDto
+            @Valid @RequestBody UpdateFundMediaFileMetadataRequestDto updateFundMediaFileMetadataRequestDto
     ) {
         FundMediaResponseDto fundMediaResponseDto = fundMediaService.updateFundMediaFileMetadata(fundId, fundMediaId, updateFundMediaFileMetadataRequestDto);
 

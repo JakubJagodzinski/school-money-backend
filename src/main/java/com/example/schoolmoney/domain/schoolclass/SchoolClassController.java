@@ -107,12 +107,12 @@ public class SchoolClassController {
     })
     @CheckPermission(Permission.SCHOOL_CLASS_CHILDREN_READ_ALL)
     @GetMapping("/school-classes/{schoolClassId}/children")
-    public ResponseEntity<Page<ChildWithParentInfoResponseDto>> getSchoolClassAllChildren(
+    public ResponseEntity<Page<ChildWithParentInfoResponseDto>> getAllChildrenForSchoolClass(
             @PathVariable UUID schoolClassId,
             @ParameterObject
             @PageableDefault(size = 20, sort = "birthDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<ChildWithParentInfoResponseDto> childResponseDtoPage = schoolClassService.getSchoolClassAllChildren(schoolClassId, pageable);
+        Page<ChildWithParentInfoResponseDto> childResponseDtoPage = schoolClassService.getAllChildrenForSchoolClass(schoolClassId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

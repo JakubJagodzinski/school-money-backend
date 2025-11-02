@@ -4,9 +4,12 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.child.Child;
+import com.example.schoolmoney.domain.child.ChildAccessService;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +21,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ChildIgnoredFundService {
 
@@ -28,6 +32,10 @@ public class ChildIgnoredFundService {
     private final FundRepository fundRepository;
 
     private final SecurityUtils securityUtils;
+
+    private final ParentRepository parentRepository;
+
+    private final ChildAccessService childAccessService;
 
     @Transactional
     public void ignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
@@ -40,8 +48,9 @@ public class ChildIgnoredFundService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!child.getParent().getUserId().equals(userId)) {
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
@@ -81,17 +90,16 @@ public class ChildIgnoredFundService {
     public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter unignoreFundForChild(childId={}, fundId={})", childId, fundId);
 
-        UUID userId = securityUtils.getCurrentUserId();
-
-        log.debug("Unignoring fund with fundId={} for child with childId={} by parent with userId={}", fundId, childId, userId);
-
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
                     log.warn(ChildMessages.CHILD_NOT_FOUND);
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
-        if (!child.getParent().getUserId().equals(userId)) {
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }

@@ -39,6 +39,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class WalletService {
 

@@ -30,6 +30,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class SchoolClassService {
 
@@ -47,21 +48,7 @@ public class SchoolClassService {
 
     private final SecurityUtils securityUtils;
 
-    public boolean canParentAccessSchoolClass(UUID parentId, UUID schoolClassId) throws EntityNotFoundException {
-        log.debug("Enter canParentAccessSchoolClass(parentId={}, schoolClassId={})", parentId, schoolClassId);
-
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
-
-        boolean hasAnyChildrenInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(parentId, schoolClassId);
-        boolean isTreasurer = schoolClass.getTreasurer().getUserId().equals(parentId);
-
-        log.debug("Exit canParentAccessSchoolClass");
-        return hasAnyChildrenInSchoolClass || isTreasurer;
-    }
+    private final SchoolClassAccessService schoolClassAccessService;
 
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
@@ -121,16 +108,19 @@ public class SchoolClassService {
         return schoolClassResponseDtoPage;
     }
 
-    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
-        log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
+    public Page<ChildWithParentInfoResponseDto> getAllChildrenForSchoolClass(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
+        log.debug("Enter getAllChildrenForSchoolClass(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        if (!schoolClassRepository.existsById(schoolClassId)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
@@ -138,7 +128,7 @@ public class SchoolClassService {
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
         log.debug("Fetched {} children for school class with schoolClassId={}", schoolClassChildren.getTotalElements(), schoolClassId);
 
-        log.debug("Exit getSchoolClassAllChildren");
+        log.debug("Exit getAllChildrenForSchoolClass");
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
     }
 
@@ -153,14 +143,16 @@ public class SchoolClassService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
+            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
         }
 
         schoolClassMapper.updateEntityFromDto(updateSchoolClassRequestDto, schoolClass);
@@ -182,14 +174,16 @@ public class SchoolClassService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
+            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
         }
 
         schoolClass.setInvitationCode(InvitationCodeGenerator.generate());

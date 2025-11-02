@@ -26,6 +26,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ChildService {
 
@@ -41,12 +42,13 @@ public class ChildService {
 
     private final EmailService emailService;
 
+    private final ChildAccessService childAccessService;
+
     @Transactional
     public ChildShortInfoResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
         log.debug("Enter createChild(createChildRequestDto={})", createChildRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-
         Parent parent = parentRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.warn(ParentMessages.PARENT_NOT_FOUND);
@@ -79,8 +81,9 @@ public class ChildService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!child.getParent().getUserId().equals(userId)) {
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
@@ -99,8 +102,6 @@ public class ChildService {
         child.setSchoolClass(schoolClass);
         childRepository.save(child);
         log.info("Child {} assigned to school class {}", child, schoolClass);
-
-        Parent parent = child.getParent();
 
         emailService.sendChildAddedToClassEmail(
                 parent.getEmail(),
@@ -124,8 +125,9 @@ public class ChildService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!child.getParent().getUserId().equals(userId)) {
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
@@ -161,8 +163,9 @@ public class ChildService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!child.getParent().getUserId().equals(userId)) {
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }

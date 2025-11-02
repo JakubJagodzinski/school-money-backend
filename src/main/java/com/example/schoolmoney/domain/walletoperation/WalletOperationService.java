@@ -16,6 +16,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class WalletOperationService {
 
@@ -27,7 +28,6 @@ public class WalletOperationService {
 
     private final SecurityUtils securityUtils;
 
-    @Transactional
     public Page<WalletOperationResponseDto> getWalletHistory(Pageable pageable) {
         log.debug("Enter getWalletHistory(pageable={})", pageable);
 

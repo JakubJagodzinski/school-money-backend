@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.report.domain.child;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.domain.child.Child;
+import com.example.schoolmoney.domain.child.ChildAccessService;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.childavatar.ChildAvatarService;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
@@ -26,6 +27,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ChildReportService {
 
@@ -43,7 +45,8 @@ public class ChildReportService {
 
     private final ChildAvatarService childAvatarService;
 
-    @Transactional
+    private final ChildAccessService childAccessService;
+
     public ReportDto generateChildReport(UUID childId) throws EntityNotFoundException {
         log.debug("Enter generateChildReport(childId={})", childId);
 
@@ -54,33 +57,20 @@ public class ChildReportService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!child.getParent().getUserId().equals(userId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
-        InputStreamResource childAvatar = childAvatarService.getChildAvatar(childId);
-
-        List<FundOperation> childFundOperationList = fundOperationRepository.findAllByChild_ChildIdOrderByProcessedAtAsc(childId);
-
-        long childTotalParticipatedFunds = fundOperationRepository.countDistinctFundsByChildId(childId);
-
-        ChildReportData childReportData = ChildReportData.builder()
-                .child(child)
-                .childAvatar(childAvatar)
-                .childFundOperationList(childFundOperationList)
-                .childTotalParticipatedFunds(childTotalParticipatedFunds)
-                .build();
-
-        byte[] childReport = childReportPdfGenerator.generateReportPdf(childReportData);
+        byte[] childReport = childReportPdfGenerator.generateReportPdf(prepareChildReportData(child));
 
         ReportDto reportDto = ReportDto
                 .builder()
                 .report(childReport)
                 .reportFileName(ReportFilenameGenerator.generate(child.getFullName()))
                 .build();
-
-        Parent parent = parentRepository.getReferenceById(userId);
 
         emailService.sendChildReportEmail(
                 parent.getEmail(),
@@ -93,6 +83,21 @@ public class ChildReportService {
 
         log.debug("Exit generateChildReport()");
         return reportDto;
+    }
+
+    private ChildReportData prepareChildReportData(Child child) {
+        UUID childId = child.getChildId();
+
+        InputStreamResource childAvatar = childAvatarService.getChildAvatar(childId);
+        List<FundOperation> childFundOperationsList = fundOperationRepository.findAllByChild_ChildIdOrderByProcessedAtAsc(childId);
+        long childTotalParticipatedFunds = fundOperationRepository.countDistinctFundsByChildId(childId);
+
+        return ChildReportData.builder()
+                .child(child)
+                .childAvatar(childAvatar)
+                .childFundOperationList(childFundOperationsList)
+                .childTotalParticipatedFunds(childTotalParticipatedFunds)
+                .build();
     }
 
 }

@@ -19,6 +19,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ParentAvatarService {
 
@@ -31,7 +32,7 @@ public class ParentAvatarService {
     private final SecurityUtils securityUtils;
 
     @Transactional
-    public void updateParentAvatar(MultipartFile file) throws IllegalStateException {
+    public void updateParentAvatar(MultipartFile file) {
         log.debug("Enter uploadParentAvatar");
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -51,7 +52,6 @@ public class ParentAvatarService {
         log.debug("Exit uploadParentAvatar");
     }
 
-    @Transactional
     public InputStreamResource getParentAvatar(UUID parentId) throws EntityNotFoundException {
         log.debug("Enter getParentAvatar(parentId={})", parentId);
 

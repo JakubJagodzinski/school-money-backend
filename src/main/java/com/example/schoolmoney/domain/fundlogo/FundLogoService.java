@@ -4,9 +4,11 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundLogoMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundRepository;
-import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.FundStatus;
+import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
@@ -22,6 +24,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FundLogoService {
 
@@ -33,7 +36,9 @@ public class FundLogoService {
 
     private final SecurityUtils securityUtils;
 
-    private final FundService fundService;
+    private final FundAccessService fundAccessService;
+
+    private final ParentRepository parentRepository;
 
     @Transactional
     public void updateFundLogo(UUID fundId, MultipartFile logoFile) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
@@ -46,16 +51,16 @@ public class FundLogoService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
-        boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
-        if (!isAuthor && !isTreasurer) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
+        if (!fundAccessService.canEditFund(parent, fund)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
 
         if (fund.getFundStatus() != FundStatus.ACTIVE) {
@@ -77,7 +82,6 @@ public class FundLogoService {
         log.debug("Exit updateFundLogo");
     }
 
-    @Transactional
     public InputStreamResource getFundLogo(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter getFundLogo(fundId={})", fundId);
 
@@ -86,6 +90,14 @@ public class FundLogoService {
                     log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
+
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
 
         if (fund.getLogoId() == null) {
             log.warn(FundLogoMessages.FUND_LOGO_NOT_SET);
@@ -109,16 +121,16 @@ public class FundLogoService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        boolean isAuthor = fund.getAuthor().getUserId().equals(userId);
-        boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(userId);
-        if (!isAuthor && !isTreasurer) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_FUND);
+        if (!fundAccessService.canEditFund(parent, fund)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
 
         if (fund.getFundStatus() != FundStatus.ACTIVE) {

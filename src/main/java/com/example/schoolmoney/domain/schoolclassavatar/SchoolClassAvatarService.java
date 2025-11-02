@@ -3,9 +3,11 @@ package com.example.schoolmoney.domain.schoolclassavatar;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
+import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
-import com.example.schoolmoney.domain.schoolclass.SchoolClassService;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,6 +23,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class SchoolClassAvatarService {
 
@@ -32,7 +35,9 @@ public class SchoolClassAvatarService {
 
     private final SecurityUtils securityUtils;
 
-    private final SchoolClassService schoolClassService;
+    private final SchoolClassAccessService schoolClassAccessService;
+
+    private final ParentRepository parentRepository;
 
     @Transactional
     public void updateSchoolClassAvatar(UUID schoolClassId, MultipartFile avatarFile) throws EntityNotFoundException, AccessDeniedException {
@@ -45,14 +50,16 @@ public class SchoolClassAvatarService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
+            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
         }
 
         String newAvatarId = storageService.uploadFile(avatarFile, bucketName, FileCategory.AVATAR_OR_LOGO);
@@ -69,7 +76,6 @@ public class SchoolClassAvatarService {
         log.debug("Exit updateSchoolClassAvatar");
     }
 
-    @Transactional
     public InputStreamResource getSchoolClassAvatar(UUID schoolClassId) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAvatar(schoolClassId={})", schoolClassId);
 
@@ -78,6 +84,14 @@ public class SchoolClassAvatarService {
                     log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
+
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
 
         if (schoolClass.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
@@ -91,7 +105,7 @@ public class SchoolClassAvatarService {
     }
 
     @Transactional
-    public void deleteSchoolClassAvatar(UUID schoolClassId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void deleteSchoolClassAvatar(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter deleteSchoolClassAvatar(schoolClassId={})", schoolClassId);
 
         SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
@@ -101,14 +115,16 @@ public class SchoolClassAvatarService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
+            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
+            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
         }
 
         if (schoolClass.getAvatarId() == null) {

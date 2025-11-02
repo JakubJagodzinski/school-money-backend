@@ -2,11 +2,13 @@ package com.example.schoolmoney.domain.fundmediaoperation;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
+import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundRepository;
-import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fundmediaoperation.dto.FundMediaOperationMapper;
 import com.example.schoolmoney.domain.fundmediaoperation.dto.response.FundMediaOperationResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.files.FileType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FundMediaOperationService {
 
@@ -31,7 +34,9 @@ public class FundMediaOperationService {
 
     private final SecurityUtils securityUtils;
 
-    private final FundService fundService;
+    private final FundAccessService fundAccessService;
+
+    private final ParentRepository parentRepository;
 
     @Transactional
     public void saveFundMediaOperation(Parent parent, UUID fundMediaId, String filename, FileType mediaType, UUID fundId, FundMediaOperationType operationType) {
@@ -53,17 +58,19 @@ public class FundMediaOperationService {
         log.debug("Exit saveFundMediaOperation");
     }
 
-    @Transactional
     public Page<FundMediaOperationResponseDto> getFundMediaOperations(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundMediaOperations(fundId={})", fundId);
 
-        if (!fundRepository.existsById(fundId)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }

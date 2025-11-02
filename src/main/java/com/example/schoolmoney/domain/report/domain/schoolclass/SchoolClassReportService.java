@@ -17,8 +17,8 @@ import com.example.schoolmoney.domain.report.domain.schoolclass.dto.SchoolClassR
 import com.example.schoolmoney.domain.report.domain.schoolclass.generator.pdf.SchoolClassReportPdfGenerator;
 import com.example.schoolmoney.domain.report.dto.ReportDto;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
-import com.example.schoolmoney.domain.schoolclass.SchoolClassService;
 import com.example.schoolmoney.domain.schoolclassavatar.SchoolClassAvatarService;
 import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,6 +36,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class SchoolClassReportService {
 
@@ -53,15 +54,14 @@ public class SchoolClassReportService {
 
     private final ChildRepository childRepository;
 
-    private final SchoolClassService schoolClassService;
-
     private final FundRepository fundRepository;
 
     private final ChildMapper childMapper;
 
     private final FundService fundService;
 
-    @Transactional
+    private final SchoolClassAccessService schoolClassAccessService;
+
     public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException {
         log.debug("Enter generateSchoolClassReport(schoolClassId={})", schoolClassId);
 
@@ -72,10 +72,36 @@ public class SchoolClassReportService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
+
+        byte[] schoolClassReport = schoolClassReportPdfGenerator.generateReportPdf(prepareSchoolClassReportData(schoolClass));
+
+        ReportDto reportDto = ReportDto
+                .builder()
+                .report(schoolClassReport)
+                .reportFileName(ReportFilenameGenerator.generate(schoolClass.getFullName()))
+                .build();
+
+        emailService.sendSchoolClassReportEmail(
+                parent.getEmail(),
+                parent.getFirstName(),
+                schoolClass.getFullName(),
+                reportDto.getReport(),
+                reportDto.getReportFileName(),
+                parent.isNotificationsEnabled()
+        );
+
+        log.debug("Exit generateSchoolClassReport()");
+        return reportDto;
+    }
+
+    private SchoolClassReportData prepareSchoolClassReportData(SchoolClass schoolClass) {
+        UUID schoolClassId = schoolClass.getSchoolClassId();
 
         InputStreamResource schoolClassAvatar = schoolClassAvatarService.getSchoolClassAvatar(schoolClassId);
 
@@ -91,34 +117,12 @@ public class SchoolClassReportService {
         List<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId);
         List<ChildWithParentInfoResponseDto> schoolClassChildrenWithParentInfo = schoolClassChildren.stream().map(childMapper::toWithParentInfoDto).toList();
 
-        SchoolClassReportData schoolClassReportData = SchoolClassReportData.builder()
+        return SchoolClassReportData.builder()
                 .schoolClass(schoolClass)
                 .schoolClassAvatar(schoolClassAvatar)
                 .schoolClassFundsWithChildrenStatuses(schoolClassFundsWithChildrenStatuses)
                 .schoolClassChildrenWithParentInfo(schoolClassChildrenWithParentInfo)
                 .build();
-
-        byte[] schoolClassReport = schoolClassReportPdfGenerator.generateReportPdf(schoolClassReportData);
-
-        ReportDto reportDto = ReportDto
-                .builder()
-                .report(schoolClassReport)
-                .reportFileName(ReportFilenameGenerator.generate(schoolClass.getFullName()))
-                .build();
-
-        Parent parent = parentRepository.getReferenceById(userId);
-
-        emailService.sendSchoolClassReportEmail(
-                parent.getEmail(),
-                parent.getFirstName(),
-                schoolClass.getFullName(),
-                reportDto.getReport(),
-                reportDto.getReportFileName(),
-                parent.isNotificationsEnabled()
-        );
-
-        log.debug("Exit generateSchoolClassReport()");
-        return reportDto;
     }
 
 }

@@ -1,17 +1,22 @@
 package com.example.schoolmoney.domain.fundoperation;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.*;
+import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
+import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
+import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.domain.child.Child;
+import com.example.schoolmoney.domain.child.ChildAccessService;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundRepository;
-import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundoperation.dto.FundOperationMapper;
 import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
@@ -29,6 +34,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FundOperationService {
 
@@ -46,7 +52,11 @@ public class FundOperationService {
 
     private final EmailService emailService;
 
-    private final FundService fundService;
+    private final FundAccessService fundAccessService;
+
+    private final ParentRepository parentRepository;
+
+    private final ChildAccessService childAccessService;
 
     @Transactional
     public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException {
@@ -58,14 +68,21 @@ public class FundOperationService {
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
+            log.warn(FundMessages.FUND_NOT_FOUND);
+            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+
         Child child = childRepository.findById(childId)
                 .orElseThrow(() -> {
                     log.warn(ChildMessages.CHILD_NOT_FOUND);
                     return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
                 });
 
-        UUID userId = securityUtils.getCurrentUserId();
-        if (!child.getParent().getUserId().equals(userId)) {
+        if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
@@ -113,8 +130,6 @@ public class FundOperationService {
         fundOperationRepository.save(fundOperation);
         log.info("Fund operation saved {}", fundOperation);
 
-        Parent parent = child.getParent();
-
         emailService.sendFundPaymentEmail(
                 parent.getEmail(),
                 parent.getFirstName(),
@@ -133,7 +148,6 @@ public class FundOperationService {
     public void depositToFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
         log.debug("Enter depositToFund(fundId={}, amountInCents={})", fundId, amountInCents);
 
-
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
                     log.warn(FundMessages.FUND_NOT_FOUND);
@@ -141,14 +155,16 @@ public class FundOperationService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!fundAccessService.canEditFund(parent, fund)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
 
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
@@ -205,22 +221,23 @@ public class FundOperationService {
     public void withdrawFromFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
         log.debug("Enter withdrawFromFund(fundId={}, amountInCents={})", fundId, amountInCents);
 
-        UUID userId = securityUtils.getCurrentUserId();
-
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
                     log.warn(FundMessages.FUND_NOT_FOUND);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
 
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!fundAccessService.canEditFund(parent, fund)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
 
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
@@ -315,17 +332,19 @@ public class FundOperationService {
         return remainingDepositLimitInCents;
     }
 
-    @Transactional
     public Page<FundOperationResponseDto> getFundAllOperations(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundAllOperations(fundId={}, pageable={})", fundId, pageable);
 
-        if (!fundRepository.existsById(fundId)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }

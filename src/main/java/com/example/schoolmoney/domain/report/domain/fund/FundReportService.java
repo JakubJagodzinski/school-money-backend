@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.report.domain.fund;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FundReportService {
 
@@ -52,7 +54,8 @@ public class FundReportService {
 
     private final FundService fundService;
 
-    @Transactional
+    private final FundAccessService fundAccessService;
+
     public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter generateFundReport(fundId={})", fundId);
 
@@ -63,36 +66,20 @@ public class FundReportService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!fundService.canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        InputStreamResource fundLogo = fundLogoService.getFundLogo(fundId);
-
-        List<FundOperation> fundOperationList = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtAsc(fundId);
-
-        List<FundMediaOperation> fundMediaOperations = fundMediaOperationRepository.findAllByFundIdOrderByProcessedAtDesc(fundId);
-
-        List<FundChildStatusResponseDto> fundChildrenStatuses = fundService.getFundChildrenStatuses(fundId, Pageable.unpaged()).getContent();
-
-        FundReportData fundReportData = FundReportData.builder()
-                .fund(fund)
-                .fundLogo(fundLogo)
-                .fundOperationList(fundOperationList)
-                .fundChildrenStatuses(fundChildrenStatuses)
-                .fundMediaOperations(fundMediaOperations)
-                .build();
-
-        byte[] fundReport = fundReportPdfGenerator.generateReportPdf(fundReportData);
+        byte[] fundReport = fundReportPdfGenerator.generateReportPdf(prepareFundReportData(fund));
 
         ReportDto reportDto = ReportDto
                 .builder()
                 .report(fundReport)
                 .reportFileName(ReportFilenameGenerator.generate(fund.getTitle()))
                 .build();
-
-        Parent parent = parentRepository.getReferenceById(userId);
 
         emailService.sendFundReportEmail(
                 parent.getEmail(),
@@ -105,6 +92,23 @@ public class FundReportService {
 
         log.debug("Exit generateFundReport()");
         return reportDto;
+    }
+
+    private FundReportData prepareFundReportData(Fund fund) {
+        UUID fundId = fund.getFundId();
+
+        InputStreamResource fundLogo = fundLogoService.getFundLogo(fundId);
+        List<FundOperation> fundOperationList = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtAsc(fundId);
+        List<FundChildStatusResponseDto> fundChildrenStatuses = fundService.getFundChildrenStatuses(fundId, Pageable.unpaged()).getContent();
+        List<FundMediaOperation> fundMediaOperations = fundMediaOperationRepository.findAllByFundIdOrderByProcessedAtDesc(fundId);
+
+        return FundReportData.builder()
+                .fund(fund)
+                .fundLogo(fundLogo)
+                .fundOperationList(fundOperationList)
+                .fundChildrenStatuses(fundChildrenStatuses)
+                .fundMediaOperations(fundMediaOperations)
+                .build();
     }
 
 }

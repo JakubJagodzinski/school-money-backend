@@ -19,8 +19,8 @@ import com.example.schoolmoney.domain.fundoperation.FundOperationType;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
-import com.example.schoolmoney.domain.schoolclass.SchoolClassService;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class FundService {
 
@@ -70,28 +71,13 @@ public class FundService {
 
     private final ChildMapper childMapper;
 
-    private final SchoolClassService schoolClassService;
+    private final FundAccessService fundAccessService;
 
-    public boolean canParentAccessFund(UUID parentId, UUID fundId) throws EntityNotFoundException {
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
-
-        boolean hasChildInSchoolClass = childRepository.existsByParent_UserIdAndSchoolClass_SchoolClassId(parentId, fund.getSchoolClass().getSchoolClassId());
-        boolean isSchoolClassTreasurer = fund.getSchoolClass().getTreasurer() != null && fund.getSchoolClass().getTreasurer().getUserId().equals(parentId);
-        boolean isFundAuthor = fund.getAuthor().getUserId().equals(parentId);
-
-        return hasChildInSchoolClass || isSchoolClassTreasurer || isFundAuthor;
-    }
+    private final SchoolClassAccessService schoolClassAccessService;
 
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
-
-        UUID userId = securityUtils.getCurrentUserId();
-
 
         SchoolClass schoolClass = schoolClassRepository.findById(createFundRequestDto.getSchoolClassId())
                 .orElseThrow(() -> {
@@ -99,20 +85,22 @@ public class FundService {
                     return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
                 });
 
-        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClass.getSchoolClassId())) {
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
 
-        if (!schoolClass.getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!schoolClassAccessService.canCreateFund(parent, schoolClass)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_CREATE_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_CREATE_FUND);
         }
 
-        Parent fundAuthor = parentRepository.getReferenceById(userId);
         Fund fund = Fund
                 .builder()
-                .author(fundAuthor)
+                .author(parent)
                 .schoolClass(schoolClass)
                 .amountPerChildInCents(createFundRequestDto.getAmountPerChildInCents())
                 .currency(financeConfiguration.getCurrency())
@@ -125,24 +113,30 @@ public class FundService {
         fundRepository.save(fund);
         log.info("Fund saved {}", fund);
 
-        List<Parent> schoolClassParents = childRepository.findSchoolClassDistinctParents(schoolClass.getSchoolClassId());
-        log.debug("Number of parents in school class {}", schoolClassParents.size());
-
-        log.debug("Sending emails to parents in school class");
-        for (Parent parent : schoolClassParents) {
-            emailService.sendFundCreatedEmail(
-                    parent.getEmail(),
-                    parent.getFirstName(),
-                    fundAuthor.getFullName(),
-                    fund.getTitle(),
-                    schoolClass.getFullName(),
-                    parent.isNotificationsEnabled()
-            );
-        }
-        log.debug("Emails sent");
+        sendFundCreatedEmailsToParents(parent.getFullName(), fund.getTitle(), schoolClass);
 
         log.debug("Exit createFund");
         return fundMapper.toDto(fund);
+    }
+
+    private void sendFundCreatedEmailsToParents(String authorFullName, String fundTitle, SchoolClass schoolClass) {
+        List<Parent> schoolClassParentsList = childRepository.findSchoolClassDistinctParents(schoolClass.getSchoolClassId());
+        log.debug("Number of parents in school class {}", schoolClassParentsList.size());
+
+        if (!schoolClassParentsList.isEmpty()) {
+            log.debug("Sending emails to parents in school class");
+            for (Parent schoolClassParent : schoolClassParentsList) {
+                emailService.sendFundCreatedEmail(
+                        schoolClassParent.getEmail(),
+                        schoolClassParent.getFirstName(),
+                        authorFullName,
+                        fundTitle,
+                        schoolClass.getFullName(),
+                        schoolClassParent.isNotificationsEnabled()
+                );
+            }
+            log.debug("Emails sent");
+        }
     }
 
     @Transactional
@@ -156,14 +150,16 @@ public class FundService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!canParentAccessFund(securityUtils.getCurrentUserId(), fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!fundAccessService.canCancelFund(parent, fund)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
 
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
@@ -195,24 +191,28 @@ public class FundService {
         fundRepository.save(fund);
         log.info("Fund cancelled {}", fund);
 
-        List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
-
-        log.debug("Sending emails about cancelled fund to parents in school class");
-        for (Parent parent : parents) {
-            // TODO check if parent has any child in that class that isn't ignoring the fund
-            emailService.sendFundCancelledEmail(
-                    parent.getEmail(),
-                    parent.getFirstName(),
-                    fund.getTitle(),
-                    fund.getSchoolClass().getFullName(),
-                    parent.isNotificationsEnabled()
-            );
-        }
-        log.debug("Emails sent");
+        sendFundCancelledEmailsToParents(fund);
 
         processParentRefunds(fundOperations);
 
         log.debug("Exit cancelFund");
+    }
+
+    private void sendFundCancelledEmailsToParents(Fund fund) {
+        List<Parent> participatinsParentsList = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
+
+        log.debug("Sending emails about cancelled fund to participating parents in school class");
+        for (Parent participatingParent : participatinsParentsList) {
+            // TODO check if parent has any child in that class that isn't ignoring the fund
+            emailService.sendFundCancelledEmail(
+                    participatingParent.getEmail(),
+                    participatingParent.getFirstName(),
+                    fund.getTitle(),
+                    fund.getSchoolClass().getFullName(),
+                    participatingParent.isNotificationsEnabled()
+            );
+        }
+        log.debug("Fund cancelled emails sent");
     }
 
     private long calculateFundTreasurerBalance(List<FundOperation> fundOperations) {
@@ -283,24 +283,29 @@ public class FundService {
             fund.setEndedAt(Instant.now());
             log.info("Finished fund with fundId={}", fund);
 
-            List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
-
-            log.debug("Sending emails about finished fund to parents in school class");
-            for (Parent parent : parents) {
-                emailService.sendFundFinishedEmail(
-                        parent.getEmail(),
-                        parent.getFirstName(),
-                        fund.getTitle(),
-                        fund.getSchoolClass().getFullName(),
-                        parent.isNotificationsEnabled()
-                );
-            }
-            log.debug("Emails sent");
+            sendFundFinishedEmailsToParents(fund);
         }
 
         fundRepository.saveAll(endedFunds);
         log.debug("Exit markEndedFundsAsFinished");
     }
+
+    private void sendFundFinishedEmailsToParents(Fund fund) {
+        List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
+
+        log.debug("Sending emails about finished fund to parents in school class");
+        for (Parent parent : parents) {
+            emailService.sendFundFinishedEmail(
+                    parent.getEmail(),
+                    parent.getFirstName(),
+                    fund.getTitle(),
+                    fund.getSchoolClass().getFullName(),
+                    parent.isNotificationsEnabled()
+            );
+        }
+        log.debug("Emails sent");
+    }
+
 
     public Page<FundResponseDto> getParentCreatedFunds(Pageable pageable) {
         log.debug("Enter getParentCreatedFunds(pageable={})", pageable);
@@ -324,14 +329,16 @@ public class FundService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!canParentAccessFund(userId, fundId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        if (!fund.getSchoolClass().getTreasurer().getUserId().equals(userId)) {
-            log.warn(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.PARENT_NOT_TREASURER_OF_THIS_SCHOOL_CLASS);
+        if (!fundAccessService.canEditFund(parent, fund)) {
+            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
+            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
 
         if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
@@ -355,13 +362,16 @@ public class FundService {
     public Page<FundResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        if (!schoolClassRepository.existsById(schoolClassId)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+                .orElseThrow(() -> {
+                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+                });
 
         UUID userId = securityUtils.getCurrentUserId();
-        if (!schoolClassService.canParentAccessSchoolClass(userId, schoolClassId)) {
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
             log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
             throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
         }
@@ -383,7 +393,6 @@ public class FundService {
         return parentChildrenFundPage.map(fundMapper::toDto);
     }
 
-    @Transactional(readOnly = true)
     public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
 
@@ -394,8 +403,9 @@ public class FundService {
                 });
 
         UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!canParentAccessFund(userId, fundId)) {
+        if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }

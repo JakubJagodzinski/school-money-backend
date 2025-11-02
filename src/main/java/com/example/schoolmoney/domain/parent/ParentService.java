@@ -13,6 +13,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 @Service
 public class ParentService {
 
@@ -22,7 +23,6 @@ public class ParentService {
 
     private final SecurityUtils securityUtils;
 
-    @Transactional
     public ParentResponseDto getParent() {
         log.debug("Enter getParent");
 
