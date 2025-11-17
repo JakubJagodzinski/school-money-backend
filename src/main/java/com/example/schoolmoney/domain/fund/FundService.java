@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -436,7 +437,9 @@ public class FundService {
 
     private Set<UUID> getPaidChildIds(UUID fundId) {
         return fundOperationRepository.findAllByFund_FundId(fundId).stream()
-                .map(f -> f.getChild().getChildId())
+                .map(FundOperation::getChild)
+                .filter(Objects::nonNull)
+                .map(Child::getChildId)
                 .collect(Collectors.toSet());
     }
 
