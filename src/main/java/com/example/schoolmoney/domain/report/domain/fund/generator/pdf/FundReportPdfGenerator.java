@@ -147,7 +147,11 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
 
         for (FundOperation fundOperation : fundOperations) {
             addDataCell(table, fundOperation.getParent().getFullName());
-            addDataCell(table, fundOperation.getChild().getFullName());
+            if (fundOperation.getChild() != null) {
+                addDataCell(table, fundOperation.getChild().getFullName());
+            } else {
+                addDataCell(table, "N/A");
+            }
             addDataCell(table, AmountFormatter.format(fundOperation.getAmountInCents(), fundOperation.getCurrency()));
             addDataCell(table, fundOperation.getOperationType().name());
             addDataCell(table, DateToStringConverter.fromInstantToLocal(fundOperation.getProcessedAt()));
