@@ -33,7 +33,6 @@ public class WalletOperation {
     @JoinColumn(name = "wallet_id", nullable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_wallet_operations_wallet_id"))
     private Wallet wallet;
 
-    @NotNull
     @Column(name = "external_operation_id")
     private String externalOperationId;
 
