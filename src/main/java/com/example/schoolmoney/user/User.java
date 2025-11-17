@@ -66,18 +66,15 @@ public class User implements UserDetails {
     @Column(name = "role", nullable = false)
     private Role role;
 
-    @NotNull
     @Column(name = "is_verified", nullable = false)
     private boolean isVerified;
 
-    @NotNull
     @Column(name = "is_blocked", nullable = false)
     private boolean isBlocked;
 
     @Column(name = "blocked_until")
     private Instant blockedUntil;
 
-    @NotNull
     @Column(name = "notifications_enabled", nullable = false)
     private boolean notificationsEnabled;
 
@@ -88,8 +85,6 @@ public class User implements UserDetails {
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
-        this.isVerified = false;
-        this.isBlocked = false;
         this.notificationsEnabled = true;
     }
 
