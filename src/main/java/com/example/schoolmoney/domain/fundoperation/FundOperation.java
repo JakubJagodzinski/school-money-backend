@@ -34,9 +34,8 @@ public class FundOperation {
     @JoinColumn(name = "parent_id", nullable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_fund_operations_parent_id"))
     private Parent parent;
 
-    @NotNull
     @ManyToOne
-    @JoinColumn(name = "child_id", nullable = false, updatable = false, foreignKey = @ForeignKey(name = "fk_fund_operations_child_id"))
+    @JoinColumn(name = "child_id", updatable = false, foreignKey = @ForeignKey(name = "fk_fund_operations_child_id"))
     private Child child;
 
     @NotNull
@@ -65,13 +64,17 @@ public class FundOperation {
     private FundOperationType operationType;
 
     @NotNull
-    @Builder.Default
     @Column(name = "processed_at", nullable = false, updatable = false)
-    private Instant processedAt = Instant.now();
+    private Instant processedAt;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status", nullable = false, updatable = false)
     private FinancialOperationStatus operationStatus;
+
+    @PrePersist
+    protected void onCreate() {
+        this.processedAt = Instant.now();
+    }
 
 }
