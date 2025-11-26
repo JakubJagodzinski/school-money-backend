@@ -144,7 +144,7 @@ public class EmailService {
     }
 
     public void sendFundFinishedEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
-        EmailContentProvider emailContentProvider = FundUnblockedEmailContentProvider.builder()
+        EmailContentProvider emailContentProvider = FundFinishedEmailContentProvider.builder()
                 .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
                 .build();
