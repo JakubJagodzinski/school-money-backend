@@ -390,8 +390,23 @@ public class FundService {
 
         Page<Fund> parentChildrenFundPage = fundRepository.findAllByParentId(userId, pageable);
 
+        Page<FundResponseDto> fundResponseDtoPage = parentChildrenFundPage.map(fundMapper::toDto);
+        for (FundResponseDto fundResponseDto : fundResponseDtoPage.getContent()) {
+            Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = getFundChildrenStatuses(fundResponseDto.getFundId(), Pageable.unpaged());
+
+            long all = fundChildStatusResponseDtoPage.getContent().stream()
+                    .filter(dto -> dto.getStatus() != FundChildStatus.DECLINED)
+                    .count();
+            long paid = fundChildStatusResponseDtoPage.getContent().stream()
+                    .filter(dto -> dto.getStatus() == FundChildStatus.PAID)
+                    .count();
+            double percent = (100.0 * paid) / all;
+
+            fundResponseDto.setFundProgress(percent);
+        }
+
         log.debug("Exit getParentChildrenAllFunds");
-        return parentChildrenFundPage.map(fundMapper::toDto);
+        return fundResponseDtoPage;
     }
 
     public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) throws EntityNotFoundException {
