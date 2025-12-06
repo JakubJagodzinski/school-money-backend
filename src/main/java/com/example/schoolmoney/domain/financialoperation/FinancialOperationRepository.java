@@ -14,17 +14,17 @@ public interface FinancialOperationRepository extends JpaRepository<FinancialOpe
 
     @Query(
             value = """
-                    SELECT processed_at,
-                           amount_in_cents,
-                           operation_type,
-                           operation_status
+                    SELECT processed_at AS processed_at,
+                           amount_in_cents AS amount_in_cents,
+                           operation_type AS operation_type,
+                           operation_status AS operation_status
                     FROM fund_operations
                     WHERE parent_id = :parent_id
                     UNION ALL
-                    SELECT processed_at,
-                           amount_in_cents,
-                           operation_type,
-                           operation_status
+                    SELECT processed_at AS processed_at,
+                           amount_in_cents AS amount_in_cents,
+                           operation_type AS operation_type,
+                           operation_status AS operation_status
                     FROM wallet_operations
                     WHERE wallet_id = :wallet_id
                     """,
