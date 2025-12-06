@@ -72,6 +72,9 @@ public class FundOperation {
     @Column(name = "operation_status", nullable = false, updatable = false)
     private FinancialOperationStatus operationStatus;
 
+    @Column(name = "note", updatable = false)
+    private String note;
+
     @PrePersist
     protected void onCreate() {
         this.processedAt = Instant.now();

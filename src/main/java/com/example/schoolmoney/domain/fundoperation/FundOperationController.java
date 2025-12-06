@@ -3,6 +3,8 @@ package com.example.schoolmoney.domain.fundoperation;
 import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
+import com.example.schoolmoney.domain.fundoperation.dto.request.DepositToFundRequestDto;
+import com.example.schoolmoney.domain.fundoperation.dto.request.WithdrawFromFundRequestDto;
 import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -126,8 +129,11 @@ public class FundOperationController {
     })
     @CheckPermission(Permission.FUND_WITHDRAW)
     @PostMapping("/funds/{fundId}/withdraw")
-    public ResponseEntity<MessageResponseDto> withdrawFromFund(@PathVariable UUID fundId, @RequestParam long amountInCents) {
-        fundOperationService.withdrawFromFund(fundId, amountInCents);
+    public ResponseEntity<MessageResponseDto> withdrawFromFund(
+            @PathVariable UUID fundId,
+            @Valid @RequestBody WithdrawFromFundRequestDto requestDto
+    ) {
+        fundOperationService.withdrawFromFund(fundId, requestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -183,8 +189,11 @@ public class FundOperationController {
     })
     @CheckPermission(Permission.FUND_DEPOSIT)
     @PostMapping("/funds/{fundId}/deposit")
-    public ResponseEntity<MessageResponseDto> depositToFund(@PathVariable UUID fundId, @RequestParam long amountInCents) {
-        fundOperationService.depositToFund(fundId, amountInCents);
+    public ResponseEntity<MessageResponseDto> depositToFund(
+            @PathVariable UUID fundId,
+            @Valid @RequestBody DepositToFundRequestDto requestDto
+    ) {
+        fundOperationService.depositToFund(fundId, requestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

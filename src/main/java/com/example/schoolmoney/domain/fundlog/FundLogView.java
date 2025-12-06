@@ -6,20 +6,20 @@ public interface FundLogView {
 
     Instant getTimestamp();
 
-    String getFundTitle();
+    String getFund_title();
 
-    String getParentFullName();
+    String getParent_full_name();
 
-    String getChildFullName();
+    String getChild_full_name();
 
-    double getAmountInCents();
+    Double getAmount_in_cents();
 
     String getCurrency();
 
-    String getOperationType();
+    String getOperation_type();
 
-    String getOperationStatus();
+    String getOperation_status();
 
-    String getDescription();
+    String getNote();
 
 }

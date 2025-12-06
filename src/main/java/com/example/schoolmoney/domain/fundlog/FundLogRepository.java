@@ -16,29 +16,29 @@ public interface FundLogRepository extends JpaRepository<FundLog, Long> {
             value = """
                     SELECT processed_at AS timestamp,
                            f.title AS fund_title,
-                           CONCAT(u.first_name, ' ', u.last_name) AS parent_full_name,
-                           CONCAT(c.first_name, ' ', c.last_name) AS child_full_name,
+                           NULLIF(CONCAT_WS(' ', u.first_name, u.last_name), '') AS parent_full_name,
+                           NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), '') AS child_full_name,
                            amount_in_cents AS amount_in_cents,
                            fund_operations.currency AS currency,
                            operation_type AS operation_type,
                            operation_status AS operation_status,
-                           '' AS description
+                           note AS note
                     FROM fund_operations
                     JOIN funds f on fund_operations.fund_id = f.fund_id
-                    JOIN children c on fund_operations.child_id = c.child_id
+                    LEFT JOIN children c on fund_operations.child_id = c.child_id
                     JOIN parents p on fund_operations.parent_id = p.parent_id
                     JOIN users u on p.parent_id = u.user_id
                     WHERE fund_operations.fund_id = :fund_id
                     UNION ALL
                     SELECT ignored_at AS timestamp,
                            f.title AS fund_title,
-                           CONCAT(u.first_name, ' ', u.last_name) AS parent_full_name,
-                           CONCAT(c.first_name, ' ', c.last_name) AS child_full_name,
-                           0.0 AS amount_in_cents,
-                           '' AS currency,
+                           NULLIF(CONCAT_WS(' ', u.first_name, u.last_name), '') AS parent_full_name,
+                           NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), '') AS child_full_name,
+                           NULL AS amount_in_cents,
+                           NULL AS currency,
                            'FUND_REJECTED' AS operation_type,
-                           '' AS operation_status,
-                           '' AS description
+                           'SUCCESS' AS operation_status,
+                           NULL AS note
                     FROM child_ignored_funds
                     JOIN funds f on child_ignored_funds.fund_id = f.fund_id
                     JOIN children c on child_ignored_funds.child_id = c.child_id
@@ -49,11 +49,11 @@ public interface FundLogRepository extends JpaRepository<FundLog, Long> {
             countQuery = """
                     SELECT COUNT(*)
                     FROM (
-                        SELECT fund_operation_id AS id
+                        SELECT fund_operation_id::Text AS id
                         FROM fund_operations
                         WHERE fund_id = :fund_id
                         UNION ALL
-                        SELECT (child_id, fund_id) AS id
+                        SELECT (child_id, fund_id)::Text AS id
                         FROM child_ignored_funds
                         WHERE fund_id = :fund_id
                     ) AS combined

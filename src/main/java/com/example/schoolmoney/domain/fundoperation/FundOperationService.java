@@ -14,6 +14,8 @@ import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundoperation.dto.FundOperationMapper;
+import com.example.schoolmoney.domain.fundoperation.dto.request.DepositToFundRequestDto;
+import com.example.schoolmoney.domain.fundoperation.dto.request.WithdrawFromFundRequestDto;
 import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
@@ -145,8 +147,8 @@ public class FundOperationService {
     }
 
     @Transactional
-    public void depositToFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
-        log.debug("Enter depositToFund(fundId={}, amountInCents={})", fundId, amountInCents);
+    public void depositToFund(UUID fundId, DepositToFundRequestDto requestDto) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
+        log.debug("Enter depositToFund(fundId={}, requestDto={})", fundId, requestDto);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
@@ -176,6 +178,8 @@ public class FundOperationService {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
+
+        long amountInCents = requestDto.getAmountInCents();
 
         if (amountInCents < 0) {
             log.warn(FundOperationMessages.DEPOSIT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
@@ -209,6 +213,7 @@ public class FundOperationService {
                 .currency(fund.getCurrency())
                 .operationType(FundOperationType.FUND_DEPOSIT)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
+                .note(requestDto.getNote())
                 .build();
 
         fundOperationRepository.save(fundDepositOperation);
@@ -218,8 +223,8 @@ public class FundOperationService {
     }
 
     @Transactional
-    public void withdrawFromFund(UUID fundId, long amountInCents) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
-        log.debug("Enter withdrawFromFund(fundId={}, amountInCents={})", fundId, amountInCents);
+    public void withdrawFromFund(UUID fundId, WithdrawFromFundRequestDto requestDto) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
+        log.debug("Enter withdrawFromFund(fundId={}, requestDto={})", fundId, requestDto);
 
         Fund fund = fundRepository.findById(fundId)
                 .orElseThrow(() -> {
@@ -250,6 +255,8 @@ public class FundOperationService {
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
 
+        long amountInCents = requestDto.getAmountInCents();
+
         if (amountInCents < 0) {
             log.warn(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
             throw new IllegalArgumentException(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
@@ -277,6 +284,7 @@ public class FundOperationService {
                 .currency(fund.getCurrency())
                 .operationType(FundOperationType.FUND_WITHDRAWAL)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
+                .note(requestDto.getNote())
                 .build();
 
         fundOperationRepository.save(fundWithdrawalOperation);
