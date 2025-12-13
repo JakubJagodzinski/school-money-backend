@@ -17,9 +17,9 @@ public enum Permission {
     PARENT_DELETE("parent:delete"),
 
     PARENT_CHILDREN_READ_ALL("parent:children:read:all"),
-    PARENT_SCHOOL_CLASS_READ_ALL("parent:school_class:read:all"),
+    PARENT_SCHOOL_CLASS_READ_ALL("parent:school:class:read:all"),
 
-    PARENT_CHILDREN_FUND_READ_ALL("parent_children_fund:read:all"),
+    PARENT_CHILDREN_FUND_READ_ALL("parent:children:fund:read:all"),
 
     PARENT_AVATAR_UPDATE("parent:avatar:update"),
     PARENT_AVATAR_READ("parent:avatar:read"),
@@ -31,8 +31,8 @@ public enum Permission {
     CHILD_UPDATE("child:update"),
     CHILD_DELETE("child:delete"),
 
-    CHILD_SCHOOL_CLASS_JOIN("child:school_class:join"),
-    CHILD_SCHOOL_CLASS_LEAVE("child:school_class:leave"),
+    CHILD_SCHOOL_CLASS_JOIN("child:school:class:join"),
+    CHILD_SCHOOL_CLASS_LEAVE("child:school:class:leave"),
 
     CHILD_AVATAR_UPDATE("child:avatar:update"),
     CHILD_AVATAR_READ("child:avatar:read"),
@@ -41,20 +41,20 @@ public enum Permission {
     CHILD_FUND_IGNORE("child:fund:ignore"),
     CHILD_FUND_UNIGNORE("child:fund:unignore"),
 
-    SCHOOL_CLASS_CREATE("school_class:create"),
-    SCHOOL_CLASS_READ("school_class:read"),
-    SCHOOL_CLASS_READ_ALL("school_class:read:all"),
-    SCHOOL_CLASS_UPDATE("school_class:update"),
-    SCHOOL_CLASS_DELETE("school_class:delete"),
+    SCHOOL_CLASS_CREATE("school:class:create"),
+    SCHOOL_CLASS_READ("school:class:read"),
+    SCHOOL_CLASS_READ_ALL("school:class:read:all"),
+    SCHOOL_CLASS_UPDATE("school:class:update"),
+    SCHOOL_CLASS_DELETE("school:class:delete"),
 
-    SCHOOL_CLASS_FUND_READ_ALL("school_class_fund:read:all"),
-    SCHOOL_CLASS_CHILDREN_READ_ALL("school_class:children:read:all"),
+    SCHOOL_CLASS_FUND_READ_ALL("school:class:fund:read:all"),
+    SCHOOL_CLASS_CHILDREN_READ_ALL("school:class:children:read:all"),
 
-    SCHOOL_CLASS_INVITATION_CODE_REGENERATE("school_class:invitation_code:regenerate"),
+    SCHOOL_CLASS_INVITATION_CODE_REGENERATE("school:class:invitation:code:regenerate"),
 
-    SCHOOL_CLASS_AVATAR_UPDATE("school_class:avatar:update"),
-    SCHOOL_CLASS_AVATAR_READ("school_class:avatar:read"),
-    SCHOOL_CLASS_AVATAR_DELETE("school_class:avatar:delete"),
+    SCHOOL_CLASS_AVATAR_UPDATE("school:class:avatar:update"),
+    SCHOOL_CLASS_AVATAR_READ("school:class:avatar:read"),
+    SCHOOL_CLASS_AVATAR_DELETE("school:class:avatar:delete"),
 
     WALLET_BALANCE_READ("wallet:balance:read"),
     WALLET_INFO_READ("wallet:info:read"),
@@ -62,7 +62,7 @@ public enum Permission {
     WALLET_IBAN_SET("wallet:iban:set"),
     WALLET_IBAN_CLEAR("wallet:iban:clear"),
 
-    WALLET_HISTORY_READ_ALL("wallet_history:read:all"),
+    WALLET_HISTORY_READ_ALL("wallet:history:read:all"),
 
     FUND_CREATE("fund:create"),
     FUND_READ("fund:read"),
@@ -70,19 +70,19 @@ public enum Permission {
     FUND_UPDATE("fund:update"),
     FUND_DELETE("fund:delete"),
     FUND_CANCEL("fund:cancel"),
-    FUND_CREATED_READ_ALL("fund_created:read:all"),
+    FUND_CREATED_READ_ALL("fund:created:read:all"),
 
     FUND_LOGO_READ("fund:logo:read"),
     FUND_LOGO_UPDATE("fund:logo:update"),
     FUND_LOGO_DELETE("fund:logo:delete"),
 
-    FUND_MEDIA_FILE_UPLOAD("fund_media:file:upload"),
-    FUND_MEDIA_FILE_READ("fund_media:file:read"),
-    FUND_MEDIA_METADATA_READ("fund_media:metadata:read"),
-    FUND_MEDIA_METADATA_UPDATE("fund_media:metadata:update"),
-    FUND_MEDIA_FILE_DELETE("fund_media:file:delete"),
+    FUND_MEDIA_FILE_UPLOAD("fund:media:file:upload"),
+    FUND_MEDIA_FILE_READ("fund:media:file:read"),
+    FUND_MEDIA_METADATA_READ("fund:media:metadata:read"),
+    FUND_MEDIA_METADATA_UPDATE("fund:media:metadata:update"),
+    FUND_MEDIA_FILE_DELETE("fund:media:file:delete"),
 
-    FUND_MEDIA_OPERATION_READ_ALL("fund_media:operation:read:all"),
+    FUND_MEDIA_OPERATION_READ_ALL("fund:media:operation:read:all"),
 
     FUND_PAY("fund:pay"),
     FUND_WITHDRAW("fund:withdraw"),
@@ -93,18 +93,18 @@ public enum Permission {
 
     FUND_OPERATIONS_READ_ALL("fund:operations:read:all"),
 
-    FUND_CHILDREN_STATUSES_READ_ALL("fund:children_statuses:read:all"),
+    FUND_CHILDREN_STATUSES_READ_ALL("fund:children:statuses:read:all"),
 
     FUND_REPORT_GENERATE("fund:report:generate"),
     CHILD_REPORT_GENERATE("child:report:generate"),
-    SCHOOL_CLASS_REPORT_GENERATE("school_class:report:generate"),
+    SCHOOL_CLASS_REPORT_GENERATE("school:class:report:generate"),
 
-    FINANCIAL_OPERATION_HISTORY_READ("financial_operation_history:read"),
+    FINANCIAL_OPERATION_HISTORY_READ("financial:operation:history:read"),
 
     WALLET_TOP_UP("wallet:top_up"),
     WALLET_WITHDRAW("wallet:withdraw"),
 
-    ADMIN_ACCOUNT_CREATE("admin_account:create");
+    ADMIN_ACCOUNT_CREATE("admin:account:create");
 
     private final String permission;
 
