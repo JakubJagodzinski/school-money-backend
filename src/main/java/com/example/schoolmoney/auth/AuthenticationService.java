@@ -50,7 +50,7 @@ public class AuthenticationService {
 
     private final WalletService walletService;
 
-    private final DomainProperties domainProperties;
+    private final EmailDomainProperties emailDomainProperties;
 
     private final AuthTokenService authTokenService;
 
@@ -66,14 +66,14 @@ public class AuthenticationService {
     public void register(RegisterRequestDto registerRequestDto, Role role) throws IllegalArgumentException, AccessDeniedException {
         log.debug("Enter register");
 
+        if (!emailDomainProperties.isEmailDomainAllowed(registerRequestDto.getEmail())) {
+            log.warn(UserMessages.EMAIL_DOMAIN_NOT_ALLOWED);
+            throw new AccessDeniedException(UserMessages.EMAIL_DOMAIN_NOT_ALLOWED);
+        }
+
         if (userRepository.existsByEmail(registerRequestDto.getEmail())) {
             log.warn(UserMessages.EMAIL_IS_ALREADY_TAKEN);
             return;
-        }
-
-        if (!domainProperties.isEmailDomainAuthorized(registerRequestDto.getEmail())) {
-            log.warn(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
-            throw new AccessDeniedException(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
         }
 
         User user = createUser(role, registerRequestDto);

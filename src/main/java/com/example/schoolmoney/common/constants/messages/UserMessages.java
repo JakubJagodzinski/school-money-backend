@@ -9,7 +9,7 @@ public class UserMessages {
     public static final String WRONG_USERNAME_OR_PASSWORD = "Wrong username or password";
     public static final String IF_NOT_ALREADY_REGISTERED_ACCOUNT_CREATED_SUCCESSFULLY = "If not already registered, account created successfully";
     public static final String ACCOUNT_NOT_VERIFIED = "Account not verified";
-    public static final String UNAUTHORIZED_EMAIL_DOMAIN = "Unauthorized email domain";
+    public static final String EMAIL_DOMAIN_NOT_ALLOWED = "Email domain not allowed";
     public static final String ACCOUNT_BLOCKED = "Account blocked";
     public static final String ACCOUNT_BLOCKED_SUCCESSFULLY = "Account blocked successfully";
     public static final String ACCOUNT_UNBLOCKED_SUCCESSFULLY = "Account unblocked successfully";

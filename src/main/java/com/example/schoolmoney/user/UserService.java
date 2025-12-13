@@ -1,6 +1,6 @@
 package com.example.schoolmoney.user;
 
-import com.example.schoolmoney.auth.DomainProperties;
+import com.example.schoolmoney.auth.EmailDomainProperties;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.PasswordMessages;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
@@ -41,7 +41,7 @@ public class UserService {
 
     private final VerificationLinkService verificationLinkService;
 
-    private final DomainProperties domainProperties;
+    private final EmailDomainProperties emailDomainProperties;
 
     @Transactional
     public void changePassword(ChangePasswordRequestDto changePasswordRequestDto) throws BadCredentialsException, IllegalArgumentException {
@@ -96,9 +96,9 @@ public class UserService {
             throw new EntityExistsException(UserMessages.EMAIL_IS_ALREADY_TAKEN);
         }
 
-        if (!domainProperties.isEmailDomainAuthorized(newEmail)) {
-            log.warn(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
-            throw new AccessDeniedException(UserMessages.UNAUTHORIZED_EMAIL_DOMAIN);
+        if (!emailDomainProperties.isEmailDomainAllowed(newEmail)) {
+            log.warn(UserMessages.EMAIL_DOMAIN_NOT_ALLOWED);
+            throw new AccessDeniedException(UserMessages.EMAIL_DOMAIN_NOT_ALLOWED);
         }
 
         User user = securityUtils.getCurrentUser();

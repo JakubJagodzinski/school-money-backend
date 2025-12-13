@@ -72,7 +72,7 @@ app:
     allowed-methods: ${ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
     allowed-headers: ${ALLOWED_HEADERS:*}
 
-  domain: ${EMAIL_DOMAIN:}
+  allowed-email-domains: ${ALLOWED_EMAIL_DOMAINS:}
 
   verification:
     token:
