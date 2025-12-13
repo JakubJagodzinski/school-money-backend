@@ -7,14 +7,20 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
+        Server server = new Server();
+        server.setUrl("/");
+
         return new OpenAPI()
                 .info(
                         new Info()
@@ -22,6 +28,7 @@ public class OpenApiConfig {
                                 .version(ApiConstants.API_INFO_VERSION)
                                 .description(ApiConstants.API_INFO_DESCRIPTION)
                 )
+                .servers(List.of(server))
                 .addSecurityItem(new SecurityRequirement().addList(SecurityConstants.SECURITY_SCHEME_NAME))
                 .components(
                         new Components()
