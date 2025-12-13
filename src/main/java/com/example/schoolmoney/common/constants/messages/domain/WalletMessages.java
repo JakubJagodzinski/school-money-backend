@@ -7,6 +7,7 @@ public class WalletMessages {
     public static final String WITHDRAWAL_IBAN_CLEARED_SUCCESSFULLY = "Withdrawal IBAN cleared successfully";
     public static final String INSUFFICIENT_WALLET_BALANCE = "Insufficient wallet balance";
     public static final String WITHDRAWAL_OPERATION_INITIALIZED_SUCCESSFULLY = "Withdrawal operation initialized successfully";
+    public static final String WALLET_WITHDRAWAL_PERFORMED_SUCCESSFULLY = "Withdrawal withdrawal performed successfully";
     public static final String WITHDRAWAL_IBAN_NOT_SET = "Withdrawal IBAN not set";
 
 }

@@ -76,20 +76,27 @@ public class Fund {
 
     @NotBlank
     @Size(max = 34)
-    @Column(name = "iban", nullable = false, length = 34)
+    @Column(name = "iban", nullable = false, updatable = false, length = 34)
     private String iban;
 
     @NotNull
-    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(name = "fund_status", nullable = false)
-    private FundStatus fundStatus = FundStatus.ACTIVE;
+    private FundStatus fundStatus;
 
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
-        this.startsAt = now;
+        if (startsAt == null) {
+            this.startsAt = now;
+        }
         this.updatedAt = now;
+
+        if (now.isAfter(startsAt)) {
+            fundStatus = FundStatus.ACTIVE;
+        } else {
+            fundStatus = FundStatus.SCHEDULED;
+        }
     }
 
     @PreUpdate

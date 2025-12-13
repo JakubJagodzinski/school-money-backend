@@ -54,8 +54,8 @@ server:
 
 stripe:
   apiKey: ${STRIPE_API_KEY}
-  paymentWebhookSecret: ${STRIPE PAYMENT_WEBHOOK_SECRET}
-  payoutWebhookSecret: ${STRIPE PAYOUT_WEBHOOK_SECRET}
+  paymentWebhookSecret: ${STRIPE_PAYMENT_WEBHOOK_SECRET}
+  payoutWebhookSecret: ${STRIPE_PAYOUT_WEBHOOK_SECRET}
 
 app:
   super-admin:
@@ -65,17 +65,23 @@ app:
     password: ${SUPER_ADMIN_PASSWORD}
 
   server:
-    public-address: ${SERVER_PUBLIC_ADDRESS:http://localhost:8090}
+    public-address: ${SERVER_PUBLIC_ADDRESS}
+
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:*}
+    allowed-methods: ${ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}
+    allowed-headers: ${ALLOWED_HEADERS:*}
 
   domain: ${EMAIL_DOMAIN:}
 
   verification:
     token:
-      expiry-hours: ${VERIFICATION_TOKEN_EXPIRY_HOURS:24}
+      expiry-hours: ${VERIFICATION_TOKEN_EXPIRY_HOURS:1}
       token-length: ${VERIFICATION_TOKEN_LENGTH:36}
 
   finances:
     currency: ${FINANCES_CURRENCY}
+    starting-balance: ${FINANCES_STARTING_BALANCE:0}
 
     payment:
       success-path: "/api/v1/payments/status/success"
@@ -89,6 +95,6 @@ logging:
     com.example.schoolmoney: DEBUG
 
 minio:
-  url: ${MINIO_URL:http://minio:9000}
+  url: ${MINIO_URL}
   access-key: ${MINIO_ACCESS_KEY}
   secret-key: ${MINIO_SECRET_KEY}

@@ -8,6 +8,8 @@ import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatu
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.wallet.dto.WalletMapper;
+import com.example.schoolmoney.domain.wallet.dto.request.InitializeWalletTopUpRequestDto;
+import com.example.schoolmoney.domain.wallet.dto.request.PerformWalletWithdrawalRequestDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletBalanceResponseDto;
 import com.example.schoolmoney.domain.wallet.dto.response.WalletInfoResponseDto;
 import com.example.schoolmoney.domain.walletoperation.WalletOperation;
@@ -25,7 +27,7 @@ import com.example.schoolmoney.finance.payout.PayoutService;
 import com.example.schoolmoney.finance.payout.dto.PayoutNotificationDto;
 import com.example.schoolmoney.finance.payout.dto.PayoutRequestDto;
 import com.example.schoolmoney.properties.ServerProperties;
-import com.example.schoolmoney.utils.IbanMasker;
+import com.example.schoolmoney.utils.IbanUtil;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -95,10 +97,26 @@ public class WalletService {
                 .builder()
                 .parent(parent)
                 .currency(currency)
+                .balanceInCents(financeConfiguration.getStartingBalance())
                 .build();
 
         walletRepository.save(wallet);
         log.info("Wallet saved {}", wallet);
+
+        if (financeConfiguration.getStartingBalance() > 0) {
+            WalletOperation walletOperation = WalletOperation.builder()
+                    .wallet(wallet)
+                    .amountInCents(financeConfiguration.getStartingBalance())
+                    .currency(currency)
+                    .operationType(WalletOperationType.WELCOME_BONUS)
+                    .operationStatus(FinancialOperationStatus.SUCCESS)
+                    .providerType(ProviderType.INTERNAL)
+                    .processedAt(Instant.now())
+                    .build();
+
+            walletOperationRepository.save(walletOperation);
+            log.info("Wallet operation saved {}", walletOperation);
+        }
 
         log.debug("Exit createWallet");
     }
@@ -156,7 +174,7 @@ public class WalletService {
     }
 
     @Transactional
-    public PaymentSessionDto initializeWalletTopUp(ProviderType providerType, long amountInCents) {
+    public PaymentSessionDto initializeWalletTopUp(InitializeWalletTopUpRequestDto requestDto) {
         log.debug("Enter initializeWalletTopUp");
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -164,25 +182,32 @@ public class WalletService {
 
         WalletOperation walletOperation = WalletOperation.builder()
                 .wallet(wallet)
-                .amountInCents(amountInCents)
+                .amountInCents(requestDto.getAmountInCents())
                 .currency(financeConfiguration.getCurrency())
                 .operationType(WalletOperationType.WALLET_TOP_UP)
                 .operationStatus(FinancialOperationStatus.PENDING)
-                .providerType(providerType)
+                .providerType(requestDto.getProviderType())
                 .build();
 
         WalletOperation pendingOperation = walletOperationRepository.save(walletOperation);
         log.info("Wallet operation saved {}", walletOperation);
 
+        String successRedirectUrl = requestDto.getSuccessRedirectUrl() != null ?
+                requestDto.getSuccessRedirectUrl() :
+                serverProperties.getPublicAddress() + paymentProperties.getSuccessPath();
+        String cancelRedirectUrl = requestDto.getCancelRedirectUrl() != null ?
+                requestDto.getCancelRedirectUrl() :
+                serverProperties.getPublicAddress() + paymentProperties.getFailedPath();
+
         PaymentRequestDto paymentRequestDto = PaymentRequestDto.builder()
-                .providerType(providerType)
+                .providerType(requestDto.getProviderType())
                 .userId(userId)
                 .paymentName("Wallet Top-Up")
                 .operationId(walletOperation.getWalletOperationId())
-                .amountInCents(amountInCents)
+                .amountInCents(requestDto.getAmountInCents())
                 .currency(financeConfiguration.getCurrency())
-                .successUrl(serverProperties.getPublicAddress() + paymentProperties.getSuccessPath())
-                .cancelUrl(serverProperties.getPublicAddress() + paymentProperties.getFailedPath())
+                .successUrl(successRedirectUrl)
+                .cancelUrl(cancelRedirectUrl)
                 .build();
 
         PaymentSessionDto paymentSessionDto = paymentService.createPaymentSession(paymentRequestDto);
@@ -281,7 +306,7 @@ public class WalletService {
                 .operationType(WalletOperationType.WALLET_WITHDRAWAL)
                 .operationStatus(FinancialOperationStatus.PENDING)
                 .providerType(withdrawalProviderType)
-                .iban(IbanMasker.maskIban(wallet.getWithdrawalIban()))
+                .iban(IbanUtil.maskIban(wallet.getWithdrawalIban()))
                 .build();
 
         WalletOperation pendingOperation = walletOperationRepository.save(walletOperation);
@@ -347,6 +372,35 @@ public class WalletService {
 
         walletRepository.save(wallet);
         walletOperationRepository.save(walletOperation);
+    }
+
+    @Transactional
+    public void performWalletWithdrawal(PerformWalletWithdrawalRequestDto requestDto) {
+        log.debug("Enter performWalletWithdrawal(requestDto={})", requestDto);
+
+        UUID userId = securityUtils.getCurrentUserId();
+        Wallet wallet = walletRepository.findByParent_UserId(userId);
+
+        validateWalletWithdrawal(wallet, requestDto.getAmountInCents());
+
+        wallet.decreaseBalanceInCents(requestDto.getAmountInCents());
+        walletRepository.save(wallet);
+        log.info("Wallet balance updated {}", wallet);
+
+        WalletOperation walletOperation = WalletOperation.builder()
+                .wallet(wallet)
+                .amountInCents(requestDto.getAmountInCents())
+                .currency(financeConfiguration.getCurrency())
+                .operationType(WalletOperationType.WALLET_WITHDRAWAL)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
+                .providerType(ProviderType.INTERNAL)
+                .iban(IbanUtil.maskIban(wallet.getWithdrawalIban()))
+                .build();
+
+        walletOperationRepository.save(walletOperation);
+        log.info("Wallet operation saved {}", walletOperation);
+
+        log.debug("Exit performWalletWithdrawal(requestDto={})", requestDto);
     }
 
 }

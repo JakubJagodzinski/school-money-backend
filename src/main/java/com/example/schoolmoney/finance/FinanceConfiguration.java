@@ -13,4 +13,6 @@ public class FinanceConfiguration {
 
     private Currency currency;
 
+    private Long startingBalance;
+
 }

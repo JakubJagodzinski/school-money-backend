@@ -1,8 +1,10 @@
 services:
   school-money-db:
     image: postgres:15
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5433:5432"
     volumes:
@@ -11,8 +13,9 @@ services:
 
   school-money-storage:
     image: quay.io/minio/minio
-    env_file:
-      - .env
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -23,11 +26,33 @@ services:
 
   school-money-app:
     image: school-money-app:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      DATASOURCE_URL: ${DATASOURCE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
+      SERVER_PUBLIC_ADDRESS: ${SERVER_PUBLIC_ADDRESS}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      STRIPE_PAYMENT_WEBHOOK_SECRET: ${STRIPE_PAYMENT_WEBHOOK_SECRET}
+      STRIPE_PAYOUT_WEBHOOK_SECRET: ${STRIPE_PAYOUT_WEBHOOK_SECRET}
+      EMAIL_DOMAIN: ${EMAIL_DOMAIN}
+      VERIFICATION_TOKEN_EXPIRY_HOURS: ${VERIFICATION_TOKEN_EXPIRY_HOURS}
+      VERIFICATION_TOKEN_LENGTH: ${VERIFICATION_TOKEN_LENGTH}
+      MINIO_URL: ${MINIO_URL}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      SUPER_ADMIN_FIRST_NAME: ${SUPER_ADMIN_FIRST_NAME}
+      SUPER_ADMIN_LAST_NAME: ${SUPER_ADMIN_LAST_NAME}
+      SUPER_ADMIN_EMAIL: ${SUPER_ADMIN_EMAIL}
+      SUPER_ADMIN_PASSWORD: ${SUPER_ADMIN_PASSWORD}
+      FINANCES_CURRENCY: ${FINANCES_CURRENCY}
     ports:
       - "8090:8090"
     depends_on:

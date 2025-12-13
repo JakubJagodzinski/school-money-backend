@@ -25,6 +25,7 @@ import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.finance.FinanceConfiguration;
+import com.example.schoolmoney.utils.IbanUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,8 +108,9 @@ public class FundService {
                 .currency(financeConfiguration.getCurrency())
                 .title(createFundRequestDto.getTitle())
                 .description(createFundRequestDto.getDescription())
+                .startsAt(createFundRequestDto.getStartsAt())
                 .endsAt(createFundRequestDto.getEndsAt())
-                .iban(createFundRequestDto.getIban())
+                .iban(IbanUtil.generateRandomIban())
                 .build();
 
         fundRepository.save(fund);

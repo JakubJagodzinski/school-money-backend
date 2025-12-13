@@ -19,9 +19,9 @@ import java.util.UUID;
         "school_class_id",
         "title",
         "description",
+        "starts_at",
         "ends_at",
-        "amount_per_child_in_cents",
-        "iban"
+        "amount_per_child_in_cents"
 })
 public class CreateFundRequestDto {
 
@@ -39,6 +39,10 @@ public class CreateFundRequestDto {
     private String description;
 
     @NotNull
+    @JsonProperty("starts_at")
+    private Instant startsAt;
+
+    @NotNull
     @Future
     @JsonProperty("ends_at")
     private Instant endsAt;
@@ -47,10 +51,5 @@ public class CreateFundRequestDto {
     @Min(0) // allow "free" funds
     @JsonProperty("amount_per_child_in_cents")
     private long amountPerChildInCents;
-
-    @NotBlank
-    @Size(max = 34)
-    @JsonProperty("iban")
-    private String iban;
 
 }

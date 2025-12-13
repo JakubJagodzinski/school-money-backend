@@ -1,0 +1,16 @@
+package com.example.schoolmoney.domain.wallet.dto.request;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.Data;
+
+@Data
+@JsonPropertyOrder({
+        "amount_in_cents"
+})
+public class PerformWalletWithdrawalRequestDto {
+
+    @JsonProperty("amount_in_cents")
+    private Long amountInCents;
+
+}
