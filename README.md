@@ -130,36 +130,38 @@ canceled.
 
 Create a `.env` file in the root directory and define the following variables:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `POSTGRES_USER` | PostgreSQL username | `postgres` |
-| `POSTGRES_PASSWORD` | PostgreSQL password | `postgres` |
-| `POSTGRES_DB` | PostgreSQL database name | `school_money` |
-| `DATASOURCE_URL` | JDBC URL for connecting to PostgreSQL | `jdbc:postgresql://localhost:5433/school_money` |
-| `JWT_SECRET_KEY` | Secret key used for signing JWT tokens | `your_jwt_secret` |
-| `JWT_EXPIRATION` | JWT token expiration in milliseconds | `86400000` |
-| `JWT_REFRESH_TOKEN_EXPIRATION` | JWT refresh token expiration in milliseconds | `604800000` |
-| `SERVER_PUBLIC_ADDRESS` | Backend public URL | `http://localhost:8090` |
-| `MAIL_HOST` | SMTP host for sending emails | `smtp.gmail.com` |
-| `MAIL_PORT` | SMTP port | `587` |
-| `MAIL_USERNAME` | SMTP username/email | `example@gmail.com` |
-| `MAIL_PASSWORD` | SMTP password | `your_email_password` |
-| `STRIPE_API_KEY` | Stripe secret key for payments | `sk_test_...` |
-| `STRIPE_PAYMENT_WEBHOOK_SECRET` | Stripe webhook secret for payments | `whsec_...` |
-| `STRIPE_PAYOUT_WEBHOOK_SECRET` | Stripe webhook secret for payouts | `whsec_...` |
-| `EMAIL_DOMAIN` | Email domain for verification | `gmail.com` |
-| `VERIFICATION_TOKEN_EXPIRY_HOURS` | Expiration time for verification tokens | `24` |
-| `VERIFICATION_TOKEN_LENGTH` | Length of verification token | `36` |
-| `MINIO_URL` | MinIO storage endpoint | `http://localhost:9000` |
-| `MINIO_ROOT_USER` | MinIO root username | `minioadmin` |
-| `MINIO_ROOT_PASSWORD` | MinIO root password | `minioadmin` |
-| `MINIO_ACCESS_KEY` | MinIO access key | `minioadmin` |
-| `MINIO_SECRET_KEY` | MinIO secret key | `minioadmin` |
-| `SUPER_ADMIN_FIRST_NAME` | First name for the super admin | `Super` |
-| `SUPER_ADMIN_LAST_NAME` | Last name for the super admin | `Admin` |
-| `SUPER_ADMIN_EMAIL` | Email for the super admin | `example@gmail.com` |
-| `SUPER_ADMIN_PASSWORD` | Password for the super admin | `supersecurepassword` |
-| `FINANCES_CURRENCY` | Default currency for finances | `PLN` |
+| Variable                          | Description                                  | Example                                         |
+|-----------------------------------|----------------------------------------------|-------------------------------------------------|
+| `POSTGRES_USER`                   | PostgreSQL username                          | `postgres`                                      |
+| `POSTGRES_PASSWORD`               | PostgreSQL password                          | `postgres`                                      |
+| `POSTGRES_DB`                     | PostgreSQL database name                     | `school_money`                                  |
+| `DATASOURCE_URL`                  | JDBC URL for connecting to PostgreSQL        | `jdbc:postgresql://localhost:5433/school_money` |
+| `JWT_SECRET_KEY`                  | Secret key used for signing JWT tokens       | `your_jwt_secret`                               |
+| `JWT_EXPIRATION`                  | JWT token expiration in milliseconds         | `86400000`                                      |
+| `JWT_REFRESH_TOKEN_EXPIRATION`    | JWT refresh token expiration in milliseconds | `604800000`                                     |
+| `SERVER_PUBLIC_ADDRESS`           | Backend public URL                           | `http://localhost:8090`                         |
+| `ALLOWED_ORIGINS`                 | Allowed origins                              | `http://localhost:8090`                         |
+| `ALLOWED_METHODS`                 | Allowed methods                              | `GET,POST,PATCH,DELETE,OPTIONS`                 |
+| `ALLOWED_HEADERS`                 | Allowed headers                              | `*`                                             |
+| `MAIL_HOST`                       | SMTP host for sending emails                 | `smtp.gmail.com`                                |
+| `MAIL_PORT`                       | SMTP port                                    | `587`                                           |
+| `MAIL_USERNAME`                   | SMTP username/email                          | `example@gmail.com`                             |
+| `MAIL_PASSWORD`                   | SMTP password                                | `your_email_password`                           |
+| `STRIPE_API_KEY`                  | Stripe secret key for payments               | `sk_test_...`                                   |
+| `STRIPE_PAYMENT_WEBHOOK_SECRET`   | Stripe webhook secret for payments           | `whsec_...`                                     |
+| `STRIPE_PAYOUT_WEBHOOK_SECRET`    | Stripe webhook secret for payouts            | `whsec_...`                                     |
+| `ALLOWED_EMAIL_DOMAINS`           | Allowed email domains for registration       | `gmail.com,outlook.com`                         |
+| `VERIFICATION_TOKEN_EXPIRY_HOURS` | Expiration time for verification tokens      | `1`                                             |
+| `VERIFICATION_TOKEN_LENGTH`       | Length of verification token                 | `36`                                            |
+| `MINIO_URL`                       | MinIO storage endpoint                       | `http://localhost:9000`                         |
+| `MINIO_ROOT_USER`                 | MinIO root username                          | `minioadmin`                                    |
+| `MINIO_ROOT_PASSWORD`             | MinIO root password                          | `minioadmin`                                    |
+| `SUPER_ADMIN_FIRST_NAME`          | First name for the super admin               | `Super`                                         |
+| `SUPER_ADMIN_LAST_NAME`           | Last name for the super admin                | `Admin`                                         |
+| `SUPER_ADMIN_EMAIL`               | Email for the super admin                    | `example@gmail.com`                             |
+| `SUPER_ADMIN_PASSWORD`            | Password for the super admin                 | `supersecurepassword`                           |
+| `FINANCES_CURRENCY`               | Default currency for finances                | `PLN`                                           |
+| `FINANCES_STARTING_BALANCE`       | Default starting balance for new accounts    | `1000000`                                       |
 
 ---
 
