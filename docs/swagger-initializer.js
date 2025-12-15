@@ -4,8 +4,8 @@ window.onload = function() {
   // the following lines will be replaced by docker/configurator, when it runs in a docker-container
   window.ui = SwaggerUIBundle({
       url: window.location.hostname.includes("github.io")
-          ? "https://JakubJagodzinski.github.io/school-money-backend/docs/openapi.json"
-          : "./openapi.json",
+          ? "https://jakubjagodzinski.github.io/school-money-backend/api-docs.json"
+          : "./api-docs.json",
     dom_id: '#swagger-ui',
     deepLinking: true,
     presets: [
