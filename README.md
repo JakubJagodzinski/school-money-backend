@@ -10,26 +10,50 @@ canceled.
 # Table of Contents
 
 1. [Tech Stack](#tech-stack)
-2. [Modules Overview](#modules-overview)
-3. [Database Scheme](#database-scheme)
-4. [Environment Variables](#environment-variables)
-5. [How to Run the Project](#how-to-run-the-project)
-6. [Author](#author)
+2. [System architecture](#system-architecture)
+3. [Modules Overview](#modules-overview)
+4. [Database Schema](#database-schema)
+5. [Swagger Documentation](#swagger-documentation)
+6. [Hosting](#hosting)
+7. [Environment Variables](#environment-variables)
+8. [How to Run the Project](#how-to-run-the-project)
+9. [Author](#author)
 
 ---
 
 # Tech Stack
 
-- **Backend:** Java SpringBoot
-- **Database:** Postgres
+- **Backend:** Java Spring Boot
+- **Database:** PostgreSQL
 - **Storage:** MinIO
-- **Authentication:** JWT (JSON Web Tokens), email-based account activation
-- **Payments:** Stripe API (wallet top-up, withdrawal)
-- **Email Services:** SMTP (account activation)
+- **Authentication:** JWT, email-based account activation
+- **Authorization:** Role-based and fine-grained permissions
+- **Payments:** Stripe API (wallet top-ups)
+- **Cron Jobs:** Spring @Scheduled
+- **Logging:** Logback
+- **PDF Generation:** OpenPDF
+- **Dependency Management:** Maven
+- **Email Services:** SMTP (account-related actions and general notifications)
 - **API Documentation:** Swagger / OpenAPI
-- **Hosting:** AWS (EC2 instance)
+- **Hosting:** AWS (EC2 instance), AWS S3, AWS CloudFront, Nginx
 - **Environment Management:** `.env`
-- **Containerization:** DockerDesktop
+- **Containerization:** Docker
+- **Deployment:** Docker Compose
+
+---
+
+# System architecture
+
+The application follows a modular backend architecture built with Java Spring Boot.
+- Each module encapsulates specific business logic.
+- PostgreSQL stores persistent data.
+- MinIO handles file storage.
+- Backend, database, and storage are hosted on AWS EC2 instance.
+- Nginx reverse proxy routes incoming traffic to backend services and handles SSL termination.
+- S3 stores HTML, js, and CSS compiled [school-money-frontend](https://github.com/BartlomiejJaruga/school-money) files.
+- CloudFront provides CDN for static content.
+
+<img src="assets/architecture.png" alt="architecture">
 
 ---
 
@@ -92,7 +116,7 @@ canceled.
 
 ### 7. Attachments Module
 
-- Add/remove attachments of any type to fundraiser
+- Add/remove attachments of any type to funds
 - Retrieve attachments and metadata
 - File logo management
 - Metadata editing (name/type)
@@ -120,15 +144,29 @@ canceled.
 
 ---
 
-# Database scheme:
+# Database schema:
 
-<img src="assets/database_scheme.png" alt="database_scheme">
+<img src="assets/database_schema.png" alt="database_schema">
+
+---
+
+# Swagger Documentation
+
+[Swagger UI](https://jakubjagodzinski.github.io/school-money-backend/)
+
+---
+
+# Hosting
+
+[website](https://www.bit-fix.online)
+
+[server api](https://api.bit-fix.online/swagger-ui/index.html)
 
 ---
 
 # Environment Variables
 
-Create a `.env` file in the root directory and define the following variables:
+From `.env.example` create an `.env` file in the root directory and define the following variables:
 
 | Variable                          | Description                                  | Example                                         |
 |-----------------------------------|----------------------------------------------|-------------------------------------------------|
