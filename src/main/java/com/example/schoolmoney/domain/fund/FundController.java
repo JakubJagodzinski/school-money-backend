@@ -7,6 +7,7 @@ import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
+import com.example.schoolmoney.domain.fund.dto.response.FundWithChildrenResponseDto;
 import com.example.schoolmoney.user.Permission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -136,7 +137,7 @@ public class FundController {
                     description = "Created funds retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = MessageResponseDto.class)
+                            schema = @Schema(implementation = FundResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -226,7 +227,7 @@ public class FundController {
                     description = "School class funds retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FundResponseDto.class)
+                            schema = @Schema(implementation = FundWithChildrenResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -253,12 +254,12 @@ public class FundController {
     })
     @CheckPermission(Permission.SCHOOL_CLASS_FUND_READ_ALL)
     @GetMapping("/school-classes/{schoolClassId}/funds")
-    public ResponseEntity<Page<FundResponseDto>> getSchoolClassAllFunds(
+    public ResponseEntity<Page<FundWithChildrenResponseDto>> getSchoolClassAllFunds(
             @PathVariable UUID schoolClassId,
             @ParameterObject
             @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundResponseDto> fundResponseDtoPage = fundService.getSchoolClassAllFunds(schoolClassId, pageable);
+        Page<FundWithChildrenResponseDto> fundResponseDtoPage = fundService.getSchoolClassAllFunds(schoolClassId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

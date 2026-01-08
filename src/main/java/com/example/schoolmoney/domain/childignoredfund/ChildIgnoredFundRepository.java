@@ -13,4 +13,6 @@ public interface ChildIgnoredFundRepository extends JpaRepository<ChildIgnoredFu
 
     List<ChildIgnoredFund> findAllByFund_FundId(UUID fundId);
 
+    List<ChildIgnoredFund> findAllByFund_FundIdAndChild_Parent_UserId(UUID fundId, UUID userId);
+
 }

@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -28,9 +29,10 @@ import java.util.UUID;
         "amount_per_child_in_cents",
         "iban",
         "fund_status",
-        "fund_progress"
+        "fund_progress",
+        "children"
 })
-public class FundResponseDto {
+public class FundWithChildrenResponseDto {
 
     @JsonProperty("fund_id")
     private UUID fundId;
@@ -64,5 +66,7 @@ public class FundResponseDto {
 
     @JsonProperty("fund_progress")
     private double fundProgress;
+
+    private List<FundChildStatusWithoutParentResponseDto> children;
 
 }

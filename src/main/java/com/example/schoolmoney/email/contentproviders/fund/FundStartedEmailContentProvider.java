@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Builder
 @RequiredArgsConstructor
-public class FundFinishedEmailContentProvider implements EmailContentProvider {
+public class FundStartedEmailContentProvider implements EmailContentProvider {
 
     private final String fundTitle;
 
@@ -14,13 +14,13 @@ public class FundFinishedEmailContentProvider implements EmailContentProvider {
 
     @Override
     public String getSubject() {
-        return "Fund \"" + fundTitle + "\" finished";
+        return "Fund \"" + fundTitle + "\" started";
     }
 
     @Override
     public String getBody() {
-        return "<p>We'd like to inform you that the <strong>" + fundTitle + "</strong> fund in <strong>" + schoolClassFullName + "</strong> class has finished.</p>" +
-                "<p>You can view the full operation history in the application.</p>";
+        return "<p>We'd like to inform you that the <strong>" + fundTitle + "</strong> fund in <strong>" + schoolClassFullName + "</strong> class has started.</p>" +
+                "<p>You can now pay for your children in the application.</p>";
     }
 
 }

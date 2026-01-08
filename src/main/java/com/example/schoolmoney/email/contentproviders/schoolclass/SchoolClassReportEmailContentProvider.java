@@ -12,7 +12,7 @@ public class SchoolClassReportEmailContentProvider implements EmailContentProvid
 
     @Override
     public String getSubject() {
-        return "School class financial report";
+        return "School class \"" + schoolClassFullName + "\" financial report";
     }
 
     @Override

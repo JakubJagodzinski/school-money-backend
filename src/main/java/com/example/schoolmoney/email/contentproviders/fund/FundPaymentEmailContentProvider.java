@@ -23,7 +23,7 @@ public class FundPaymentEmailContentProvider implements EmailContentProvider {
 
     @Override
     public String getSubject() {
-        return "Fund payment";
+        return "Fund \"" + fundTitle + "\" payment";
     }
 
     @Override

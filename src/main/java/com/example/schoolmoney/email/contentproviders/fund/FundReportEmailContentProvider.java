@@ -12,7 +12,7 @@ public class FundReportEmailContentProvider implements EmailContentProvider {
 
     @Override
     public String getSubject() {
-        return "Fund financial report";
+        return "Fund \"" + fundTitle + "\" financial report";
     }
 
     @Override

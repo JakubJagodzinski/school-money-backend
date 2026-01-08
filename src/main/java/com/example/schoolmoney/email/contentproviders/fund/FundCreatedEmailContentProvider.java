@@ -16,14 +16,14 @@ public class FundCreatedEmailContentProvider implements EmailContentProvider {
 
     @Override
     public String getSubject() {
-        return "New fund";
+        return "New fund \"" + fundTitle + "\"";
     }
 
     @Override
     public String getBody() {
         return "<p>A new fund titled <strong>" + fundTitle + "</strong> has been created by <strong>"
                 + fundAuthorFullName + "</strong> for the <strong>" + schoolClassFullName + "</strong> class.</p>"
-                + "<p>You can now view the fund and pay for your child in the application.</p>";
+                + "<p>You can now view the fund in the application.</p>";
     }
 
 }

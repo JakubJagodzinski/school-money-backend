@@ -152,6 +152,15 @@ public class EmailService {
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
     }
 
+    public void sendFundStartedEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
+        EmailContentProvider emailContentProvider = FundStartedEmailContentProvider.builder()
+                .fundTitle(fundTitle)
+                .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
+    }
+
     public void sendFundCancelledEmail(String to, String firstName, String fundTitle, String schoolClassFullName, boolean userNotificationsEnabled) {
         EmailContentProvider emailContentProvider = FundCancelledEmailContentProvider.builder()
                 .fundTitle(fundTitle)

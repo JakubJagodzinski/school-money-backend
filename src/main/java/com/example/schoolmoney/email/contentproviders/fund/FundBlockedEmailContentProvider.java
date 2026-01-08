@@ -19,7 +19,7 @@ public class FundBlockedEmailContentProvider implements EmailContentProvider {
 
     @Override
     public String getSubject() {
-        return "Fund blocked";
+        return "Fund \"" + fundTitle + "\" blocked";
     }
 
     @Override

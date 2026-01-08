@@ -22,6 +22,8 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
 
     List<FundOperation> findAllByFund_FundId(UUID fundId);
 
+    List<FundOperation> findAllByFund_FundIdAndChild_Parent_UserId(UUID fundId, UUID userId);
+
     Page<FundOperation> findAllByFund_FundIdOrderByProcessedAtDesc(UUID fundId, Pageable pageable);
 
     List<FundOperation> findAllByFund_FundIdOrderByProcessedAtAsc(UUID fundId);

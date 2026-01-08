@@ -19,7 +19,7 @@ public class FundCancelledEmailContentProvider implements EmailContentProvider {
 
     @Override
     public String getSubject() {
-        return "Fund cancelled";
+        return "Fund \"" + fundTitle + "\" cancelled";
     }
 
     @Override
