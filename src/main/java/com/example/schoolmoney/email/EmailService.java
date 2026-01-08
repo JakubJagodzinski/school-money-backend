@@ -4,6 +4,7 @@ import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.account.*;
 import com.example.schoolmoney.email.contentproviders.child.ChildAddedToClassEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.child.ChildReportEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.easteregg.WeekendEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.fund.*;
 import com.example.schoolmoney.email.contentproviders.schoolclass.SchoolClassReportEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.wallet.WalletTopUpEmailContentProvider;
@@ -208,6 +209,13 @@ public class EmailService {
                 .fundAuthorFullName(fundAuthorFullName)
                 .fundTitle(fundTitle)
                 .schoolClassFullName(schoolClassFullName)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
+    }
+
+    public void sendWeekendEmail(String to, String firstName, boolean userNotificationsEnabled) {
+        EmailContentProvider emailContentProvider = WeekendEmailContentProvider.builder()
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
