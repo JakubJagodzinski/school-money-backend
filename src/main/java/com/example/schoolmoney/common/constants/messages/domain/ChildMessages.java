@@ -6,5 +6,6 @@ public class ChildMessages {
     public static final String CHILD_ADDED_TO_SCHOOL_CLASS = "Child added to school class successfully";
     public static final String CHILD_ALREADY_IN_SCHOOL_CLASS = "Child already in school class";
     public static final String CHILD_REMOVED_FROM_SCHOOL_CLASS = "Child removed from school class successfully";
+    public static final String CHILD_HAS_ACTIVE_FUNDS = "Child has active funds";
 
 }

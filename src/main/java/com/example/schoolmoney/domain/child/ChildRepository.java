@@ -24,6 +24,8 @@ public interface ChildRepository extends JpaRepository<Child, UUID> {
 
     Page<Child> findAllByParent_UserId(UUID userId, Pageable pageable);
 
+    List<Child> findAllByParent_UserId(UUID userId);
+
     @Query("""
                 SELECT DISTINCT c.schoolClass.schoolClassId
                 FROM Child c

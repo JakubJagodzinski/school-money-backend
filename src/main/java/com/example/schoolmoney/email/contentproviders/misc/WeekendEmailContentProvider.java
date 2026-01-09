@@ -1,4 +1,4 @@
-package com.example.schoolmoney.email.contentproviders.easteregg;
+package com.example.schoolmoney.email.contentproviders.misc;
 
 import com.example.schoolmoney.email.contentproviders.EmailContentProvider;
 import lombok.Builder;
@@ -7,11 +7,6 @@ import lombok.RequiredArgsConstructor;
 @Builder
 @RequiredArgsConstructor
 public class WeekendEmailContentProvider implements EmailContentProvider {
-
-    @Override
-    public boolean isCritical() {
-        return true;
-    }
 
     @Override
     public String getSubject() {
@@ -39,11 +34,6 @@ public class WeekendEmailContentProvider implements EmailContentProvider {
                 </p>
                 
                 <p>Enjoy your weekend and see you on Monday!</p>
-                
-                <hr/>
-                <p style="font-size: 12px; color: #888;">
-                    This email was sent automatically — because Friday is a state of mind.
-                </p>
                 """;
     }
 

@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -73,12 +74,20 @@ public class UserController {
     }
 
     @GetMapping("/users/email/change/confirm")
-    public ResponseEntity<MessageResponseDto> confirmEmailChange(@RequestParam String token) {
+    public ResponseEntity<String> confirmEmailChange(@RequestParam String token) {
         userService.confirmEmailChange(token);
+
+        String html = "<html>" +
+                "<head><title>New email confirmation</title></head>" +
+                "<body>" +
+                "<h1>You have verified your new email successfully, now you can close this browser window.</h1>" +
+                "</body>" +
+                "</html>";
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new MessageResponseDto(UserMessages.EMAIL_CHANGED_SUCCESSFULLY));
+                .contentType(MediaType.TEXT_HTML)
+                .body(html);
     }
 
     @PostMapping("/users/notifications/on")

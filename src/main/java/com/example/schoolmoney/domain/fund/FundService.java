@@ -208,7 +208,6 @@ public class FundService {
 
         log.debug("Sending emails about cancelled fund to participating parents in school class");
         for (Parent participatingParent : participatinsParentsList) {
-            // TODO check if parent has any child in that class that isn't ignoring the fund
             emailService.sendFundCancelledEmail(
                     participatingParent.getEmail(),
                     participatingParent.getFirstName(),
@@ -428,30 +427,42 @@ public class FundService {
         return fundWithChildrenResponseDtoPage;
     }
 
-    public Page<FundResponseDto> getParentChildrenAllFunds(Pageable pageable) {
+    public Page<FundWithChildrenResponseDto> getParentChildrenAllFunds(Pageable pageable) {
         log.debug("Enter getParentChildrenAllFunds(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
 
         Page<Fund> parentChildrenFundPage = fundRepository.findAllByParentId(userId, pageable);
 
+        Page<FundWithChildrenResponseDto> fundWithChildrenResponseDtoPage = parentChildrenFundPage.map(fundMapper::toDtoWithChildren);
+
         Page<FundResponseDto> fundResponseDtoPage = parentChildrenFundPage.map(fundMapper::toDto);
+
+        List<Child> parentChildren = childRepository.findAllByParent_UserId(userId);
+
+        for (FundWithChildrenResponseDto fundWithChildrenResponseDto : fundWithChildrenResponseDtoPage.getContent()) {
+            List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
+            fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
+        }
+
         for (FundResponseDto fundResponseDto : fundResponseDtoPage.getContent()) {
-            Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = getFundChildrenStatuses(fundResponseDto.getFundId(), Pageable.unpaged());
-
-            long all = fundChildStatusResponseDtoPage.getContent().stream()
-                    .filter(dto -> dto.getStatus() != FundChildStatus.DECLINED)
-                    .count();
-            long paid = fundChildStatusResponseDtoPage.getContent().stream()
-                    .filter(dto -> dto.getStatus() == FundChildStatus.PAID)
-                    .count();
-            double percent = (100.0 * paid) / all;
-
-            fundResponseDto.setFundProgress(percent);
+            fundResponseDto.setFundProgress(countFundProgress(fundResponseDto.getFundId()));
         }
 
         log.debug("Exit getParentChildrenAllFunds");
-        return fundResponseDtoPage;
+        return fundWithChildrenResponseDtoPage;
+    }
+
+    public double countFundProgress(UUID fundId) {
+        Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = getFundChildrenStatuses(fundId, Pageable.unpaged());
+
+        long all = fundChildStatusResponseDtoPage.getContent().stream()
+                .filter(dto -> dto.getStatus() != FundChildStatus.DECLINED)
+                .count();
+        long paid = fundChildStatusResponseDtoPage.getContent().stream()
+                .filter(dto -> dto.getStatus() == FundChildStatus.PAID)
+                .count();
+        return (100.0 * paid) / all;
     }
 
     public List<FundChildStatusWithoutParentResponseDto> getFundParentChildrenStatuses(UUID fundId, List<Child> parentChildren, UUID parentId) throws EntityNotFoundException {
@@ -537,8 +548,12 @@ public class FundService {
     }
 
     private FundChildStatus resolveChildStatus(UUID childId, Set<UUID> ignoredIds, Set<UUID> paidIds) {
-        if (ignoredIds.contains(childId)) return FundChildStatus.DECLINED;
-        if (paidIds.contains(childId)) return FundChildStatus.PAID;
+        if (ignoredIds.contains(childId)) {
+            return FundChildStatus.DECLINED;
+        }
+        if (paidIds.contains(childId)) {
+            return FundChildStatus.PAID;
+        }
         return FundChildStatus.UNPAID;
     }
 

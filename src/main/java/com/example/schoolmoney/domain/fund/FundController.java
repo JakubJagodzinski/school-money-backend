@@ -278,7 +278,7 @@ public class FundController {
                     description = "Parent's children school classes funds retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = FundResponseDto.class)
+                            schema = @Schema(implementation = FundWithChildrenResponseDto.class)
                     )
             ),
             @ApiResponse(
@@ -289,11 +289,11 @@ public class FundController {
     })
     @CheckPermission(Permission.PARENT_CHILDREN_FUND_READ_ALL)
     @GetMapping("/parents/children/funds")
-    public ResponseEntity<Page<FundResponseDto>> getParentChildrenAllFunds(
+    public ResponseEntity<Page<FundWithChildrenResponseDto>> getParentChildrenAllFunds(
             @ParameterObject
             @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundResponseDto> fundResponseDtoPage = fundService.getParentChildrenAllFunds(pageable);
+        Page<FundWithChildrenResponseDto> fundResponseDtoPage = fundService.getParentChildrenAllFunds(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

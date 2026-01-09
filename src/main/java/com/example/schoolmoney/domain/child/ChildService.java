@@ -9,6 +9,9 @@ import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
+import com.example.schoolmoney.domain.fund.FundStatus;
+import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
@@ -43,6 +46,8 @@ public class ChildService {
     private final EmailService emailService;
 
     private final ChildAccessService childAccessService;
+
+    private final FundOperationRepository fundOperationRepository;
 
     @Transactional
     public ChildShortInfoResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
@@ -115,7 +120,7 @@ public class ChildService {
     }
 
     @Transactional
-    public void unassignChildFromSchoolClass(UUID childId) throws EntityNotFoundException {
+    public void unassignChildFromSchoolClass(UUID childId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter unassignChildFromSchoolClass(childId={})", childId);
 
         Child child = childRepository.findById(childId)
@@ -132,7 +137,14 @@ public class ChildService {
             throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
         }
 
-        // TODO check active funds
+        if (fundOperationRepository.existsByChild_ChildIdAndFund_FundStatusAndOperationStatus(
+                childId,
+                FundStatus.ACTIVE,
+                FinancialOperationStatus.SUCCESS
+        )) {
+            log.warn(ChildMessages.CHILD_HAS_ACTIVE_FUNDS);
+            throw new IllegalStateException(ChildMessages.CHILD_HAS_ACTIVE_FUNDS);
+        }
 
         child.setSchoolClass(null);
         childRepository.save(child);

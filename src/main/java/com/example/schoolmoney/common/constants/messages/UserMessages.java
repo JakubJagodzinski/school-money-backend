@@ -14,7 +14,6 @@ public class UserMessages {
     public static final String ACCOUNT_BLOCKED_SUCCESSFULLY = "Account blocked successfully";
     public static final String ACCOUNT_UNBLOCKED_SUCCESSFULLY = "Account unblocked successfully";
     public static final String YOU_CANNOT_BLOCK_YOURSELF = "You cannot block yourself";
-    public static final String EMAIL_CHANGED_SUCCESSFULLY = "Email changed successfully";
     public static final String EMAIL_CHANGE_REQUESTED = "Email change requested";
 
 }

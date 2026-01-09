@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.fundoperation;
 
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
+import com.example.schoolmoney.domain.fund.FundStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -36,5 +37,7 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
             WHERE f.child.childId = :childId
             """)
     long countDistinctFundsByChildId(@Param("childId") UUID childId);
+
+    boolean existsByChild_ChildIdAndFund_FundStatusAndOperationStatus(UUID childId, FundStatus fundStatus, FinancialOperationStatus operationStatus);
 
 }

@@ -1,5 +1,7 @@
 package com.example.schoolmoney.email.contentproviders;
 
+import com.example.schoolmoney.email.GreetingUtil;
+
 public interface EmailContentProvider {
 
     default boolean isCritical() {
@@ -9,7 +11,7 @@ public interface EmailContentProvider {
     String getSubject();
 
     default String getGreeting(String firstName) {
-        return "<p>Hi " + firstName + ",</p>";
+        return "<p>" + GreetingUtil.getGreeting(firstName) + "</p>";
     }
 
     String getBody();
