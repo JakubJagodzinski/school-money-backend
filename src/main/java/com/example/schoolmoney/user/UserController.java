@@ -72,7 +72,7 @@ public class UserController {
                 .body(new MessageResponseDto(UserMessages.EMAIL_CHANGE_REQUESTED));
     }
 
-    @PostMapping("/users/email/change/confirm")
+    @GetMapping("/users/email/change/confirm")
     public ResponseEntity<MessageResponseDto> confirmEmailChange(@RequestParam String token) {
         userService.confirmEmailChange(token);
 

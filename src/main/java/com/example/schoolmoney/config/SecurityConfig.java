@@ -28,6 +28,7 @@ public class SecurityConfig {
             "/api/v1/password-reset/**",
             "/api/v1/payments/webhook/**",
             "/api/v1/payments/status/**",
+            "/api/v1/users/email/change/confirm",
             "/api/v1/auth/**",
             "/v2/api-docs",
             "/v3/api-docs",
