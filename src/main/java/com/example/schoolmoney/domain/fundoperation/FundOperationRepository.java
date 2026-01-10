@@ -40,4 +40,26 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
 
     boolean existsByChild_ChildIdAndFund_FundStatusAndOperationStatus(UUID childId, FundStatus fundStatus, FinancialOperationStatus operationStatus);
 
+    @Query("""
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN fo.operationType = :payment THEN fo.amountInCents
+                        WHEN fo.operationType = :deposit THEN fo.amountInCents
+                        WHEN fo.operationType = :refund THEN -fo.amountInCents
+                        WHEN fo.operationType = :withdrawal THEN -fo.amountInCents
+                    END
+                ), 0)
+                FROM FundOperation fo
+                WHERE fo.fund.schoolClass.schoolClassId = :schoolClassId
+                  AND fo.fund.fundStatus = :fundStatus
+            """)
+    long getSchoolClassActiveFundsCurrentBalanceInCents(
+            @Param("schoolClassId") UUID schoolClassId,
+            @Param("fundStatus") FundStatus fundStatus,
+            @Param("payment") FundOperationType payment,
+            @Param("deposit") FundOperationType deposit,
+            @Param("refund") FundOperationType refund,
+            @Param("withdrawal") FundOperationType withdrawal
+    );
+
 }

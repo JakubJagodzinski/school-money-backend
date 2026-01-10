@@ -21,8 +21,11 @@ import java.util.UUID;
         "school_class_name",
         "school_class_year",
         "number_of_children",
+        "number_of_scheduled_funds",
         "number_of_active_funds",
-        "active_funds_gathered_money_in_cents"
+        "number_of_finished_funds",
+        "active_funds_current_balance_in_cents",
+        "finished_funds_current_balance_in_cents"
 })
 public class SchoolClassResponseDto {
 
@@ -44,10 +47,19 @@ public class SchoolClassResponseDto {
     @JsonProperty("number_of_children")
     private long numberOfChildren;
 
+    @JsonProperty("number_of_scheduled_funds")
+    private long numberOfScheduledFunds;
+
     @JsonProperty("number_of_active_funds")
     private long numberOfActiveFunds;
 
-    @JsonProperty("active_funds_gathered_money_in_cents")
-    private long activeFundsGatheredMoneyInCents;
+    @JsonProperty("number_of_finished_funds")
+    private long numberOfFinishedFunds;
+
+    @JsonProperty("active_funds_current_balance_in_cents")
+    private long activeFundsCurrentBalanceInCents;
+
+    @JsonProperty("finished_funds_current_balance_in_cents")
+    private long finishedFundsCurrentBalanceInCents;
 
 }

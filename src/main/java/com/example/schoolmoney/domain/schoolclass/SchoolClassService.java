@@ -8,6 +8,8 @@ import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
+import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
+import com.example.schoolmoney.domain.fundoperation.FundOperationType;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
@@ -52,6 +54,8 @@ public class SchoolClassService {
 
     private final SchoolClassFinder schoolClassFinder;
 
+    private final FundOperationRepository fundOperationRepository;
+
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
         log.debug("Enter createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
@@ -84,6 +88,7 @@ public class SchoolClassService {
         return schoolClassPage.map(schoolClassMapper::toDto);
     }
 
+    @Transactional(readOnly = true)
     public Page<SchoolClassResponseDto> getTreasurerAndParentChildrenSchoolClasses(Pageable pageable) {
         log.debug("Enter getTreasurerAndParentChildrenSchoolClasses(pageable={})", pageable);
 
@@ -96,20 +101,49 @@ public class SchoolClassService {
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAllByTreasurer_UserIdOrSchoolClassIdIn(userId, parentChildrenSchoolClassesIds, pageable);
 
         Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassPage.map(schoolClassMapper::toDto);
-        schoolClassResponseDtoPage.forEach(schoolClass -> {
-            UUID schoolClassId = schoolClass.getSchoolClassId();
+        schoolClassResponseDtoPage.forEach(schoolClassDto -> {
+            UUID schoolClassId = schoolClassDto.getSchoolClassId();
 
             long numberOfChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
-            schoolClass.setNumberOfChildren(numberOfChildren);
+            schoolClassDto.setNumberOfChildren(numberOfChildren);
+
+            long numberOfScheduledFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.SCHEDULED);
+            schoolClassDto.setNumberOfScheduledFunds(numberOfScheduledFunds);
 
             long numberOfActiveFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.ACTIVE);
-            schoolClass.setNumberOfActiveFunds(numberOfActiveFunds);
+            schoolClassDto.setNumberOfActiveFunds(numberOfActiveFunds);
+
+            long numberOfFinishedFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.FINISHED);
+            schoolClassDto.setNumberOfFinishedFunds(numberOfFinishedFunds);
+
+            schoolClassDto.setActiveFundsCurrentBalanceInCents(
+                    fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
+                            schoolClassId,
+                            FundStatus.ACTIVE,
+                            FundOperationType.FUND_PAYMENT,
+                            FundOperationType.FUND_DEPOSIT,
+                            FundOperationType.FUND_REFUND,
+                            FundOperationType.FUND_WITHDRAWAL
+                    )
+            );
+
+            schoolClassDto.setFinishedFundsCurrentBalanceInCents(
+                    fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
+                            schoolClassId,
+                            FundStatus.FINISHED,
+                            FundOperationType.FUND_PAYMENT,
+                            FundOperationType.FUND_DEPOSIT,
+                            FundOperationType.FUND_REFUND,
+                            FundOperationType.FUND_WITHDRAWAL
+                    )
+            );
         });
 
-        log.debug("Exit getTreasurerAndParentChildrenSchoolClasses");
+        log.debug("Exit getTreasurerAndParentChildrenSchoolClasses(pageable={})", pageable);
         return schoolClassResponseDtoPage;
     }
 
+    @Transactional(readOnly = true)
     public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
