@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,6 +18,7 @@ import java.util.Map;
 @JsonPropertyOrder({
         "status",
         "message",
+        "error_id",
         "timestamp",
         "errors"
 })
@@ -27,6 +29,9 @@ public class ApiErrorResponseDto {
 
     @JsonProperty("message")
     private final String message;
+
+    @JsonProperty("error_id")
+    private UUID errorId;
 
     @Builder.Default
     @JsonProperty("timestamp")

@@ -38,6 +38,7 @@ public class GlobalExceptionHandler {
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message("Validation error")
+                .errorId(UUID.randomUUID())
                 .errors(errors)
                 .build();
 
@@ -48,12 +49,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponseDto> handleGlobalException(Exception e) {
-        String errorId = UUID.randomUUID().toString();
+        UUID errorId = UUID.randomUUID();
         log.error("Unexpected error occurred. ErrorId: {}: {}", errorId, e.getMessage(), e);
 
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("Unexpected error occurred. ErrorId: " + errorId)
+                .message("Unexpected error occurred")
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -63,9 +65,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DisabledException.class)
     public ResponseEntity<ApiErrorResponseDto> handleDisabled(DisabledException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Account is disabled. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .message(UserMessages.ACCOUNT_NOT_VERIFIED)
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -75,9 +81,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(LockedException.class)
     public ResponseEntity<ApiErrorResponseDto> handleLocked(LockedException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Account is locked. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .message(UserMessages.ACCOUNT_BLOCKED)
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -87,9 +97,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiErrorResponseDto> handleBadCredentials(BadCredentialsException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Bad credentials provided. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .message(UserMessages.WRONG_USERNAME_OR_PASSWORD)
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -99,9 +113,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MailException.class)
     public ResponseEntity<ApiErrorResponseDto> handleMailException(MailException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Mail sending error. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.SERVICE_UNAVAILABLE.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -111,9 +129,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(StripeException.class)
     public ResponseEntity<ApiErrorResponseDto> handleStripeException(StripeException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Stripe error. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.BAD_GATEWAY.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -123,9 +145,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiErrorResponseDto> handleAccessDeniedException(AccessDeniedException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Access denied. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.FORBIDDEN.value())
                 .message("Access denied: " + e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -135,9 +161,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiErrorResponseDto> handleEntityNotFoundException(EntityNotFoundException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Entity not found. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -147,9 +177,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityExistsException.class)
     public ResponseEntity<ApiErrorResponseDto> handleEntityExistsException(EntityExistsException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Entity already exists. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -159,9 +193,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<ApiErrorResponseDto> handleUsernameNotFoundException(UsernameNotFoundException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Username not found. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -171,9 +209,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiErrorResponseDto> handleIllegalArgumentException(IllegalArgumentException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Illegal argument provided. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
@@ -183,9 +225,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiErrorResponseDto> handleIllegalStateException(IllegalStateException e) {
+        UUID errorId = UUID.randomUUID();
+        log.error("Illegal state provided. ErrorId: {}", errorId, e);
+
         ApiErrorResponseDto response = ApiErrorResponseDto.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message(e.getMessage())
+                .errorId(errorId)
                 .build();
 
         return ResponseEntity
