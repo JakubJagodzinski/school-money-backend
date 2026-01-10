@@ -4,7 +4,7 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildAccessService;
-import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.domain.child.ChildFinder;
 import com.example.schoolmoney.domain.childavatar.ChildAvatarService;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
@@ -35,8 +35,6 @@ public class ChildReportService {
 
     private final ParentRepository parentRepository;
 
-    private final ChildRepository childRepository;
-
     private final ChildReportPdfGenerator childReportPdfGenerator;
 
     private final SecurityUtils securityUtils;
@@ -47,14 +45,12 @@ public class ChildReportService {
 
     private final ChildAccessService childAccessService;
 
+    private final ChildFinder childFinder;
+
     public ReportDto generateChildReport(UUID childId) throws EntityNotFoundException {
         log.debug("Enter generateChildReport(childId={})", childId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

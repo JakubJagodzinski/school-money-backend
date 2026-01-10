@@ -18,7 +18,7 @@ import com.example.schoolmoney.domain.report.domain.schoolclass.generator.pdf.Sc
 import com.example.schoolmoney.domain.report.dto.ReportDto;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
-import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassFinder;
 import com.example.schoolmoney.domain.schoolclassavatar.SchoolClassAvatarService;
 import com.example.schoolmoney.email.EmailService;
 import jakarta.persistence.EntityNotFoundException;
@@ -42,8 +42,6 @@ public class SchoolClassReportService {
 
     private final ParentRepository parentRepository;
 
-    private final SchoolClassRepository schoolClassRepository;
-
     private final SchoolClassReportPdfGenerator schoolClassReportPdfGenerator;
 
     private final SecurityUtils securityUtils;
@@ -62,14 +60,12 @@ public class SchoolClassReportService {
 
     private final SchoolClassAccessService schoolClassAccessService;
 
+    private final SchoolClassFinder schoolClassFinder;
+
     public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException {
         log.debug("Enter generateSchoolClassReport(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

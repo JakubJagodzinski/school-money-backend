@@ -7,7 +7,7 @@ import com.example.schoolmoney.common.constants.messages.domain.FundOperationMes
 import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildAccessService;
-import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.domain.child.ChildFinder;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundAccessService;
@@ -48,8 +48,6 @@ public class FundOperationService {
 
     private final WalletRepository walletRepository;
 
-    private final ChildRepository childRepository;
-
     private final SecurityUtils securityUtils;
 
     private final EmailService emailService;
@@ -59,6 +57,8 @@ public class FundOperationService {
     private final ParentRepository parentRepository;
 
     private final ChildAccessService childAccessService;
+
+    private final ChildFinder childFinder;
 
     @Transactional
     public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException {
@@ -78,11 +78,7 @@ public class FundOperationService {
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
         }
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         if (!childAccessService.canAccessChild(parent, child)) {
             log.warn(ChildMessages.CHILD_NOT_FOUND);

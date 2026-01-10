@@ -19,7 +19,10 @@ import java.util.UUID;
         "treasurer",
         "invitation_code",
         "school_class_name",
-        "school_class_year"
+        "school_class_year",
+        "number_of_children",
+        "number_of_active_funds",
+        "active_funds_gathered_money_in_cents"
 })
 public class SchoolClassResponseDto {
 
@@ -43,5 +46,8 @@ public class SchoolClassResponseDto {
 
     @JsonProperty("number_of_active_funds")
     private long numberOfActiveFunds;
+
+    @JsonProperty("active_funds_gathered_money_in_cents")
+    private long activeFundsGatheredMoneyInCents;
 
 }

@@ -11,6 +11,7 @@ import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.email.EmailService;
 import com.example.schoolmoney.user.User;
+import com.example.schoolmoney.user.UserFinder;
 import com.example.schoolmoney.user.UserRepository;
 import com.example.schoolmoney.usermoderation.UserModerationEventService;
 import jakarta.persistence.EntityNotFoundException;
@@ -40,6 +41,8 @@ public class AdminService {
 
     private final FundRepository fundRepository;
 
+    private final UserFinder userFinder;
+
     @Transactional
     public void blockUser(UUID userId, BlockUserRequestDto blockUserRequestDto) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter blockUser");
@@ -51,11 +54,7 @@ public class AdminService {
             throw new IllegalStateException(UserMessages.YOU_CANNOT_BLOCK_YOURSELF);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.warn(UserMessages.USER_NOT_FOUND);
-                    return new EntityNotFoundException(UserMessages.USER_NOT_FOUND);
-                });
+        User user = userFinder.getByIdOrThrow(userId);
 
         if (user.isBlocked()) {
             log.warn("User {} already blocked", user.getEmail());
@@ -95,11 +94,7 @@ public class AdminService {
     public void unblockUser(UUID userId, UnblockUserRequestDto unblockUserRequestDto) throws EntityNotFoundException {
         log.debug("Enter unblockUser");
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.warn(UserMessages.USER_NOT_FOUND);
-                    return new EntityNotFoundException(UserMessages.USER_NOT_FOUND);
-                });
+        User user = userFinder.getByIdOrThrow(userId);
 
         if (!user.isBlocked()) {
             log.warn("User {} is not blocked", user.getEmail());

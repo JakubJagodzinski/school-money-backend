@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
 import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildAccessService;
+import com.example.schoolmoney.domain.child.ChildFinder;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
@@ -38,15 +39,13 @@ public class ChildAvatarService {
 
     private final ChildAccessService childAccessService;
 
+    private final ChildFinder childFinder;
+
     @Transactional
     public void updateChildAvatar(UUID childId, MultipartFile avatarFile) throws EntityNotFoundException {
         log.debug("Enter uploadChildAvatar(childId={})", childId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -73,11 +72,7 @@ public class ChildAvatarService {
     public InputStreamResource getChildAvatar(UUID childId) throws EntityNotFoundException {
         log.debug("Enter getChildAvatar(childId={})", childId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         if (child.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
@@ -94,11 +89,7 @@ public class ChildAvatarService {
     public void deleteChildAvatar(UUID childId) throws EntityNotFoundException {
         log.debug("Enter deleteChildAvatar(childId={})", childId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

@@ -5,7 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildAccessService;
-import com.example.schoolmoney.domain.child.ChildRepository;
+import com.example.schoolmoney.domain.child.ChildFinder;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.parent.Parent;
@@ -27,8 +27,6 @@ public class ChildIgnoredFundService {
 
     private final ChildIgnoredFundRepository childIgnoredFundRepository;
 
-    private final ChildRepository childRepository;
-
     private final FundRepository fundRepository;
 
     private final SecurityUtils securityUtils;
@@ -37,15 +35,13 @@ public class ChildIgnoredFundService {
 
     private final ChildAccessService childAccessService;
 
+    private final ChildFinder childFinder;
+
     @Transactional
     public void ignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter ignoreFundForChild(childId={}, fundId={}", childId, fundId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -90,11 +86,7 @@ public class ChildIgnoredFundService {
     public void unignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter unignoreFundForChild(childId={}, fundId={})", childId, fundId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

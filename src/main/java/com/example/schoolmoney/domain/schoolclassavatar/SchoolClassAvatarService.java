@@ -7,6 +7,7 @@ import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassFinder;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
@@ -39,15 +40,13 @@ public class SchoolClassAvatarService {
 
     private final ParentRepository parentRepository;
 
+    private final SchoolClassFinder schoolClassFinder;
+
     @Transactional
     public void updateSchoolClassAvatar(UUID schoolClassId, MultipartFile avatarFile) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter updateSchoolClassAvatar(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -79,11 +78,7 @@ public class SchoolClassAvatarService {
     public InputStreamResource getSchoolClassAvatar(UUID schoolClassId) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAvatar(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -108,11 +103,7 @@ public class SchoolClassAvatarService {
     public void deleteSchoolClassAvatar(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter deleteSchoolClassAvatar(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

@@ -19,7 +19,7 @@ import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
-import com.example.schoolmoney.domain.schoolclass.SchoolClassRepository;
+import com.example.schoolmoney.domain.schoolclass.SchoolClassFinder;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
@@ -54,8 +54,6 @@ public class FundService {
 
     private final ParentRepository parentRepository;
 
-    private final SchoolClassRepository schoolClassRepository;
-
     private final FundOperationRepository fundOperationRepository;
 
     private final WalletRepository walletRepository;
@@ -76,15 +74,15 @@ public class FundService {
 
     private final SchoolClassAccessService schoolClassAccessService;
 
+    private final FundFinder fundFinder;
+
+    private final SchoolClassFinder schoolClassFinder;
+
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(createFundRequestDto.getSchoolClassId())
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(createFundRequestDto.getSchoolClassId());
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -145,11 +143,7 @@ public class FundService {
     public void cancelFund(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter cancelFund(fundId={})", fundId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -355,11 +349,7 @@ public class FundService {
     public FundResponseDto updateFund(UUID fundId, UpdateFundRequestDto updateFundRequestDto) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter updateFund(fundId={}, updateFundRequestDto={})", fundId, updateFundRequestDto);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -395,11 +385,7 @@ public class FundService {
     public Page<FundWithChildrenResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -453,11 +439,7 @@ public class FundService {
     public FundProgressResponseDto countFundProgress(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter countFundProgress(fundId={})", fundId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = getFundChildrenStatuses(fundId, Pageable.unpaged());
 
@@ -518,11 +500,7 @@ public class FundService {
     public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

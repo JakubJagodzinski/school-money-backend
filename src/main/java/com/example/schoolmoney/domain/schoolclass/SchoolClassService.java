@@ -50,6 +50,8 @@ public class SchoolClassService {
 
     private final SchoolClassAccessService schoolClassAccessService;
 
+    private final SchoolClassFinder schoolClassFinder;
+
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
         log.debug("Enter createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
@@ -108,14 +110,10 @@ public class SchoolClassService {
         return schoolClassResponseDtoPage;
     }
 
-    public Page<ChildWithParentInfoResponseDto> getAllChildrenForSchoolClass(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
-        log.debug("Enter getAllChildrenForSchoolClass(schoolClassId={}, pageable={})", schoolClassId, pageable);
+    public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
+        log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -128,7 +126,7 @@ public class SchoolClassService {
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
         log.debug("Fetched {} children for school class with schoolClassId={}", schoolClassChildren.getTotalElements(), schoolClassId);
 
-        log.debug("Exit getAllChildrenForSchoolClass");
+        log.debug("Exit getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
     }
 
@@ -136,11 +134,7 @@ public class SchoolClassService {
     public SchoolClassResponseDto updateSchoolClass(UUID schoolClassId, UpdateSchoolClassRequestDto updateSchoolClassRequestDto) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter updateSchoolClass(schoolClassId={}, updateSchoolClassRequestDto={})", schoolClassId, updateSchoolClassRequestDto);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -167,11 +161,7 @@ public class SchoolClassService {
     public SchoolClassInvitationCodeResponseDto regenerateInvitationCode(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
         log.debug("Enter regenerateInvitationCode(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
-                .orElseThrow(() -> {
-                    log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                    return new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-                });
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

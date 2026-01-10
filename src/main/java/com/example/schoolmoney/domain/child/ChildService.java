@@ -49,6 +49,8 @@ public class ChildService {
 
     private final FundOperationRepository fundOperationRepository;
 
+    private final ChildFinder childFinder;
+
     @Transactional
     public ChildShortInfoResponseDto createChild(CreateChildRequestDto createChildRequestDto) throws EntityNotFoundException {
         log.debug("Enter createChild(createChildRequestDto={})", createChildRequestDto);
@@ -79,11 +81,7 @@ public class ChildService {
     public void assignChildToSchoolClass(UUID childId, String invitationCode) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter assignChildToSchoolClass(childId={}, invitationCode={})", childId, invitationCode);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -123,11 +121,7 @@ public class ChildService {
     public void unassignChildFromSchoolClass(UUID childId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter unassignChildFromSchoolClass(childId={})", childId);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -168,11 +162,7 @@ public class ChildService {
     public ChildShortInfoResponseDto updateChild(UUID childId, UpdateChildRequestDto updateChildRequestDto) throws EntityNotFoundException {
         log.debug("Enter updateChild(childId={}, updateChildRequestDto={})", childId, updateChildRequestDto);
 
-        Child child = childRepository.findById(childId)
-                .orElseThrow(() -> {
-                    log.warn(ChildMessages.CHILD_NOT_FOUND);
-                    return new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-                });
+        Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
