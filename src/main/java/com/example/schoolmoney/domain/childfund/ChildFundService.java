@@ -10,6 +10,7 @@ import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
+import com.example.schoolmoney.domain.fund.dto.response.FundProgressResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,58 +41,67 @@ public class ChildFundService {
 
     private final FundService fundService;
 
-    public Page<ParentChildHistoryFundResponseDto> getSchoolClassParentChildrenFundsHistory(UUID schoolClassId, Pageable pageable) {
-        log.debug("Enter getSchoolClassParentChildrenFundsHistory(schoolClassId={})", schoolClassId);
+    public Page<ParentChildHistoryFundResponseDto> getParentChildrenFundsHistory(Pageable pageable) {
+        log.debug("Enter getParentChildrenFundsHistory(pageable={})", pageable);
 
         UUID parentId = securityUtils.getCurrentUserId();
 
-        Page<ChildFundView> childFundViewPage = childFundRepository.findSchoolClassParentChildrenFundsHistory(parentId, schoolClassId, pageable);
+        Page<ChildFundView> childFundViewPage = childFundRepository.findParentChildrenFundsHistory(parentId, pageable);
 
         Map<UUID, Child> childMap = getChildMap(childFundViewPage);
 
         Map<UUID, Fund> fundMap = getFundMap(childFundViewPage);
 
-        Map<UUID, Double> fundProgressMap = getFundProgressMap(fundMap);
+        Map<UUID, FundProgressResponseDto> fundProgressMap = getFundProgressMap(fundMap);
 
-        Page<ParentChildHistoryFundResponseDto> childFundDtoPage = childFundViewPage.map(view -> new ParentChildHistoryFundResponseDto(
-                childMapper.toShortInfoDto(childMap.get(UUID.fromString(view.getChildId()))),
-                view.getChildStatus(),
-                fundMapper.toDto(fundMap.get(UUID.fromString(view.getFundId())))
-        ));
+        Page<ParentChildHistoryFundResponseDto> childFundDtoPage = childFundViewPage.map(view -> ParentChildHistoryFundResponseDto.builder()
+                .fund(fundMapper.toDto(fundMap.get(view.getFundId())))
+                .child(childMapper.toShortInfoDto(childMap.get(view.getChildId())))
+                .childStatus(view.getChildStatus())
+                .timestamp(view.getTimestamp())
+                .build()
+        );
 
         for (ParentChildHistoryFundResponseDto parentChildHistoryFundResponseDto : childFundDtoPage.getContent()) {
             UUID fundId = parentChildHistoryFundResponseDto.getFund().getFundId();
             parentChildHistoryFundResponseDto.getFund().setFundProgress(fundProgressMap.get(fundId));
         }
 
-        log.debug("Exit getSchoolClassParentChildrenFundsHistory(schoolClassId={})", schoolClassId);
+        log.debug("Exit getParentChildrenFundsHistory(pageable={})", pageable);
         return childFundDtoPage;
     }
 
-    public Page<ParentChildUnpaidFundResponseDto> getSchoolClassParentChildrenUnpaidFunds(UUID schoolClassId, Pageable pageable) {
-        log.debug("Enter getSchoolClassParentChildrenUnpaidFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
+    public Page<ParentChildUnpaidFundResponseDto> getParentChildrenSchoolClassUnpaidFunds(UUID schoolClassId, Pageable pageable) {
+        log.debug("Enter getParentChildrenSchoolClassUnpaidFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
+
+        if (schoolClassId == null) {
+            log.debug("No school class id provided, getting all unpaid funds for current parent");
+        }
 
         UUID parentId = securityUtils.getCurrentUserId();
 
-        Page<ChildFundView> childFundViewPage = childFundRepository.findSchoolClassParentChildrenUnpaidFunds(parentId, schoolClassId, pageable);
+        Page<ChildFundView> childFundViewPage = childFundRepository.findParentChildrenUnpaidFunds(parentId, schoolClassId, pageable);
 
         Map<UUID, Child> childMap = getChildMap(childFundViewPage);
 
         Map<UUID, Fund> fundMap = getFundMap(childFundViewPage);
 
-        Map<UUID, Double> fundProgressMap = getFundProgressMap(fundMap);
+        Map<UUID, FundProgressResponseDto> fundProgressMap = getFundProgressMap(fundMap);
 
-        Page<ParentChildUnpaidFundResponseDto> childFundDtoPage = childFundViewPage.map(view -> new ParentChildUnpaidFundResponseDto(
-                childMapper.toShortInfoDto(childMap.get(UUID.fromString(view.getChildId()))),
-                fundMapper.toDto(fundMap.get(UUID.fromString(view.getFundId())))
-        ));
+        Page<ParentChildUnpaidFundResponseDto> childFundDtoPage = childFundViewPage.map(view -> ParentChildUnpaidFundResponseDto.builder()
+                .fund(fundMapper.toDto(fundMap.get(view.getFundId())))
+                .childStatus(view.getChildStatus())
+                .child(childMapper.toShortInfoDto(childMap.get(view.getChildId())))
+                .timestamp(view.getTimestamp())
+                .build()
+        );
 
         for (ParentChildUnpaidFundResponseDto parentChildUnpaidFundResponseDto : childFundDtoPage.getContent()) {
             UUID fundId = parentChildUnpaidFundResponseDto.getFund().getFundId();
             parentChildUnpaidFundResponseDto.getFund().setFundProgress(fundProgressMap.get(fundId));
         }
 
-        log.debug("Exit getSchoolClassParentChildrenUnpaidFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
+        log.debug("Exit getParentChildrenSchoolClassUnpaidFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
         return childFundDtoPage;
     }
 
@@ -99,7 +109,6 @@ public class ChildFundService {
         return childRepository.findAllById(
                         childFundViewPage.stream()
                                 .map(ChildFundView::getChildId)
-                                .map(UUID::fromString)
                                 .collect(Collectors.toSet())
                 ).stream()
                 .collect(Collectors.toMap(Child::getChildId, c -> c));
@@ -109,14 +118,13 @@ public class ChildFundService {
         return fundRepository.findAllById(
                         childFundViewPage.stream()
                                 .map(ChildFundView::getFundId)
-                                .map(UUID::fromString)
                                 .collect(Collectors.toSet())
                 ).stream()
                 .collect(Collectors.toMap(Fund::getFundId, f -> f));
     }
 
-    private Map<UUID, Double> getFundProgressMap(Map<UUID, Fund> fundMap) {
-        Map<UUID, Double> fundProgressMap = new HashMap<>();
+    private Map<UUID, FundProgressResponseDto> getFundProgressMap(Map<UUID, Fund> fundMap) {
+        Map<UUID, FundProgressResponseDto> fundProgressMap = new HashMap<>();
         for (Fund fund : fundMap.values()) {
             fundProgressMap.put(fund.getFundId(), fundService.countFundProgress(fund.getFundId()));
         }

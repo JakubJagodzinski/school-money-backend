@@ -23,12 +23,11 @@ public class ChildFundController {
 
     private final ChildFundService childFundService;
 
-    @GetMapping("/school-classes/{schoolClassId}/funds/history")
-    public ResponseEntity<Page<ParentChildHistoryFundResponseDto>> getSchoolClassParentChildrenFundsHistory(
-            @PathVariable UUID schoolClassId,
+    @GetMapping("/school-classes/funds/history")
+    public ResponseEntity<Page<ParentChildHistoryFundResponseDto>> getParentChildrenFundsHistory(
             @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
-        Page<ParentChildHistoryFundResponseDto> responseDto = childFundService.getSchoolClassParentChildrenFundsHistory(schoolClassId, pageable);
+        Page<ParentChildHistoryFundResponseDto> responseDto = childFundService.getParentChildrenFundsHistory(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -36,11 +35,22 @@ public class ChildFundController {
     }
 
     @GetMapping("/school-classes/{schoolClassId}/funds/unpaid")
-    public ResponseEntity<Page<ParentChildUnpaidFundResponseDto>> getSchoolClassParentChildrenUnpaidFunds(
+    public ResponseEntity<Page<ParentChildUnpaidFundResponseDto>> getParentChildrenSchoolClassUnpaidFunds(
             @PathVariable UUID schoolClassId,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable
     ) {
-        Page<ParentChildUnpaidFundResponseDto> responseDto = childFundService.getSchoolClassParentChildrenUnpaidFunds(schoolClassId, pageable);
+        Page<ParentChildUnpaidFundResponseDto> responseDto = childFundService.getParentChildrenSchoolClassUnpaidFunds(schoolClassId, pageable);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDto);
+    }
+
+    @GetMapping("/school-classes/funds/unpaid")
+    public ResponseEntity<Page<ParentChildUnpaidFundResponseDto>> getParentChildrenUnpaidFunds(
+            @ParameterObject @PageableDefault(size = 20) Pageable pageable
+    ) {
+        Page<ParentChildUnpaidFundResponseDto> responseDto = childFundService.getParentChildrenSchoolClassUnpaidFunds(null, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

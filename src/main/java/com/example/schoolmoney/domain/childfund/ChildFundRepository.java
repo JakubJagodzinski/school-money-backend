@@ -21,7 +21,13 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                             WHEN fo.fund_id IS NOT NULL THEN 'PAID'
                             WHEN cif.fund_id IS NOT NULL THEN 'IGNORED'
                             WHEN f.fund_status NOT IN ('ACTIVE','SCHEDULED') THEN 'UNPAID'
-                        END AS childStatus
+                            ELSE 'UNKNOWN'
+                        END AS childStatus,
+                        CASE
+                            WHEN fo.fund_id IS NOT NULL THEN fo.processed_at
+                            WHEN cif.fund_id IS NOT NULL THEN cif.ignored_at
+                            WHEN f.fund_status NOT IN ('ACTIVE','SCHEDULED') THEN f.ended_at
+                        END AS timestamp
                     FROM children c
                     JOIN school_classes sc ON sc.school_class_id = c.school_class_id
                     JOIN funds f ON f.school_class_id = sc.school_class_id
@@ -33,13 +39,14 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                            ON cif.child_id = c.child_id
                            AND cif.fund_id = f.fund_id
                     WHERE c.parent_id = :parentId
-                      AND sc.school_class_id = :schoolClassId
                       AND (
                             fo.fund_id IS NOT NULL
                             OR cif.fund_id IS NOT NULL
                             OR f.fund_status NOT IN ('ACTIVE','SCHEDULED')
                           )
-                    ORDER BY c.child_id, f.fund_id
+                    ORDER BY timestamp,
+                            f.fund_id,
+                            c.child_id
                     """,
             countQuery = """
                     SELECT COUNT(*)
@@ -54,7 +61,6 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                            ON cif.child_id = c.child_id
                            AND cif.fund_id = f.fund_id
                     WHERE c.parent_id = :parentId
-                      AND sc.school_class_id = :schoolClassId
                       AND (
                             fo.fund_id IS NOT NULL
                             OR cif.fund_id IS NOT NULL
@@ -63,9 +69,8 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                     """,
             nativeQuery = true
     )
-    Page<ChildFundView> findSchoolClassParentChildrenFundsHistory(
+    Page<ChildFundView> findParentChildrenFundsHistory(
             @Param("parentId") UUID parentId,
-            @Param("schoolClassId") UUID schoolClassId,
             Pageable pageable
     );
 
@@ -73,12 +78,14 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
             value = """
                     SELECT
                         c.child_id AS childId,
-                        f.fund_id AS fundId
+                        f.fund_id AS fundId,
+                        'UNPAID' AS childStatus,
+                        f.ends_at AS timestamp
                     FROM children c
                     JOIN school_classes sc ON sc.school_class_id = c.school_class_id
                     JOIN funds f ON f.school_class_id = sc.school_class_id
                     WHERE c.parent_id = :parentId
-                      AND sc.school_class_id = :schoolClassId
+                      AND (:schoolClassId IS NULL OR sc.school_class_id = :schoolClassId)
                       AND f.fund_status = 'ACTIVE'
                       AND NOT EXISTS (
                           SELECT 1
@@ -87,7 +94,9 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                             AND fo.fund_id = f.fund_id
                             AND fo.operation_status = 'SUCCESS'
                       )
-                    ORDER BY c.child_id, f.fund_id
+                    ORDER BY f.ends_at,
+                         f.fund_id,
+                         c.child_id
                     """,
             countQuery = """
                     SELECT COUNT(*)
@@ -95,7 +104,7 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                     JOIN school_classes sc ON sc.school_class_id = c.school_class_id
                     JOIN funds f ON f.school_class_id = sc.school_class_id
                     WHERE c.parent_id = :parentId
-                      AND sc.school_class_id = :schoolClassId
+                      AND (:schoolClassId IS NULL OR sc.school_class_id = :schoolClassId)
                       AND f.fund_status = 'ACTIVE'
                       AND NOT EXISTS (
                           SELECT 1
@@ -107,7 +116,7 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                     """,
             nativeQuery = true
     )
-    Page<ChildFundView> findSchoolClassParentChildrenUnpaidFunds(
+    Page<ChildFundView> findParentChildrenUnpaidFunds(
             @Param("parentId") UUID parentId,
             @Param("schoolClassId") UUID schoolClassId,
             Pageable pageable

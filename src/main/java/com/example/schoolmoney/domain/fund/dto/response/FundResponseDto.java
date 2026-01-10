@@ -63,6 +63,6 @@ public class FundResponseDto {
     private FundStatus fundStatus;
 
     @JsonProperty("fund_progress")
-    private double fundProgress;
+    private FundProgressResponseDto fundProgress;
 
 }

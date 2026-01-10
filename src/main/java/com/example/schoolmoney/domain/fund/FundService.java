@@ -11,10 +11,7 @@ import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatu
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
-import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
-import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusWithoutParentResponseDto;
-import com.example.schoolmoney.domain.fund.dto.response.FundResponseDto;
-import com.example.schoolmoney.domain.fund.dto.response.FundWithChildrenResponseDto;
+import com.example.schoolmoney.domain.fund.dto.response.*;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.fundoperation.FundOperationType;
@@ -453,16 +450,50 @@ public class FundService {
         return fundWithChildrenResponseDtoPage;
     }
 
-    public double countFundProgress(UUID fundId) {
+    public FundProgressResponseDto countFundProgress(UUID fundId) throws EntityNotFoundException {
+        log.debug("Enter countFundProgress(fundId={})", fundId);
+
+        Fund fund = fundRepository.findById(fundId)
+                .orElseThrow(() -> {
+                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+                });
+
         Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = getFundChildrenStatuses(fundId, Pageable.unpaged());
 
-        long all = fundChildStatusResponseDtoPage.getContent().stream()
-                .filter(dto -> dto.getStatus() != FundChildStatus.DECLINED)
-                .count();
-        long paid = fundChildStatusResponseDtoPage.getContent().stream()
+        long paidChildrenCount = fundChildStatusResponseDtoPage.getContent().stream()
                 .filter(dto -> dto.getStatus() == FundChildStatus.PAID)
                 .count();
-        return (100.0 * paid) / all;
+        long unpaidChildrenCount = fundChildStatusResponseDtoPage.getContent().stream()
+                .filter(dto -> dto.getStatus() == FundChildStatus.UNPAID)
+                .count();
+        long ignoredChildrenCount = fundChildStatusResponseDtoPage.getContent().stream()
+                .filter(dto -> dto.getStatus() == FundChildStatus.DECLINED)
+                .count();
+        long participatingChildrenCount = fundChildStatusResponseDtoPage.getContent().stream()
+                .filter(dto -> dto.getStatus() != FundChildStatus.DECLINED)
+                .count();
+
+        long amountPerChild = fund.getAmountPerChildInCents();
+
+        long currentAmountInCents = paidChildrenCount * amountPerChild;
+        long targetAmountInCents = participatingChildrenCount * amountPerChild;
+        long remainingAmountInCents = unpaidChildrenCount * amountPerChild;
+
+        double progressPercentage = (100.0 * paidChildrenCount) / participatingChildrenCount;
+
+        log.debug("Exit countFundProgress(fundId={})", fundId);
+        return FundProgressResponseDto.builder()
+                .currentAmountInCents(currentAmountInCents)
+                .targetAmountInCents(targetAmountInCents)
+                .remainingAmountInCents(remainingAmountInCents)
+                .progressPercentage(progressPercentage)
+                .ignoredChildrenCount(ignoredChildrenCount)
+                .participatingChildrenCount(participatingChildrenCount)
+                .paidChildrenCount(paidChildrenCount)
+                .unpaidChildrenCount(unpaidChildrenCount)
+                .progressPercentage(progressPercentage)
+                .build();
     }
 
     public List<FundChildStatusWithoutParentResponseDto> getFundParentChildrenStatuses(UUID fundId, List<Child> parentChildren, UUID parentId) throws EntityNotFoundException {

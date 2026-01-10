@@ -1,12 +1,16 @@
 package com.example.schoolmoney.domain.childfund;
 
+import java.time.Instant;
+import java.util.UUID;
 
 public interface ChildFundView {
 
-    String getChildId();
+    UUID getChildId();
 
-    String getFundId();
+    UUID getFundId();
 
-    String getChildStatus();
+    ChildFundStatus getChildStatus();
+
+    Instant getTimestamp();
 
 }
