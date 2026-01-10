@@ -101,43 +101,7 @@ public class SchoolClassService {
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAllByTreasurer_UserIdOrSchoolClassIdIn(userId, parentChildrenSchoolClassesIds, pageable);
 
         Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassPage.map(schoolClassMapper::toDto);
-        schoolClassResponseDtoPage.forEach(schoolClassDto -> {
-            UUID schoolClassId = schoolClassDto.getSchoolClassId();
-
-            long numberOfChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
-            schoolClassDto.setNumberOfChildren(numberOfChildren);
-
-            long numberOfScheduledFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.SCHEDULED);
-            schoolClassDto.setNumberOfScheduledFunds(numberOfScheduledFunds);
-
-            long numberOfActiveFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.ACTIVE);
-            schoolClassDto.setNumberOfActiveFunds(numberOfActiveFunds);
-
-            long numberOfFinishedFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.FINISHED);
-            schoolClassDto.setNumberOfFinishedFunds(numberOfFinishedFunds);
-
-            schoolClassDto.setActiveFundsCurrentBalanceInCents(
-                    fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
-                            schoolClassId,
-                            FundStatus.ACTIVE,
-                            FundOperationType.FUND_PAYMENT,
-                            FundOperationType.FUND_DEPOSIT,
-                            FundOperationType.FUND_REFUND,
-                            FundOperationType.FUND_WITHDRAWAL
-                    )
-            );
-
-            schoolClassDto.setFinishedFundsCurrentBalanceInCents(
-                    fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
-                            schoolClassId,
-                            FundStatus.FINISHED,
-                            FundOperationType.FUND_PAYMENT,
-                            FundOperationType.FUND_DEPOSIT,
-                            FundOperationType.FUND_REFUND,
-                            FundOperationType.FUND_WITHDRAWAL
-                    )
-            );
-        });
+        schoolClassResponseDtoPage.forEach(this::updateSchoolClassStatistics);
 
         log.debug("Exit getTreasurerAndParentChildrenSchoolClasses(pageable={})", pageable);
         return schoolClassResponseDtoPage;
@@ -162,6 +126,70 @@ public class SchoolClassService {
 
         log.debug("Exit getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
         return schoolClassChildren.map(childMapper::toWithParentInfoDto);
+    }
+
+    private void updateSchoolClassStatistics(SchoolClassResponseDto schoolClassResponseDto) {
+        log.debug("Enter updateSchoolClassStatistics(schoolClassResponseDto={})", schoolClassResponseDto);
+
+        UUID schoolClassId = schoolClassResponseDto.getSchoolClassId();
+
+        long numberOfChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
+        schoolClassResponseDto.setNumberOfChildren(numberOfChildren);
+
+        long numberOfScheduledFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.SCHEDULED);
+        schoolClassResponseDto.setNumberOfScheduledFunds(numberOfScheduledFunds);
+
+        long numberOfActiveFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.ACTIVE);
+        schoolClassResponseDto.setNumberOfActiveFunds(numberOfActiveFunds);
+
+        long numberOfFinishedFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.FINISHED);
+        schoolClassResponseDto.setNumberOfFinishedFunds(numberOfFinishedFunds);
+
+        schoolClassResponseDto.setActiveFundsCurrentBalanceInCents(
+                fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
+                        schoolClassId,
+                        FundStatus.ACTIVE,
+                        FundOperationType.FUND_PAYMENT,
+                        FundOperationType.FUND_DEPOSIT,
+                        FundOperationType.FUND_REFUND,
+                        FundOperationType.FUND_WITHDRAWAL
+                )
+        );
+
+        schoolClassResponseDto.setFinishedFundsCurrentBalanceInCents(
+                fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
+                        schoolClassId,
+                        FundStatus.FINISHED,
+                        FundOperationType.FUND_PAYMENT,
+                        FundOperationType.FUND_DEPOSIT,
+                        FundOperationType.FUND_REFUND,
+                        FundOperationType.FUND_WITHDRAWAL
+                )
+        );
+
+        log.debug("Exit updateSchoolClassStatistics(schoolClassResponseDto={})", schoolClassResponseDto);
+    }
+
+    @Transactional(readOnly = true)
+    public SchoolClassResponseDto getSchoolClassById(UUID schoolClassId) throws EntityNotFoundException {
+        log.debug("Enter getSchoolClassById(schoolClassId={})", schoolClassId);
+
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentRepository.getReferenceById(userId);
+
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
+
+        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
+            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
+        }
+
+        SchoolClassResponseDto schoolClassResponseDto = schoolClassMapper.toDto(schoolClass);
+
+        updateSchoolClassStatistics(schoolClassResponseDto);
+
+        log.debug("Exit getSchoolClassById(schoolClassId={})", schoolClassId);
+        return schoolClassResponseDto;
     }
 
     @Transactional

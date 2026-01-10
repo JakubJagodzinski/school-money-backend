@@ -120,6 +120,44 @@ public class SchoolClassController {
     }
 
     @Operation(
+            summary = "Get school class by id",
+            description = """
+                    Returns school class with its statistics.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "School class retrieved successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SchoolClassResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "School class not found",
+                    content = @Content()
+            )
+    })
+    @CheckPermission(Permission.SCHOOL_CLASS_READ)
+    @GetMapping("/school-classes/{schoolClassId}")
+    public ResponseEntity<SchoolClassResponseDto> getSchoolClassById(
+            @PathVariable UUID schoolClassId
+    ) {
+        SchoolClassResponseDto responseDto = schoolClassService.getSchoolClassById(schoolClassId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDto);
+    }
+
+    @Operation(
             summary = "Create a new school class",
             description = """
                     Creates a new school class with the provided details.
