@@ -1,7 +1,9 @@
 package com.example.schoolmoney.domain.childfund;
 
+import com.example.schoolmoney.auth.access.CheckPermission;
 import com.example.schoolmoney.domain.childfund.dto.response.ParentChildHistoryFundResponseDto;
 import com.example.schoolmoney.domain.childfund.dto.response.ParentChildUnpaidFundResponseDto;
+import com.example.schoolmoney.user.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,7 @@ public class ChildFundController {
 
     private final ChildFundService childFundService;
 
+    @CheckPermission(Permission.PARENT_CHILDREN_FUND_HISTORY_READ_ALL)
     @GetMapping("/school-classes/funds/history")
     public ResponseEntity<Page<ParentChildHistoryFundResponseDto>> getParentChildrenFundsHistory(
             @ParameterObject @PageableDefault(size = 20) Pageable pageable
@@ -34,6 +37,7 @@ public class ChildFundController {
                 .body(responseDto);
     }
 
+    @CheckPermission(Permission.PARENT_CHILDREN_SCHOOL_CLASS_UNPAID_FUND_READ_ALL)
     @GetMapping("/school-classes/{schoolClassId}/funds/unpaid")
     public ResponseEntity<Page<ParentChildUnpaidFundResponseDto>> getParentChildrenSchoolClassUnpaidFunds(
             @PathVariable UUID schoolClassId,
@@ -46,6 +50,7 @@ public class ChildFundController {
                 .body(responseDto);
     }
 
+    @CheckPermission(Permission.PARENT_CHILDREN_UNPAID_FUND_READ_ALL)
     @GetMapping("/school-classes/funds/unpaid")
     public ResponseEntity<Page<ParentChildUnpaidFundResponseDto>> getParentChildrenUnpaidFunds(
             @ParameterObject @PageableDefault(size = 20) Pageable pageable

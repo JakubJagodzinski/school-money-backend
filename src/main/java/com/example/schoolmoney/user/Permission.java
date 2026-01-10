@@ -104,7 +104,11 @@ public enum Permission {
     WALLET_TOP_UP("wallet:top_up"),
     WALLET_WITHDRAW("wallet:withdraw"),
 
-    ADMIN_ACCOUNT_CREATE("admin:account:create");
+    ADMIN_ACCOUNT_CREATE("admin:account:create"),
+
+    PARENT_CHILDREN_SCHOOL_CLASS_UNPAID_FUND_READ_ALL("parent:children:school:class:unpaid:fund:read:all"),
+    PARENT_CHILDREN_FUND_HISTORY_READ_ALL("parent:children:fund:history:read:all"),
+    PARENT_CHILDREN_UNPAID_FUND_READ_ALL("parent:children:unpaid:fund:read:all");
 
     private final String permission;
 

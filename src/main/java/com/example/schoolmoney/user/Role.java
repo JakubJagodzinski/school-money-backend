@@ -102,7 +102,11 @@ public enum Role {
                     Permission.FINANCIAL_OPERATION_HISTORY_READ,
 
                     Permission.WALLET_TOP_UP,
-                    Permission.WALLET_WITHDRAW
+                    Permission.WALLET_WITHDRAW,
+
+                    Permission.PARENT_CHILDREN_FUND_HISTORY_READ_ALL,
+                    Permission.PARENT_CHILDREN_SCHOOL_CLASS_UNPAID_FUND_READ_ALL,
+                    Permission.PARENT_CHILDREN_UNPAID_FUND_READ_ALL
             )
     ),
 
