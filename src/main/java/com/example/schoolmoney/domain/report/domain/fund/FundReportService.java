@@ -4,7 +4,7 @@ import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundAccessService;
-import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundFinder;
 import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.fundlogo.FundLogoService;
@@ -38,8 +38,6 @@ public class FundReportService {
 
     private final FundOperationRepository fundOperationRepository;
 
-    private final FundRepository fundRepository;
-
     private final ParentRepository parentRepository;
 
     private final FundReportPdfGenerator fundReportPdfGenerator;
@@ -56,14 +54,12 @@ public class FundReportService {
 
     private final FundAccessService fundAccessService;
 
+    private final FundFinder fundFinder;
+
     public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter generateFundReport(fundId={})", fundId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

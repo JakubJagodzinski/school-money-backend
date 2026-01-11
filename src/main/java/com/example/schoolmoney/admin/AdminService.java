@@ -5,8 +5,8 @@ import com.example.schoolmoney.admin.dto.request.UnblockUserRequestDto;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.auth.authtoken.AuthTokenService;
 import com.example.schoolmoney.common.constants.messages.UserMessages;
-import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundFinder;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.email.EmailService;
@@ -42,6 +42,8 @@ public class AdminService {
     private final FundRepository fundRepository;
 
     private final UserFinder userFinder;
+
+    private final FundFinder fundFinder;
 
     @Transactional
     public void blockUser(UUID userId, BlockUserRequestDto blockUserRequestDto) throws EntityNotFoundException, IllegalStateException {
@@ -123,11 +125,7 @@ public class AdminService {
     public void blockFund(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter blockFund");
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         if (fund.getFundStatus() == FundStatus.BLOCKED) {
             log.warn("Fund with fundId={} already blocked", fundId);
@@ -155,11 +153,7 @@ public class AdminService {
     public void unblockFund(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter unblockFund");
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         if (fund.getFundStatus() == FundStatus.ACTIVE) {
             log.warn("Fund with fundId={} already unblocked", fundId);

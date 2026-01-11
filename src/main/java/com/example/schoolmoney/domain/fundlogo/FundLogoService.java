@@ -3,10 +3,7 @@ package com.example.schoolmoney.domain.fundlogo;
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundLogoMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
-import com.example.schoolmoney.domain.fund.Fund;
-import com.example.schoolmoney.domain.fund.FundAccessService;
-import com.example.schoolmoney.domain.fund.FundRepository;
-import com.example.schoolmoney.domain.fund.FundStatus;
+import com.example.schoolmoney.domain.fund.*;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.files.FileCategory;
@@ -40,15 +37,13 @@ public class FundLogoService {
 
     private final ParentRepository parentRepository;
 
+    private final FundFinder fundFinder;
+
     @Transactional
     public void updateFundLogo(UUID fundId, MultipartFile logoFile) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter updateFundLogo(fundId={})", fundId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -85,11 +80,7 @@ public class FundLogoService {
     public InputStreamResource getFundLogo(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter getFundLogo(fundId={})", fundId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
@@ -114,11 +105,7 @@ public class FundLogoService {
     public void deleteFundLogo(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter deleteFundLogo(fundId={})", fundId);
 
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);

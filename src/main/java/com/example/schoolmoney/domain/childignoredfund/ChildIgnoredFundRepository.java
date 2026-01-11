@@ -9,7 +9,7 @@ import java.util.UUID;
 @Repository
 public interface ChildIgnoredFundRepository extends JpaRepository<ChildIgnoredFund, ChildIgnoredFundId> {
 
-    int deleteByChild_ChildIdAndFund_FundId(UUID childId, UUID fundId);
+    void deleteByChild_ChildIdAndFund_FundId(UUID childId, UUID fundId);
 
     List<ChildIgnoredFund> findAllByFund_FundId(UUID fundId);
 

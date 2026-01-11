@@ -20,13 +20,14 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                         CASE
                             WHEN fo.fund_id IS NOT NULL THEN 'PAID'
                             WHEN cif.fund_id IS NOT NULL THEN 'IGNORED'
-                            WHEN f.fund_status NOT IN ('ACTIVE','SCHEDULED') THEN 'UNPAID'
+                            WHEN f.fund_status NOT IN ('ACTIVE','SCHEDULED','CANCELLED') THEN 'UNPAID'
                             ELSE 'UNKNOWN'
                         END AS childStatus,
                         CASE
                             WHEN fo.fund_id IS NOT NULL THEN fo.processed_at
                             WHEN cif.fund_id IS NOT NULL THEN cif.ignored_at
-                            WHEN f.fund_status NOT IN ('ACTIVE','SCHEDULED') THEN f.ended_at
+                            WHEN f.fund_status = 'CANCELLED' THEN f.ended_at
+                            WHEN f.fund_status NOT IN ('ACTIVE','SCHEDULED','CANCELLED') THEN f.ends_at
                         END AS timestamp
                     FROM children c
                     JOIN school_classes sc ON sc.school_class_id = c.school_class_id
@@ -35,6 +36,7 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                            ON fo.child_id = c.child_id
                            AND fo.fund_id = f.fund_id
                            AND fo.operation_status = 'SUCCESS'
+                           AND fo.operation_type = 'FUND_PAYMENT'
                     LEFT JOIN child_ignored_funds cif
                            ON cif.child_id = c.child_id
                            AND cif.fund_id = f.fund_id
@@ -42,11 +44,9 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                       AND (
                             fo.fund_id IS NOT NULL
                             OR cif.fund_id IS NOT NULL
-                            OR f.fund_status NOT IN ('ACTIVE','SCHEDULED')
+                            OR f.fund_status NOT IN ('ACTIVE','SCHEDULED','CANCELLED')
                           )
-                    ORDER BY timestamp,
-                            f.fund_id,
-                            c.child_id
+                    ORDER BY timestamp DESC
                     """,
             countQuery = """
                     SELECT COUNT(*)
@@ -57,6 +57,7 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                            ON fo.child_id = c.child_id
                            AND fo.fund_id = f.fund_id
                            AND fo.operation_status = 'SUCCESS'
+                           AND fo.operation_type = 'FUND_PAYMENT'
                     LEFT JOIN child_ignored_funds cif
                            ON cif.child_id = c.child_id
                            AND cif.fund_id = f.fund_id
@@ -64,7 +65,7 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                       AND (
                             fo.fund_id IS NOT NULL
                             OR cif.fund_id IS NOT NULL
-                            OR f.fund_status NOT IN ('ACTIVE','SCHEDULED')
+                            OR f.fund_status NOT IN ('ACTIVE','SCHEDULED','CANCELLED')
                           )
                     """,
             nativeQuery = true
@@ -89,9 +90,16 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                       AND f.fund_status = 'ACTIVE'
                       AND NOT EXISTS (
                           SELECT 1
+                          FROM child_ignored_funds cif
+                          WHERE cif.child_id = c.child_id
+                            AND cif.fund_id = f.fund_id
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1
                           FROM fund_operations fo
                           WHERE fo.child_id = c.child_id
                             AND fo.fund_id = f.fund_id
+                            AND fo.operation_type = 'FUND_PAYMENT'
                             AND fo.operation_status = 'SUCCESS'
                       )
                     ORDER BY f.ends_at,
@@ -108,9 +116,16 @@ public interface ChildFundRepository extends JpaRepository<ChildFund, Long> {
                       AND f.fund_status = 'ACTIVE'
                       AND NOT EXISTS (
                           SELECT 1
+                          FROM child_ignored_funds cif
+                          WHERE cif.child_id = c.child_id
+                            AND cif.fund_id = f.fund_id
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1
                           FROM fund_operations fo
                           WHERE fo.child_id = c.child_id
                             AND fo.fund_id = f.fund_id
+                            AND fo.operation_type = 'FUND_PAYMENT'
                             AND fo.operation_status = 'SUCCESS'
                       )
                     """,

@@ -5,7 +5,7 @@ import com.example.schoolmoney.common.constants.messages.UserMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundAccessService;
-import com.example.schoolmoney.domain.fund.FundRepository;
+import com.example.schoolmoney.domain.fund.FundFinder;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,10 +23,14 @@ import java.util.UUID;
 public class FundLogService {
 
     private final FundLogRepository fundLogRepository;
+
     private final SecurityUtils securityUtils;
+
     private final FundAccessService fundAccessService;
+
     private final ParentRepository parentRepository;
-    private final FundRepository fundRepository;
+
+    private final FundFinder fundFinder;
 
     public Page<FundLogView> getFundLogs(UUID fundId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getFundLogs(fundId={}, pageable={})", fundId, pageable);
@@ -37,11 +41,7 @@ public class FundLogService {
                     log.error(UserMessages.USER_NOT_FOUND);
                     return new EntityNotFoundException(UserMessages.USER_NOT_FOUND);
                 });
-        Fund fund = fundRepository.findById(fundId)
-                .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
-                    return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-                });
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         if (!fundAccessService.canViewFund(parent, fund)) {
             log.warn(FundMessages.FUND_NOT_FOUND);
