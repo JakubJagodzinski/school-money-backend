@@ -89,7 +89,6 @@ public class ChildReportPdfGenerator implements ReportPdfGenerator {
 
         addHeaderCell(table, "Fund");
         addHeaderCell(table, "Parent");
-        addHeaderCell(table, "Child");
         addHeaderCell(table, "Amount");
         addHeaderCell(table, "Type");
         addHeaderCell(table, "Processed At");
@@ -97,9 +96,8 @@ public class ChildReportPdfGenerator implements ReportPdfGenerator {
         for (FundOperation childFundOperation : childFundOperationList) {
             addDataCell(table, childFundOperation.getFund().getTitle());
             addDataCell(table, childFundOperation.getParent().getFullName());
-            addDataCell(table, childFundOperation.getChild().getFullName());
             addDataCell(table, AmountFormatter.format(childFundOperation.getAmountInCents(), childFundOperation.getCurrency()));
-            addDataCell(table, childFundOperation.getOperationType().name());
+            addDataCell(table, childFundOperation.getOperationType().getShortName());
             addDataCell(table, DateToStringConverter.fromInstantToLocal(childFundOperation.getProcessedAt()));
         }
 

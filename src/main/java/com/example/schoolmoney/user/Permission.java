@@ -108,7 +108,12 @@ public enum Permission {
 
     PARENT_CHILDREN_SCHOOL_CLASS_UNPAID_FUND_READ_ALL("parent:children:school:class:unpaid:fund:read:all"),
     PARENT_CHILDREN_FUND_HISTORY_READ_ALL("parent:children:fund:history:read:all"),
-    PARENT_CHILDREN_UNPAID_FUND_READ_ALL("parent:children:unpaid:fund:read:all");
+    PARENT_CHILDREN_UNPAID_FUND_READ_ALL("parent:children:unpaid:fund:read:all"),
+
+    RANDOM_JOKE_READ("random:joke:read"),
+    DAILY_JOKE_TURN_OFF("daily:joke:turn:off"),
+    DAILY_JOKE_TURN_ON("daily:joke:turn:on"),
+    DAILY_JOKE_TEST("daily:joke:test");
 
     private final String permission;
 

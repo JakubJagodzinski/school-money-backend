@@ -2,8 +2,10 @@ package com.example.schoolmoney.domain.fundlogo;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundLogoMessages;
-import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
-import com.example.schoolmoney.domain.fund.*;
+import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundAccessService;
+import com.example.schoolmoney.domain.fund.FundFinder;
+import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.files.FileCategory;
@@ -48,20 +50,10 @@ public class FundLogoService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
-
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-        }
-
-        if (fund.getFundStatus() != FundStatus.ACTIVE) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertFundIsNotBlocked(fund);
+        fundAccessService.assertFundIsActive(fund);
 
         UUID newLogoId = UUID.fromString(storageService.uploadFile(logoFile, bucketName, FileCategory.AVATAR_OR_LOGO));
 
@@ -74,21 +66,18 @@ public class FundLogoService {
         fundRepository.save(fund);
         log.info("Logo id saved for fund with fundId={}", fundId);
 
-        log.debug("Exit updateFundLogo");
+        log.debug("Exit updateFundLogo(fundId={})", fundId);
     }
 
     public InputStreamResource getFundLogo(UUID fundId) throws EntityNotFoundException {
         log.debug("Enter getFundLogo(fundId={})", fundId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
+
+        fundAccessService.assertCanViewFund(parent, fund);
 
         if (fund.getLogoId() == null) {
             log.warn(FundLogoMessages.FUND_LOGO_NOT_SET);
@@ -97,7 +86,7 @@ public class FundLogoService {
 
         String logoId = fund.getLogoId().toString();
 
-        log.debug("Exit getFundLogo");
+        log.debug("Exit getFundLogo(fundId={})", fundId);
         return storageService.downloadFile(logoId, bucketName);
     }
 
@@ -105,25 +94,15 @@ public class FundLogoService {
     public void deleteFundLogo(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
         log.debug("Enter deleteFundLogo(fundId={})", fundId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-        }
-
-        if (fund.getFundStatus() != FundStatus.ACTIVE) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertFundIsNotBlocked(fund);
+        fundAccessService.assertFundIsActive(fund);
 
         if (fund.getLogoId() == null) {
             log.warn(FundLogoMessages.FUND_LOGO_NOT_SET);
@@ -138,7 +117,7 @@ public class FundLogoService {
         fundRepository.save(fund);
         log.info("Logo id set to null for fund with fundId={}", fund.getFundId());
 
-        log.debug("Exit deleteFundLogo");
+        log.debug("Exit deleteFundLogo(fundId={})", fundId);
     }
 
 }

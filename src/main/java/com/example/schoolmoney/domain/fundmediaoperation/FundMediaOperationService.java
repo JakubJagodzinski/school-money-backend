@@ -66,10 +66,7 @@ public class FundMediaOperationService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         Page<FundMediaOperation> fundMediaOperationPage = fundMediaOperationRepository.findAllByFundId(fundId, pageable);
 

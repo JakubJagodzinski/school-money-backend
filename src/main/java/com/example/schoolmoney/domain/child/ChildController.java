@@ -5,6 +5,7 @@ import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import com.example.schoolmoney.user.Permission;
@@ -40,24 +41,16 @@ public class ChildController {
                 .body(childShortInfoResponseDto);
     }
 
-    @CheckPermission(Permission.CHILD_SCHOOL_CLASS_JOIN)
-    @PostMapping("/children/{childId}/school-class")
-    public ResponseEntity<MessageResponseDto> joinSchoolClass(@PathVariable UUID childId, @RequestParam String invitationCode) {
-        childService.assignChildToSchoolClass(childId, invitationCode);
+    @CheckPermission(Permission.CHILD_READ)
+    @GetMapping("/children/{childId}")
+    public ResponseEntity<ChildResponseDto> getChild(
+            @PathVariable UUID childId
+    ) {
+        ChildResponseDto responseDto = childService.getChildById(childId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(new MessageResponseDto(ChildMessages.CHILD_ADDED_TO_SCHOOL_CLASS));
-    }
-
-    @CheckPermission(Permission.CHILD_SCHOOL_CLASS_LEAVE)
-    @DeleteMapping("/children/{childId}/school-class")
-    public ResponseEntity<MessageResponseDto> leaveSchoolClass(@PathVariable UUID childId) {
-        childService.unassignChildFromSchoolClass(childId);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(new MessageResponseDto(ChildMessages.CHILD_REMOVED_FROM_SCHOOL_CLASS));
+                .body(responseDto);
     }
 
     @CheckPermission(Permission.PARENT_CHILDREN_READ_ALL)
@@ -81,6 +74,26 @@ public class ChildController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(childShortInfoResponseDto);
+    }
+
+    @CheckPermission(Permission.CHILD_SCHOOL_CLASS_JOIN)
+    @PostMapping("/children/{childId}/school-class")
+    public ResponseEntity<MessageResponseDto> joinSchoolClass(@PathVariable UUID childId, @RequestParam String invitationCode) {
+        childService.assignChildToSchoolClass(childId, invitationCode);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(ChildMessages.CHILD_ADDED_TO_SCHOOL_CLASS));
+    }
+
+    @CheckPermission(Permission.CHILD_SCHOOL_CLASS_LEAVE)
+    @DeleteMapping("/children/{childId}/school-class")
+    public ResponseEntity<MessageResponseDto> leaveSchoolClass(@PathVariable UUID childId) {
+        childService.unassignChildFromSchoolClass(childId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(ChildMessages.CHILD_REMOVED_FROM_SCHOOL_CLASS));
     }
 
 }

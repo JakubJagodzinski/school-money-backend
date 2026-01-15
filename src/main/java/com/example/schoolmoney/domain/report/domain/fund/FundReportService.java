@@ -64,10 +64,7 @@ public class FundReportService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         byte[] fundReport = fundReportPdfGenerator.generateReportPdf(prepareFundReportData(fund));
 

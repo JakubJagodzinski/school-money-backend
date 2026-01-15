@@ -55,10 +55,7 @@ public class ChildReportService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         byte[] childReport = childReportPdfGenerator.generateReportPdf(prepareChildReportData(child));
 

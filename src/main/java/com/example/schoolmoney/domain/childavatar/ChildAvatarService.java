@@ -50,10 +50,7 @@ public class ChildAvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         String newAvatarId = storageService.uploadFile(avatarFile, bucketName, FileCategory.AVATAR_OR_LOGO);
 
@@ -94,10 +91,7 @@ public class ChildAvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         if (child.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);

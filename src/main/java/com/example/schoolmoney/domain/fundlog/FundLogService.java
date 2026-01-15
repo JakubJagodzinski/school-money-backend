@@ -43,10 +43,7 @@ public class FundLogService {
                 });
         Fund fund = fundFinder.getByIdOrThrow(fundId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         Page<FundLogView> fundLogs = fundLogRepository.findFundLogs(fundId, pageable);
 

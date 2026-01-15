@@ -98,3 +98,7 @@ minio:
   url: ${MINIO_URL}
   access-key: ${MINIO_ROOT_USER}
   secret-key: ${MINIO_ROOT_PASSWORD}
+
+joke:
+  api:
+    url: ${JOKE_API_URL}

@@ -5,6 +5,10 @@ public enum FundOperationType {
     FUND_PAYMENT,
     FUND_REFUND,
     FUND_DEPOSIT,
-    FUND_WITHDRAWAL
+    FUND_WITHDRAWAL;
+
+    public String getShortName() {
+        return name().replace("FUND_", "");
+    }
 
 }

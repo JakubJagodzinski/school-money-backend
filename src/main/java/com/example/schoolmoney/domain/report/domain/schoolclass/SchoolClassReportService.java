@@ -70,10 +70,7 @@ public class SchoolClassReportService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         byte[] schoolClassReport = schoolClassReportPdfGenerator.generateReportPdf(prepareSchoolClassReportData(schoolClass));
 

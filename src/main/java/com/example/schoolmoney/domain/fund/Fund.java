@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.fund;
 import com.example.schoolmoney.converter.CurrencyAttributeConverter;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
+import com.example.schoolmoney.utils.IbanUtil;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -50,6 +51,9 @@ public class Fund {
     @Column(name = "description", length = 1_000)
     private String description;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
     @NotNull
     @Column(name = "starts_at", nullable = false, updatable = false)
     private Instant startsAt;
@@ -87,6 +91,8 @@ public class Fund {
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
+
+        this.createdAt = now;
         if (startsAt == null) {
             this.startsAt = now;
         }
@@ -102,6 +108,28 @@ public class Fund {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    public boolean isActive() {
+        return fundStatus.equals(FundStatus.ACTIVE);
+    }
+
+    public boolean isBlocked() {
+        return fundStatus.equals(FundStatus.BLOCKED);
+    }
+
+    public void cancel() {
+        fundStatus = FundStatus.CANCELLED;
+        endedAt = Instant.now();
+    }
+
+    public void finish() {
+        fundStatus = FundStatus.FINISHED;
+        endedAt = Instant.now();
+    }
+
+    public String getMaskedIban() {
+        return IbanUtil.maskIban(iban);
     }
 
 }

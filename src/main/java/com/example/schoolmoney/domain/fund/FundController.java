@@ -36,6 +36,8 @@ public class FundController {
 
     private final FundService fundService;
 
+    private final FundProcessingService fundProcessingService;
+
     @Operation(
             summary = "Create a new fund for a school class",
             description = """
@@ -65,6 +67,18 @@ public class FundController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(fundResponseDto);
+    }
+
+    @CheckPermission(Permission.FUND_READ)
+    @GetMapping("/funds/{fundId}")
+    public ResponseEntity<FundResponseDto> getFundById(
+            @PathVariable UUID fundId
+    ) {
+        FundResponseDto responseDto = fundService.getFundById(fundId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(responseDto);
     }
 
     @Operation(
@@ -118,7 +132,7 @@ public class FundController {
     @CheckPermission(Permission.FUND_CANCEL)
     @PostMapping("/funds/{fundId}/cancel")
     public ResponseEntity<MessageResponseDto> cancelFund(@PathVariable UUID fundId) {
-        fundService.cancelFund(fundId);
+        fundProcessingService.cancelFund(fundId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

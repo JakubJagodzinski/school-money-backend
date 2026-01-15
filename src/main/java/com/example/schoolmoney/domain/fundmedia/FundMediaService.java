@@ -65,15 +65,8 @@ public class FundMediaService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
-
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMediaMessages.NO_PERMISSION_TO_UPLOAD_MEDIA);
-            throw new AccessDeniedException(FundMediaMessages.NO_PERMISSION_TO_UPLOAD_MEDIA);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
 
         String fileId = storageService.uploadFile(file, bucketName, FileCategory.FUND_MEDIA);
 
@@ -111,10 +104,7 @@ public class FundMediaService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         Page<FundMedia> fundMediaPage = fundMediaRepository.findAllByFund_FundId(fundId, pageable);
 
@@ -129,10 +119,7 @@ public class FundMediaService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         FundMedia fundMedia = fundMediaRepository.findById(fundMediaId)
                 .orElseThrow(() -> {
@@ -173,15 +160,8 @@ public class FundMediaService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
-
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMediaMessages.NO_PERMISSION_TO_EDIT_MEDIA_METADATA);
-            throw new AccessDeniedException(FundMediaMessages.NO_PERMISSION_TO_EDIT_MEDIA_METADATA);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
 
         if (fund.getFundStatus() != FundStatus.ACTIVE) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
@@ -225,15 +205,8 @@ public class FundMediaService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
-
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMediaMessages.NO_PERMISSION_TO_DELETE_FUND_MEDIA);
-            throw new AccessDeniedException(FundMediaMessages.NO_PERMISSION_TO_DELETE_FUND_MEDIA);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
 
         if (fund.getFundStatus() != FundStatus.ACTIVE) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);

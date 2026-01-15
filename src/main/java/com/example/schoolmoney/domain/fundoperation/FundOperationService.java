@@ -1,7 +1,6 @@
 package com.example.schoolmoney.domain.fundoperation;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
 import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
@@ -13,7 +12,6 @@ import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatu
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundFinder;
-import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundoperation.dto.FundOperationMapper;
 import com.example.schoolmoney.domain.fundoperation.dto.request.DepositToFundRequestDto;
 import com.example.schoolmoney.domain.fundoperation.dto.request.WithdrawFromFundRequestDto;
@@ -72,31 +70,16 @@ public class FundOperationService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         Child child = childFinder.getByIdOrThrow(childId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
-        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
-            log.warn(FundMessages.FUND_IS_BLOCKED);
-            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
-        }
+        fundAccessService.assertFundIsNotBlocked(fund);
+        fundAccessService.assertFundIsActive(fund);
 
-        if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
-
-        if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndOperationTypeAndOperationStatus(
-                fundId, userId, childId, FundOperationType.FUND_PAYMENT, FinancialOperationStatus.SUCCESS
-        )) {
+        if (fundOperationRepository.existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndOperationTypeAndOperationStatus(fundId, userId, childId, FundOperationType.FUND_PAYMENT, FinancialOperationStatus.SUCCESS)) {
             log.warn(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
             throw new IllegalStateException(FundOperationMessages.PAYMENT_ALREADY_MADE_FOR_THIS_CHILD);
         }
@@ -112,31 +95,12 @@ public class FundOperationService {
         walletRepository.save(parentWallet);
         log.info("Wallet updated {}", parentWallet);
 
-        FundOperation fundOperation = FundOperation
-                .builder()
-                .parent(child.getParent())
-                .child(child)
-                .fund(fund)
-                .wallet(parentWallet)
-                .amountInCents(fund.getAmountPerChildInCents())
-                .currency(fund.getCurrency())
-                .operationType(FundOperationType.FUND_PAYMENT)
-                .operationStatus(FinancialOperationStatus.SUCCESS)
-                .build();
+        FundOperation fundOperation = FundOperation.builder().parent(child.getParent()).child(child).fund(fund).wallet(parentWallet).amountInCents(fund.getAmountPerChildInCents()).currency(fund.getCurrency()).operationType(FundOperationType.FUND_PAYMENT).operationStatus(FinancialOperationStatus.SUCCESS).build();
 
         fundOperationRepository.save(fundOperation);
         log.info("Fund operation saved {}", fundOperation);
 
-        emailService.sendFundPaymentEmail(
-                parent.getEmail(),
-                parent.getFirstName(),
-                fund.getTitle(),
-                fund.getSchoolClass().getFullName(),
-                child.getFullName(),
-                fund.getAmountPerChildInCents(),
-                fund.getCurrency(),
-                parent.isNotificationsEnabled()
-        );
+        emailService.sendFundPaymentEmail(parent.getEmail(), parent.getFirstName(), fund.getTitle(), fund.getSchoolClass().getFullName(), child.getFullName(), fund.getAmountPerChildInCents(), fund.getCurrency(), parent.isNotificationsEnabled());
 
         childIgnoredFundService.unignoreFundForChild(childId, fundId, userId);
 
@@ -152,25 +116,10 @@ public class FundOperationService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
-
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-        }
-
-        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
-            log.warn(FundMessages.FUND_IS_BLOCKED);
-            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
-        }
-
-        if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertFundIsNotBlocked(fund);
+        fundAccessService.assertFundIsActive(fund);
 
         long amountInCents = requestDto.getAmountInCents();
 
@@ -197,17 +146,7 @@ public class FundOperationService {
         walletRepository.save(treasurerWallet);
         log.info("Wallet updated {}", treasurerWallet);
 
-        FundOperation fundDepositOperation = FundOperation
-                .builder()
-                .parent(fund.getSchoolClass().getTreasurer())
-                .fund(fund)
-                .wallet(treasurerWallet)
-                .amountInCents(amountInCents)
-                .currency(fund.getCurrency())
-                .operationType(FundOperationType.FUND_DEPOSIT)
-                .operationStatus(FinancialOperationStatus.SUCCESS)
-                .note(requestDto.getNote())
-                .build();
+        FundOperation fundDepositOperation = FundOperation.builder().parent(fund.getSchoolClass().getTreasurer()).fund(fund).wallet(treasurerWallet).amountInCents(amountInCents).currency(fund.getCurrency()).operationType(FundOperationType.FUND_DEPOSIT).operationStatus(FinancialOperationStatus.SUCCESS).note(requestDto.getNote()).build();
 
         fundOperationRepository.save(fundDepositOperation);
         log.info("Fund operation saved {}", fundDepositOperation);
@@ -224,22 +163,15 @@ public class FundOperationService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
 
-        if (!fundAccessService.canEditFund(parent, fund)) {
-            log.warn(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-            throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
-        }
-
-        if (fund.getFundStatus().equals(FundStatus.BLOCKED)) {
+        if (fund.isBlocked()) {
             log.warn(FundMessages.FUND_IS_BLOCKED);
             throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
         }
 
-        if (!fund.getFundStatus().equals(FundStatus.ACTIVE)) {
+        if (!fund.isActive()) {
             log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
@@ -264,17 +196,7 @@ public class FundOperationService {
         walletRepository.save(treasurerWallet);
         log.info("wallet updated {}", treasurerWallet);
 
-        FundOperation fundWithdrawalOperation = FundOperation
-                .builder()
-                .parent(fund.getSchoolClass().getTreasurer())
-                .fund(fund)
-                .wallet(treasurerWallet)
-                .amountInCents(amountInCents)
-                .currency(fund.getCurrency())
-                .operationType(FundOperationType.FUND_WITHDRAWAL)
-                .operationStatus(FinancialOperationStatus.SUCCESS)
-                .note(requestDto.getNote())
-                .build();
+        FundOperation fundWithdrawalOperation = FundOperation.builder().parent(fund.getSchoolClass().getTreasurer()).fund(fund).wallet(treasurerWallet).amountInCents(amountInCents).currency(fund.getCurrency()).operationType(FundOperationType.FUND_WITHDRAWAL).operationStatus(FinancialOperationStatus.SUCCESS).note(requestDto.getNote()).build();
 
         fundOperationRepository.save(fundWithdrawalOperation);
         log.info("Fund operation saved {}", fundWithdrawalOperation);
@@ -337,15 +259,54 @@ public class FundOperationService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!fundAccessService.canViewFund(parent, fund)) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         Page<FundOperation> fundOperationPage = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtDesc(fundId, pageable);
 
         log.debug("Exit getFundAllOperations");
         return fundOperationPage.map(fundOperationMapper::toDto);
+    }
+
+    public void processParentRefunds(List<FundOperation> fundOperations) {
+        for (FundOperation fundOperation : fundOperations) {
+            if (fundOperation.getOperationType().equals(FundOperationType.FUND_PAYMENT) && fundOperation.getAmountInCents() > 0) {
+                log.debug("Processing refund for fund operation {}", fundOperation);
+
+                Wallet parentWallet = fundOperation.getWallet();
+
+                parentWallet.increaseBalanceInCents(fundOperation.getAmountInCents());
+                walletRepository.save(parentWallet);
+                log.info("Parent wallet balance updated {}", parentWallet);
+
+                FundOperation parentRefundOperation = FundOperation
+                        .builder()
+                        .parent(fundOperation.getParent())
+                        .child(fundOperation.getChild())
+                        .fund(fundOperation.getFund())
+                        .wallet(parentWallet)
+                        .amountInCents(fundOperation.getAmountInCents())
+                        .currency(fundOperation.getCurrency())
+                        .operationType(FundOperationType.FUND_REFUND)
+                        .operationStatus(FinancialOperationStatus.SUCCESS)
+                        .build();
+
+                fundOperationRepository.save(parentRefundOperation);
+                log.info("Parent refund operation saved {}", parentRefundOperation);
+
+                Parent parent = parentWallet.getParent();
+
+                emailService.sendFundPaymentRefundEmail(
+                        parent.getEmail(),
+                        parent.getFirstName(),
+                        parentRefundOperation.getFund().getTitle(),
+                        parentRefundOperation.getFund().getSchoolClass().getFullName(),
+                        parentRefundOperation.getChild().getFullName(),
+                        parentRefundOperation.getAmountInCents(),
+                        parentRefundOperation.getCurrency(),
+                        parent.isNotificationsEnabled()
+                );
+            }
+        }
     }
 
 }

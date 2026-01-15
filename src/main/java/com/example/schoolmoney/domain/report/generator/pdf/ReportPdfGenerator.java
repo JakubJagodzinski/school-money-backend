@@ -2,9 +2,13 @@ package com.example.schoolmoney.domain.report.generator.pdf;
 
 import com.example.schoolmoney.domain.report.dto.ReportData;
 import com.lowagie.text.*;
+import com.lowagie.text.Font;
+import com.lowagie.text.Image;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import org.springframework.core.io.InputStreamResource;
+
+import java.awt.*;
 
 public interface ReportPdfGenerator {
 
@@ -44,6 +48,13 @@ public interface ReportPdfGenerator {
 
     default void addDataCell(PdfPTable table, String text) {
         PdfPCell cell = new PdfPCell(new Phrase(text, FONT_DATA_CELL));
+        cell.setPadding(8);
+        table.addCell(cell);
+    }
+
+    default void addDataCell(PdfPTable table, String text, Color color) {
+        Font font = new Font(Font.HELVETICA, 12, Font.NORMAL, color);
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
         cell.setPadding(8);
         table.addCell(cell);
     }

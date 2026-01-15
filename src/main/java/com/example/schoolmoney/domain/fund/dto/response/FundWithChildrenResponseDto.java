@@ -24,6 +24,7 @@ import java.util.UUID;
         "title",
         "logo_url",
         "description",
+        "created_at",
         "starts_at",
         "ends_at",
         "amount_per_child_in_cents",
@@ -49,6 +50,9 @@ public class FundWithChildrenResponseDto {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("created_at")
+    private Instant createdAt;
+
     @JsonProperty("starts_at")
     private Instant startsAt;
 
@@ -67,6 +71,7 @@ public class FundWithChildrenResponseDto {
     @JsonProperty("fund_progress")
     private double fundProgress;
 
+    @JsonProperty("children")
     private List<FundChildStatusWithoutParentResponseDto> children;
 
 }

@@ -52,10 +52,7 @@ public class ChildIgnoredFundService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
 
@@ -105,10 +102,7 @@ public class ChildIgnoredFundService {
 
         Parent parent = parentRepository.getReferenceById(parentId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         childIgnoredFundRepository.deleteByChild_ChildIdAndFund_FundId(childId, fundId);
         log.info("Parent with userId={} unignored fund with fundId={} for child with childId={}", parentId, fundId, childId);

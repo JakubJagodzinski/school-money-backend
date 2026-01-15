@@ -20,7 +20,7 @@ public class FundFinder {
     public Fund getByIdOrThrow(UUID fundId) {
         return fundRepository.findById(fundId)
                 .orElseThrow(() -> {
-                    log.warn(FundMessages.FUND_NOT_FOUND);
+                    log.warn("Fund with id={} not found", fundId);
                     return new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
                 });
     }

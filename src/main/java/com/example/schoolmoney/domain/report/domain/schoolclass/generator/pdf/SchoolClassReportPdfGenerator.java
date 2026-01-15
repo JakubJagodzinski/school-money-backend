@@ -3,8 +3,10 @@ package com.example.schoolmoney.domain.report.domain.schoolclass.generator.pdf;
 import com.example.schoolmoney.common.constants.messages.domain.FundReportMessages;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundChildStatus;
 import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.parent.dto.response.ParentResponseDto;
+import com.example.schoolmoney.domain.report.ChildFundStatusColorSelector;
 import com.example.schoolmoney.domain.report.domain.schoolclass.dto.SchoolClassReportData;
 import com.example.schoolmoney.domain.report.dto.ReportData;
 import com.example.schoolmoney.domain.report.generator.pdf.ReportPageEvent;
@@ -99,9 +101,11 @@ public class SchoolClassReportPdfGenerator implements ReportPdfGenerator {
             String childFullName = child.getFirstName() + " " + child.getLastName();
             String parentFullName = parent.getFirstName() + " " + parent.getLastName();
 
+            FundChildStatus fundChildStatus = fundChildStatusResponseDto.getStatus();
+
             addDataCell(table, childFullName);
             addDataCell(table, parentFullName);
-            addDataCell(table, fundChildStatusResponseDto.getStatus().name());
+            addDataCell(table, fundChildStatus.name(), ChildFundStatusColorSelector.getStatusColor(fundChildStatus));
         }
 
         return table;
@@ -141,7 +145,7 @@ public class SchoolClassReportPdfGenerator implements ReportPdfGenerator {
             addRow(table, "End date", DateToStringConverter.fromInstant(fund.getEndsAt()));
         }
         addRow(table, "Status", fund.getFundStatus().name());
-        addRow(table, "IBAN", fund.getIban());
+        addRow(table, "IBAN", fund.getMaskedIban());
 
         return table;
     }

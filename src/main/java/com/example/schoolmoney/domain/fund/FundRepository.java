@@ -36,6 +36,6 @@ public interface FundRepository extends JpaRepository<Fund, UUID> {
             """)
     Page<Fund> findAllByParentId(@Param("parentId") UUID parentId, Pageable pageable);
 
-    List<Fund> findAllByStartsAtGreaterThanEqualAndFundStatus(Instant now, FundStatus fundStatus);
+    List<Fund> findAllByStartsAtLessThanEqualAndFundStatus(Instant now, FundStatus fundStatus);
 
 }

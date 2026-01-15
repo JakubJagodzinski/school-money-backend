@@ -51,15 +51,8 @@ public class SchoolClassAvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
-
-        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
+        schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         String newAvatarId = storageService.uploadFile(avatarFile, bucketName, FileCategory.AVATAR_OR_LOGO);
 
@@ -83,10 +76,7 @@ public class SchoolClassAvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         if (schoolClass.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
@@ -108,15 +98,8 @@ public class SchoolClassAvatarService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
-
-        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
+        schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         if (schoolClass.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);

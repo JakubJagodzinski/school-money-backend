@@ -7,6 +7,7 @@ import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessa
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.request.CreateChildRequestDto;
 import com.example.schoolmoney.domain.child.dto.request.UpdateChildRequestDto;
+import com.example.schoolmoney.domain.child.dto.response.ChildResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildShortInfoResponseDto;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithSchoolClassInfoResponseDto;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
@@ -86,10 +87,7 @@ public class ChildService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         SchoolClass schoolClass = schoolClassRepository.findByInvitationCode(invitationCode)
                 .orElseThrow(() -> {
@@ -126,10 +124,7 @@ public class ChildService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         if (fundOperationRepository.existsByChild_ChildIdAndFund_FundStatusAndOperationStatus(
                 childId,
@@ -167,10 +162,7 @@ public class ChildService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!childAccessService.canAccessChild(parent, child)) {
-            log.warn(ChildMessages.CHILD_NOT_FOUND);
-            throw new EntityNotFoundException(ChildMessages.CHILD_NOT_FOUND);
-        }
+        childAccessService.assertCanAccessChild(parent, child);
 
         childMapper.updateEntityFromDto(updateChildRequestDto, child);
         childRepository.save(child);
@@ -178,6 +170,16 @@ public class ChildService {
 
         log.debug("Exit updateChild");
         return childMapper.toShortInfoDto(child);
+    }
+
+    @Transactional(readOnly = true)
+    public ChildResponseDto getChildById(UUID childId) {
+        log.debug("Enter getChildById(childId={})", childId);
+
+        Child child = childFinder.getByIdOrThrow(childId);
+
+        log.debug("Exit getChildById(childId={})", childId);
+        return childMapper.toDto(child);
     }
 
 }

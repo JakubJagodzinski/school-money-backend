@@ -116,10 +116,7 @@ public class SchoolClassService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
         log.debug("Fetched {} children for school class with schoolClassId={}", schoolClassChildren.getTotalElements(), schoolClassId);
@@ -179,10 +176,7 @@ public class SchoolClassService {
 
         SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         SchoolClassResponseDto schoolClassResponseDto = schoolClassMapper.toDto(schoolClass);
 
@@ -201,15 +195,8 @@ public class SchoolClassService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
-
-        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
+        schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         schoolClassMapper.updateEntityFromDto(updateSchoolClassRequestDto, schoolClass);
         SchoolClass updatedSchoolClass = schoolClassRepository.save(schoolClass);
@@ -228,15 +215,8 @@ public class SchoolClassService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
 
-        if (!schoolClassAccessService.canViewSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-            throw new EntityNotFoundException(SchoolClassMessages.SCHOOL_CLASS_NOT_FOUND);
-        }
-
-        if (!schoolClassAccessService.canEditSchoolClass(parent, schoolClass)) {
-            log.warn(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-            throw new AccessDeniedException(SchoolClassMessages.NO_PERMISSION_TO_EDIT_THIS_SCHOOL_CLASS);
-        }
+        schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
+        schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         schoolClass.setInvitationCode(InvitationCodeGenerator.generate());
         schoolClassRepository.save(schoolClass);
