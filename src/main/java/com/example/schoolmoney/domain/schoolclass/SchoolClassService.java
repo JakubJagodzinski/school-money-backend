@@ -1,15 +1,13 @@
 package com.example.schoolmoney.domain.schoolclass;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.child.dto.response.ChildWithParentInfoResponseDto;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
-import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
-import com.example.schoolmoney.domain.fundoperation.FundOperationType;
+import com.example.schoolmoney.domain.fundoperation.FundOperationFinder;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
@@ -32,7 +30,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class SchoolClassService {
 
@@ -54,7 +51,7 @@ public class SchoolClassService {
 
     private final SchoolClassFinder schoolClassFinder;
 
-    private final FundOperationRepository fundOperationRepository;
+    private final FundOperationFinder fundOperationFinder;
 
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
@@ -79,6 +76,7 @@ public class SchoolClassService {
         return schoolClassMapper.toDto(schoolClass);
     }
 
+    @Transactional(readOnly = true)
     public Page<SchoolClassResponseDto> getAllSchoolClasses(Pageable pageable) {
         log.debug("Enter getAllSchoolClasses(pageable={})", pageable);
 
@@ -142,27 +140,11 @@ public class SchoolClassService {
         long numberOfFinishedFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.FINISHED);
         schoolClassResponseDto.setNumberOfFinishedFunds(numberOfFinishedFunds);
 
-        schoolClassResponseDto.setActiveFundsCurrentBalanceInCents(
-                fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
-                        schoolClassId,
-                        FundStatus.ACTIVE,
-                        FundOperationType.FUND_PAYMENT,
-                        FundOperationType.FUND_DEPOSIT,
-                        FundOperationType.FUND_REFUND,
-                        FundOperationType.FUND_WITHDRAWAL
-                )
-        );
+        long activeFundsCurrentBalanceInCents = fundOperationFinder.getSchoolClassFundsCurrentBalanceInCents(schoolClassId, FundStatus.ACTIVE);
+        schoolClassResponseDto.setActiveFundsCurrentBalanceInCents(activeFundsCurrentBalanceInCents);
 
-        schoolClassResponseDto.setFinishedFundsCurrentBalanceInCents(
-                fundOperationRepository.getSchoolClassActiveFundsCurrentBalanceInCents(
-                        schoolClassId,
-                        FundStatus.FINISHED,
-                        FundOperationType.FUND_PAYMENT,
-                        FundOperationType.FUND_DEPOSIT,
-                        FundOperationType.FUND_REFUND,
-                        FundOperationType.FUND_WITHDRAWAL
-                )
-        );
+        long finishedFundsCurrentBalanceInCents = fundOperationFinder.getSchoolClassFundsCurrentBalanceInCents(schoolClassId, FundStatus.FINISHED);
+        schoolClassResponseDto.setFinishedFundsCurrentBalanceInCents(finishedFundsCurrentBalanceInCents);
 
         log.debug("Exit updateSchoolClassStatistics(schoolClassResponseDto={})", schoolClassResponseDto);
     }

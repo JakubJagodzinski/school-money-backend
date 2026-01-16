@@ -18,11 +18,13 @@ public interface FundMapper {
     @Named("fundToFundDto")
     @Mapping(target = "authorId", source = "author.userId")
     @Mapping(target = "schoolClass", source = "schoolClass", qualifiedByName = "schoolClassToSchoolClassHeaderDto")
+    @Mapping(target = "iban", expression = "java(entity.getMaskedIban())")
     FundResponseDto toDto(Fund entity);
 
     @Named("fundToFundDtoWithChildren")
     @Mapping(target = "authorId", source = "author.userId")
     @Mapping(target = "schoolClass", source = "schoolClass", qualifiedByName = "schoolClassToSchoolClassHeaderDto")
+    @Mapping(target = "iban", expression = "java(entity.getMaskedIban())")
     FundWithChildrenResponseDto toDtoWithChildren(Fund entity);
 
     void updateEntityFromDto(UpdateFundRequestDto dto, @MappingTarget Fund entity);

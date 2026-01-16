@@ -10,6 +10,7 @@ import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.*;
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
+import com.example.schoolmoney.domain.fundoperation.FundOperationFinder;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.parent.Parent;
 import com.example.schoolmoney.domain.parent.ParentRepository;
@@ -37,7 +38,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class FundService {
 
@@ -69,6 +69,8 @@ public class FundService {
 
     private final SchoolClassFinder schoolClassFinder;
 
+    private final FundOperationFinder fundOperationFinder;
+
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
@@ -94,20 +96,28 @@ public class FundService {
                 .iban(IbanUtil.generateRandomPlIban())
                 .build();
 
-        fundRepository.save(fund);
-        log.info("Fund saved {}", fund);
+        Fund savedFund = fundRepository.save(fund);
+        log.info("Fund {} saved", savedFund.getFundId());
+
+        FundResponseDto fundResponseDto = fundMapper.toDto(savedFund);
+        fundResponseDto.setFundProgress(countFundProgress(savedFund.getFundId()));
+        fundResponseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(savedFund.getFundId()));
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
-                        sendFundCreatedEmailsToParents(parent.getFullName(), fund.getTitle(), schoolClass);
+                        sendFundCreatedEmailsToParents(
+                                parent.getFullName(),
+                                savedFund.getTitle(),
+                                schoolClass
+                        );
                     }
                 }
         );
 
         log.debug("Exit createFund");
-        return fundMapper.toDto(fund);
+        return fundResponseDto;
     }
 
     private void sendFundCreatedEmailsToParents(String authorFullName, String fundTitle, SchoolClass schoolClass) {
@@ -143,6 +153,7 @@ public class FundService {
 
         FundResponseDto fundResponseDto = fundMapper.toDto(fund);
         fundResponseDto.setFundProgress(countFundProgress(fundId));
+        fundResponseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(fundId));
 
         log.debug("Exit getFundById(fundId={})", fundId);
         return fundResponseDto;
@@ -156,18 +167,25 @@ public class FundService {
 
         Page<Fund> fundPage = fundRepository.findAllByAuthor_UserId(userId, pageable);
 
-        log.debug("Exit getCreatedFunds");
-        return fundPage.map(fundMapper::toDto);
+        Page<FundResponseDto> fundResponseDtoPage = fundPage.map(fundMapper::toDto);
+
+        for (FundResponseDto fund : fundResponseDtoPage.getContent()) {
+            fund.setFundProgress(countFundProgress(fund.getFundId()));
+            fund.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(fund.getFundId()));
+        }
+
+        log.debug("Exit getParentCreatedFunds(pageable={})", pageable);
+        return fundResponseDtoPage;
     }
 
     @Transactional
     public FundResponseDto updateFund(UUID fundId, UpdateFundRequestDto updateFundRequestDto) {
         log.debug("Enter updateFund(fundId={}, updateFundRequestDto={})", fundId, updateFundRequestDto);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
+
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
@@ -182,13 +200,14 @@ public class FundService {
         return fundMapper.toDto(savedFund);
     }
 
+    @Transactional(readOnly = true)
     public Page<FundWithChildrenResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) {
         log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentRepository.getReferenceById(userId);
+
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
@@ -207,6 +226,7 @@ public class FundService {
         return fundWithChildrenResponseDtoPage;
     }
 
+    @Transactional(readOnly = true)
     public Page<FundWithChildrenResponseDto> getParentChildrenAllFunds(Pageable pageable) {
         log.debug("Enter getParentChildrenAllFunds(pageable={})", pageable);
 
@@ -216,17 +236,11 @@ public class FundService {
 
         Page<FundWithChildrenResponseDto> fundWithChildrenResponseDtoPage = parentChildrenFundPage.map(fundMapper::toDtoWithChildren);
 
-        Page<FundResponseDto> fundResponseDtoPage = parentChildrenFundPage.map(fundMapper::toDto);
-
         List<Child> parentChildren = childRepository.findAllByParent_UserId(userId);
 
         for (FundWithChildrenResponseDto fundWithChildrenResponseDto : fundWithChildrenResponseDtoPage.getContent()) {
             List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
             fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
-        }
-
-        for (FundResponseDto fundResponseDto : fundResponseDtoPage.getContent()) {
-            fundResponseDto.setFundProgress(countFundProgress(fundResponseDto.getFundId()));
         }
 
         log.debug("Exit getParentChildrenAllFunds");
@@ -259,7 +273,9 @@ public class FundService {
         long targetAmountInCents = participatingChildrenCount * amountPerChild;
         long remainingAmountInCents = unpaidChildrenCount * amountPerChild;
 
-        double progressPercentage = (100.0 * paidChildrenCount) / participatingChildrenCount;
+        double progressPercentage = participatingChildrenCount == 0
+                ? 0.0
+                : (100.0 * paidChildrenCount) / participatingChildrenCount;
 
         log.debug("Exit countFundProgress(fundId={})", fundId);
         return FundProgressResponseDto.builder()

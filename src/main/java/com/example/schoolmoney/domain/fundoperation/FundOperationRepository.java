@@ -16,7 +16,17 @@ import java.util.UUID;
 public interface FundOperationRepository extends JpaRepository<FundOperation, UUID> {
 
     boolean existsByFund_FundIdAndParent_UserIdAndChild_ChildIdAndOperationTypeAndOperationStatus(
-            UUID fundId, UUID userId, UUID childId, FundOperationType operationType, FinancialOperationStatus operationStatus
+            UUID fundId,
+            UUID userId,
+            UUID childId,
+            FundOperationType operationType,
+            FinancialOperationStatus operationStatus
+    );
+
+    boolean existsByChild_ChildIdAndFund_FundStatusAndOperationStatus(
+            UUID childId,
+            FundStatus fundStatus,
+            FinancialOperationStatus operationStatus
     );
 
     boolean existsByFund_FundIdAndParent_UserId(UUID fundId, UUID userId);
@@ -38,8 +48,6 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
             """)
     long countDistinctFundsByChildId(@Param("childId") UUID childId);
 
-    boolean existsByChild_ChildIdAndFund_FundStatusAndOperationStatus(UUID childId, FundStatus fundStatus, FinancialOperationStatus operationStatus);
-
     @Query("""
                 SELECT COALESCE(SUM(
                     CASE
@@ -52,14 +60,38 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
                 FROM FundOperation fo
                 WHERE fo.fund.schoolClass.schoolClassId = :schoolClassId
                   AND fo.fund.fundStatus = :fundStatus
+                  AND fo.operationStatus = :operationStatusSuccess
             """)
-    long getSchoolClassActiveFundsCurrentBalanceInCents(
+    long getSchoolClassFundsCurrentBalanceInCents(
             @Param("schoolClassId") UUID schoolClassId,
             @Param("fundStatus") FundStatus fundStatus,
             @Param("payment") FundOperationType payment,
             @Param("deposit") FundOperationType deposit,
             @Param("refund") FundOperationType refund,
-            @Param("withdrawal") FundOperationType withdrawal
+            @Param("withdrawal") FundOperationType withdrawal,
+            @Param("operationStatusSuccess") FinancialOperationStatus operationStatusSuccess
+    );
+
+    @Query("""
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN fo.operationType = :payment THEN fo.amountInCents
+                        WHEN fo.operationType = :deposit THEN fo.amountInCents
+                        WHEN fo.operationType = :refund THEN -fo.amountInCents
+                        WHEN fo.operationType = :withdrawal THEN -fo.amountInCents
+                    END
+                ), 0)
+                FROM FundOperation fo
+                WHERE fo.fund.fundId = :fundId
+                    AND fo.operationStatus = :operationStatusSuccess
+            """)
+    long getFundCurrentBalanceInCents(
+            @Param("fundId") UUID fundId,
+            @Param("payment") FundOperationType payment,
+            @Param("deposit") FundOperationType deposit,
+            @Param("refund") FundOperationType refund,
+            @Param("withdrawal") FundOperationType withdrawal,
+            @Param("operationStatusSuccess") FinancialOperationStatus operationStatusSuccess
     );
 
 }

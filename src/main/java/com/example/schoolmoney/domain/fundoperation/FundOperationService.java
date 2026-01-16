@@ -61,6 +61,8 @@ public class FundOperationService {
 
     private final ChildIgnoredFundService childIgnoredFundService;
 
+    private final FundOperationFinder fundOperationFinder;
+
     @Transactional
     public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException {
         log.debug("Enter performPayment(fundId={}, childId={})", fundId, childId);
@@ -183,9 +185,9 @@ public class FundOperationService {
             throw new IllegalArgumentException(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
         }
 
-        long fundActualAmountInCents = getFundActualAmountInCents(fundId);
+        long fundCurrentBalanceInCents = fundOperationFinder.getFundCurrentBalanceInCents(fundId);
 
-        if (fundActualAmountInCents < amountInCents) {
+        if (fundCurrentBalanceInCents < amountInCents) {
             log.warn(FundMessages.NOT_ENOUGH_BALANCE_IN_FUND);
             throw new IllegalStateException(FundMessages.NOT_ENOUGH_BALANCE_IN_FUND);
         }
@@ -202,33 +204,6 @@ public class FundOperationService {
         log.info("Fund operation saved {}", fundWithdrawalOperation);
 
         log.debug("Exit withdrawFromFund");
-    }
-
-    private long getFundActualAmountInCents(UUID fundId) {
-        List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
-
-        long fundActualAmountInCents = 0;
-
-        for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
-                FundOperationType fundOperationType = fundOperation.getOperationType();
-
-                switch (fundOperationType) {
-                    case FUND_PAYMENT:
-                    case FUND_DEPOSIT:
-                        fundActualAmountInCents += fundOperation.getAmountInCents();
-                        break;
-                    case FUND_WITHDRAWAL:
-                    case FUND_REFUND:
-                        fundActualAmountInCents -= fundOperation.getAmountInCents();
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        return fundActualAmountInCents;
     }
 
     private long getFundRemainingDepositLimitInCents(UUID fundId) {
