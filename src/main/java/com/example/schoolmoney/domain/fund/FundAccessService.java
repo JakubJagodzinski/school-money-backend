@@ -56,4 +56,11 @@ public class FundAccessService {
         }
     }
 
+    public void assertFundIsNotFinishedAndNotCancelled(Fund fund) {
+        if (fund.isFinished() && fund.isCancelled()) {
+            log.warn("Fund with id {} is {}", fund.getFundId(), fund.getFundStatus());
+            throw new IllegalStateException(FundMessages.FUND_IS_FINISHED_OR_CANCELLED);
+        }
+    }
+
 }

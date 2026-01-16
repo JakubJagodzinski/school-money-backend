@@ -3,6 +3,7 @@ package com.example.schoolmoney.domain.child.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +33,7 @@ public class CreateChildRequestDto {
     @JsonProperty("last_name")
     private String lastName;
 
+    @PastOrPresent
     @JsonProperty("birth_date")
     private LocalDate birthDate;
 

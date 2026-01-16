@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.walletoperation;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.domain.walletoperation.dto.WalletOperationMapper;
@@ -16,7 +17,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class WalletOperationService {
 
@@ -28,16 +28,20 @@ public class WalletOperationService {
 
     private final SecurityUtils securityUtils;
 
+    private final ParentFinder parentFinder;
+
+    @Transactional(readOnly = true)
     public Page<WalletOperationResponseDto> getWalletHistory(Pageable pageable) {
         log.debug("Enter getWalletHistory(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
         Page<WalletOperation> parentWalletOperationPage = walletOperationRepository.findAllByWallet_WalletIdOrderByProcessedAtDesc(wallet.getWalletId(), pageable);
 
-        log.debug("Exit getWalletHistory");
+        log.debug("Exit getWalletHistory(pageable={})", pageable);
         return parentWalletOperationPage.map(walletOperationMapper::toDto);
     }
 

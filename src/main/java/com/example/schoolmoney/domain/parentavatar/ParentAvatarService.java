@@ -2,12 +2,11 @@ package com.example.schoolmoney.domain.parentavatar;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
-import com.example.schoolmoney.common.constants.messages.domain.ParentMessages;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -19,7 +18,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class ParentAvatarService {
 
@@ -31,14 +29,20 @@ public class ParentAvatarService {
 
     private final SecurityUtils securityUtils;
 
+    private final ParentFinder parentFinder;
+
     @Transactional
     public void updateParentAvatar(MultipartFile file) {
         log.debug("Enter uploadParentAvatar");
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
-        String newAvatarId = storageService.uploadFile(file, bucketName, FileCategory.AVATAR_OR_LOGO);
+        String newAvatarId = storageService.uploadFile(
+                file,
+                bucketName,
+                FileCategory.AVATAR_OR_LOGO
+        );
 
         if (parent.getAvatarId() != null) {
             storageService.deleteFile(parent.getAvatarId().toString(), bucketName);
@@ -52,14 +56,11 @@ public class ParentAvatarService {
         log.debug("Exit uploadParentAvatar");
     }
 
-    public InputStreamResource getParentAvatar(UUID parentId) throws EntityNotFoundException {
+    @Transactional(readOnly = true)
+    public InputStreamResource getParentAvatar(UUID parentId) {
         log.debug("Enter getParentAvatar(parentId={})", parentId);
 
-        Parent parent = parentRepository.findById(parentId)
-                .orElseThrow(() -> {
-                    log.warn(ParentMessages.PARENT_NOT_FOUND);
-                    return new EntityNotFoundException(ParentMessages.PARENT_NOT_FOUND);
-                });
+        Parent parent = parentFinder.getByIdOrThrow(parentId);
 
         if (parent.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
@@ -74,10 +75,10 @@ public class ParentAvatarService {
 
     @Transactional
     public void deleteParentAvatar() {
-        log.debug("Enter deleteParentAvatar");
+        log.debug("Enter deleteParentAvatar()");
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         if (parent.getAvatarId() == null) {
             log.warn(AvatarMessages.AVATAR_NOT_SET);
@@ -92,7 +93,7 @@ public class ParentAvatarService {
         parentRepository.save(parent);
         log.info("Avatar id set to null for parent with parentId={}", userId);
 
-        log.debug("Exit deleteParentAvatar");
+        log.debug("Exit deleteParentAvatar()");
     }
 
 }

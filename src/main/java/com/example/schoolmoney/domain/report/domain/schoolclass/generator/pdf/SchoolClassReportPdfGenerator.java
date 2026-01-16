@@ -52,8 +52,9 @@ public class SchoolClassReportPdfGenerator implements ReportPdfGenerator {
 
             document.add(createTitle("School class general information"));
 
-            Image schoolClassAvatarImage = createImage(schoolClassAvatar, 400, 200);
+            Image schoolClassAvatarImage = createCircularImage(pdfWriter, schoolClassAvatar, 150);
             if (schoolClassAvatarImage != null) {
+                schoolClassAvatarImage.setAlignment(Image.ALIGN_CENTER);
                 document.add(schoolClassAvatarImage);
             }
 

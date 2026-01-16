@@ -6,6 +6,7 @@ import com.example.schoolmoney.common.constants.messages.domain.WalletMessages;
 import com.example.schoolmoney.common.constants.messages.domain.WalletOperationMessages;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.parent.Parent;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.parent.ParentRepository;
 import com.example.schoolmoney.domain.wallet.dto.WalletMapper;
 import com.example.schoolmoney.domain.wallet.dto.request.InitializeWalletTopUpRequestDto;
@@ -41,9 +42,10 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class WalletService {
+
+    private final ProviderType withdrawalProviderType = ProviderType.STRIPE;
 
     private final WalletMapper walletMapper;
 
@@ -61,13 +63,13 @@ public class WalletService {
 
     private final PayoutService payoutService;
 
-    private final ProviderType withdrawalProviderType = ProviderType.STRIPE;
-
     private final FinanceConfiguration financeConfiguration;
 
     private final ServerProperties serverProperties;
 
     private final PaymentProperties paymentProperties;
+
+    private final ParentFinder parentFinder;
 
     @Transactional
     public void createWallet(UUID parentId) {
@@ -76,7 +78,7 @@ public class WalletService {
 
     @Transactional
     public void createWallet(UUID parentId, Currency currency) throws EntityNotFoundException, EntityExistsException {
-        log.debug("Enter createWallet(parentId={})", parentId);
+        log.debug("Enter createWallet(parentId={}, currency={})", parentId, currency);
 
         Parent parent = parentRepository.findById(parentId)
                 .orElseThrow(() -> {
@@ -101,7 +103,7 @@ public class WalletService {
                 .build();
 
         walletRepository.save(wallet);
-        log.info("Wallet saved {}", wallet);
+        log.info("Wallet with id={} saved successfully", wallet.getWalletId());
 
         if (financeConfiguration.getStartingBalance() > 0) {
             WalletOperation walletOperation = WalletOperation.builder()
@@ -115,69 +117,77 @@ public class WalletService {
                     .build();
 
             walletOperationRepository.save(walletOperation);
-            log.info("Wallet operation saved {}", walletOperation);
+            log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
         }
 
-        log.debug("Exit createWallet");
+        log.debug("Exit createWallet(parentId={}, currency={})", parentId, currency);
     }
 
+    @Transactional(readOnly = true)
     public WalletInfoResponseDto getWalletInfo() {
-        log.debug("Enter getWalletInfo");
+        log.debug("Enter getWalletInfo()");
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
-        log.debug("Exit getWalletInfo");
+        log.debug("Exit getWalletInfo()");
         return walletMapper.toInfoDto(wallet);
     }
 
+    @Transactional(readOnly = true)
     public WalletBalanceResponseDto getWalletBalance() {
-        log.debug("Enter getWalletBalance");
+        log.debug("Enter getWalletBalance()");
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
-        log.debug("Exit getWalletBalance");
+        log.debug("Exit getWalletBalance()");
         return walletMapper.toBalanceDto(wallet);
     }
 
     @Transactional
     public void setWithdrawalIban(String withdrawalIban) {
-        log.debug("Enter setWithdrawalIban(withdrawalIban={})", withdrawalIban);
+        log.debug("Enter setWithdrawalIban()");
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
         wallet.setWithdrawalIban(withdrawalIban);
         walletRepository.save(wallet);
-        log.info("Wallet saved {}", wallet);
+        log.info("Wallet with id={} saved successfully", wallet.getWalletId());
 
-        log.debug("Exit setWithdrawalIban");
+        log.debug("Exit setWithdrawalIban()");
     }
 
     @Transactional
     public void clearWithdrawalIban() {
-        log.debug("Enter clearWithdrawalIban");
+        log.debug("Enter clearWithdrawalIban()");
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
         wallet.setWithdrawalIban(null);
         walletRepository.save(wallet);
-        log.info("Wallet saved {}", wallet);
+        log.info("Wallet with id={} saved successfully", wallet.getWalletId());
 
-        log.debug("Exit clearWithdrawalIban");
+        log.debug("Exit clearWithdrawalIban()");
     }
 
     @Transactional
     public PaymentSessionDto initializeWalletTopUp(InitializeWalletTopUpRequestDto requestDto) {
-        log.debug("Enter initializeWalletTopUp");
+        log.debug("Enter initializeWalletTopUp()");
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
+
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
         WalletOperation walletOperation = WalletOperation.builder()
@@ -190,7 +200,7 @@ public class WalletService {
                 .build();
 
         WalletOperation pendingOperation = walletOperationRepository.save(walletOperation);
-        log.info("Wallet operation saved {}", walletOperation);
+        log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
 
         String successRedirectUrl = requestDto.getSuccessRedirectUrl() != null ?
                 requestDto.getSuccessRedirectUrl() :
@@ -215,13 +225,13 @@ public class WalletService {
         pendingOperation.setExternalOperationId(paymentSessionDto.getSessionId());
         walletOperationRepository.save(pendingOperation);
 
-        log.debug("Exit initializeWalletTopUp");
+        log.debug("Exit initializeWalletTopUp()");
         return paymentSessionDto;
     }
 
     @Transactional
     public void finalizeWalletTopUp(PaymentNotificationDto paymentNotificationDto) throws EntityNotFoundException {
-        log.debug("Enter registerWalletTopUp");
+        log.debug("Enter registerWalletTopUp()");
 
         WalletOperation walletOperation = walletOperationRepository.findById(paymentNotificationDto.getOperationId())
                 .orElseThrow(() -> {
@@ -264,9 +274,9 @@ public class WalletService {
 
         walletOperationRepository.save(walletOperation);
         walletRepository.save(wallet);
-        log.info("Wallet operation saved {}", walletOperation);
+        log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
 
-        log.debug("Exit registerWalletTopUp");
+        log.debug("Exit registerWalletTopUp()");
     }
 
     private void validateWalletWithdrawal(Wallet wallet, long amountInCents) throws IllegalStateException, IllegalArgumentException {
@@ -291,13 +301,15 @@ public class WalletService {
         log.debug("Enter initializeWalletWithdrawal(amountInCents={})", amountInCents);
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
+
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
         validateWalletWithdrawal(wallet, amountInCents);
 
         wallet.increaseReservedBalanceInCents(amountInCents);
         walletRepository.save(wallet);
-        log.info("Reserved balance updated {}", wallet);
+        log.info("Reserved balance updated for wallet with id={}", wallet.getWalletId());
 
         WalletOperation walletOperation = WalletOperation.builder()
                 .wallet(wallet)
@@ -310,7 +322,7 @@ public class WalletService {
                 .build();
 
         WalletOperation pendingOperation = walletOperationRepository.save(walletOperation);
-        log.info("Wallet operation saved {}", walletOperation);
+        log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
 
         PayoutRequestDto payoutRequestDto = buildPayoutRequest(userId, pendingOperation, wallet.getWithdrawalIban());
         String payoutId = payoutService.createPayout(payoutRequestDto);
@@ -318,7 +330,7 @@ public class WalletService {
         pendingOperation.setExternalOperationId(payoutId);
         walletOperationRepository.save(pendingOperation);
 
-        log.debug("Exit initializeWalletWithdrawal");
+        log.debug("Exit initializeWalletWithdrawal(amountInCents={})", amountInCents);
     }
 
     private PayoutRequestDto buildPayoutRequest(UUID userId, WalletOperation pendingOperation, String iban) {
@@ -335,6 +347,8 @@ public class WalletService {
 
     @Transactional
     public void finalizeWalletWithdrawal(PayoutNotificationDto payoutNotificationDto) {
+        log.debug("Enter finalizeWalletWithdrawal()");
+
         WalletOperation walletOperation = walletOperationRepository.findById(payoutNotificationDto.getOperationId())
                 .orElseThrow(() -> {
                     log.warn(WalletOperationMessages.WALLET_OPERATION_NOT_FOUND);
@@ -372,6 +386,9 @@ public class WalletService {
 
         walletRepository.save(wallet);
         walletOperationRepository.save(walletOperation);
+        log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
+
+        log.debug("Exit finalizeWalletWithdrawal()");
     }
 
     @Transactional
@@ -379,13 +396,15 @@ public class WalletService {
         log.debug("Enter performWalletWithdrawal(requestDto={})", requestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
+
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
         validateWalletWithdrawal(wallet, requestDto.getAmountInCents());
 
         wallet.decreaseBalanceInCents(requestDto.getAmountInCents());
         walletRepository.save(wallet);
-        log.info("Wallet balance updated {}", wallet);
+        log.info("Wallet balance updated for wallet with id={}", wallet.getWalletId());
 
         WalletOperation walletOperation = WalletOperation.builder()
                 .wallet(wallet)
@@ -398,7 +417,7 @@ public class WalletService {
                 .build();
 
         walletOperationRepository.save(walletOperation);
-        log.info("Wallet operation saved {}", walletOperation);
+        log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
 
         log.debug("Exit performWalletWithdrawal(requestDto={})", requestDto);
     }

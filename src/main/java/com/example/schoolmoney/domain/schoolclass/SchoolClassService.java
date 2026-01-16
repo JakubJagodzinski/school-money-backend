@@ -9,7 +9,7 @@ import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundoperation.FundOperationFinder;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.schoolclass.dto.SchoolClassMapper;
 import com.example.schoolmoney.domain.schoolclass.dto.request.CreateSchoolClassRequestDto;
 import com.example.schoolmoney.domain.schoolclass.dto.request.UpdateSchoolClassRequestDto;
@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,8 +40,6 @@ public class SchoolClassService {
 
     private final ChildRepository childRepository;
 
-    private final ParentRepository parentRepository;
-
     private final FundRepository fundRepository;
 
     private final SecurityUtils securityUtils;
@@ -53,13 +50,14 @@ public class SchoolClassService {
 
     private final FundOperationFinder fundOperationFinder;
 
+    private final ParentFinder parentFinder;
+
     @Transactional
     public SchoolClassResponseDto createSchoolClass(CreateSchoolClassRequestDto createSchoolClassRequestDto) {
         log.debug("Enter createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
-        log.debug("Creating school class for user with userId={}", userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         SchoolClass schoolClass = SchoolClass
                 .builder()
@@ -70,9 +68,9 @@ public class SchoolClassService {
                 .build();
 
         schoolClassRepository.save(schoolClass);
-        log.info("School class saved {}", schoolClass);
+        log.info("School class with id={} created", schoolClass.getSchoolClassId());
 
-        log.debug("Exit createSchoolClass");
+        log.debug("Exit createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
         return schoolClassMapper.toDto(schoolClass);
     }
 
@@ -82,7 +80,7 @@ public class SchoolClassService {
 
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAll(pageable);
 
-        log.debug("Exit getAllSchoolClasses");
+        log.debug("Exit getAllSchoolClasses(pageable={})", pageable);
         return schoolClassPage.map(schoolClassMapper::toDto);
     }
 
@@ -91,6 +89,7 @@ public class SchoolClassService {
         log.debug("Enter getTreasurerAndParentChildrenSchoolClasses(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         List<UUID> parentChildrenSchoolClassesIds = childRepository.findDistinctSchoolClassIdsByParentUserId(userId);
 
@@ -112,7 +111,7 @@ public class SchoolClassService {
         SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
@@ -150,18 +149,16 @@ public class SchoolClassService {
     }
 
     @Transactional(readOnly = true)
-    public SchoolClassResponseDto getSchoolClassById(UUID schoolClassId) throws EntityNotFoundException {
+    public SchoolClassResponseDto getSchoolClassById(UUID schoolClassId) {
         log.debug("Enter getSchoolClassById(schoolClassId={})", schoolClassId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         SchoolClassResponseDto schoolClassResponseDto = schoolClassMapper.toDto(schoolClass);
-
         updateSchoolClassStatistics(schoolClassResponseDto);
 
         log.debug("Exit getSchoolClassById(schoolClassId={})", schoolClassId);
@@ -169,42 +166,40 @@ public class SchoolClassService {
     }
 
     @Transactional
-    public SchoolClassResponseDto updateSchoolClass(UUID schoolClassId, UpdateSchoolClassRequestDto updateSchoolClassRequestDto) throws EntityNotFoundException, AccessDeniedException {
+    public SchoolClassResponseDto updateSchoolClass(UUID schoolClassId, UpdateSchoolClassRequestDto updateSchoolClassRequestDto) {
         log.debug("Enter updateSchoolClass(schoolClassId={}, updateSchoolClassRequestDto={})", schoolClassId, updateSchoolClassRequestDto);
 
-        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
         schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         schoolClassMapper.updateEntityFromDto(updateSchoolClassRequestDto, schoolClass);
         SchoolClass updatedSchoolClass = schoolClassRepository.save(schoolClass);
-        log.info("School class updated {}", updatedSchoolClass);
+        log.info("School class with id={} updated successfully", updatedSchoolClass.getSchoolClassId());
 
-        log.debug("Exit updateSchoolClass");
+        log.debug("Exit updateSchoolClass(schoolClassId={}, updateSchoolClassRequestDto={})", schoolClassId, updateSchoolClassRequestDto);
         return schoolClassMapper.toDto(updatedSchoolClass);
     }
 
     @Transactional
-    public SchoolClassInvitationCodeResponseDto regenerateInvitationCode(UUID schoolClassId) throws EntityNotFoundException, AccessDeniedException {
+    public SchoolClassInvitationCodeResponseDto regenerateInvitationCode(UUID schoolClassId) {
         log.debug("Enter regenerateInvitationCode(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
         schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         schoolClass.setInvitationCode(InvitationCodeGenerator.generate());
         schoolClassRepository.save(schoolClass);
-        log.info("Invitation code regenerated for school class {}", schoolClass);
+        log.info("Invitation code regenerated for school class with id={}", schoolClass.getSchoolClassId());
 
-        log.debug("Exit regenerateInvitationCode");
+        log.debug("Exit regenerateInvitationCode(schoolClassId={})", schoolClassId);
         return schoolClassMapper.toInvitationCodeDto(schoolClass);
     }
 

@@ -20,7 +20,7 @@ import java.util.UUID;
         "performed_by_full_name",
         "fund_media_id",
         "filename",
-        "file_type",
+        "media_type",
         "fund_id",
         "operation_type",
         "processed_at"
@@ -42,8 +42,8 @@ public class FundMediaOperationResponseDto {
     @JsonProperty("filename")
     private String filename;
 
-    @JsonProperty("file_type")
-    private FileType fileType;
+    @JsonProperty("media_type")
+    private FileType mediaType;
 
     @JsonProperty("fund_id")
     private UUID fundId;

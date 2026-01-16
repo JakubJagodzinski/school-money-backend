@@ -1,7 +1,6 @@
 package com.example.schoolmoney.domain.report.domain.schoolclass;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.SchoolClassMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
@@ -11,7 +10,7 @@ import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.fund.FundService;
 import com.example.schoolmoney.domain.fund.dto.response.FundChildStatusResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.report.ReportFilenameGenerator;
 import com.example.schoolmoney.domain.report.domain.schoolclass.dto.SchoolClassReportData;
 import com.example.schoolmoney.domain.report.domain.schoolclass.generator.pdf.SchoolClassReportPdfGenerator;
@@ -21,7 +20,6 @@ import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassFinder;
 import com.example.schoolmoney.domain.schoolclassavatar.SchoolClassAvatarService;
 import com.example.schoolmoney.email.EmailService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -36,11 +34,8 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class SchoolClassReportService {
-
-    private final ParentRepository parentRepository;
 
     private final SchoolClassReportPdfGenerator schoolClassReportPdfGenerator;
 
@@ -62,17 +57,20 @@ public class SchoolClassReportService {
 
     private final SchoolClassFinder schoolClassFinder;
 
-    public ReportDto generateSchoolClassReport(UUID schoolClassId) throws EntityNotFoundException {
+    private final ParentFinder parentFinder;
+
+    @Transactional(readOnly = true)
+    public ReportDto generateSchoolClassReport(UUID schoolClassId) {
         log.debug("Enter generateSchoolClassReport(schoolClassId={})", schoolClassId);
 
-        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
-        byte[] schoolClassReport = schoolClassReportPdfGenerator.generateReportPdf(prepareSchoolClassReportData(schoolClass));
+        SchoolClassReportData schoolClassReportData = prepareSchoolClassReportData(schoolClass);
+        byte[] schoolClassReport = schoolClassReportPdfGenerator.generateReportPdf(schoolClassReportData);
 
         ReportDto reportDto = ReportDto
                 .builder()
@@ -89,11 +87,13 @@ public class SchoolClassReportService {
                 parent.isNotificationsEnabled()
         );
 
-        log.debug("Exit generateSchoolClassReport()");
+        log.debug("Exit generateSchoolClassReport(schoolClassId={})", schoolClassId);
         return reportDto;
     }
 
     private SchoolClassReportData prepareSchoolClassReportData(SchoolClass schoolClass) {
+        log.debug("Enter prepareSchoolClassReportData(schoolClassId={})", schoolClass.getSchoolClassId());
+
         UUID schoolClassId = schoolClass.getSchoolClassId();
 
         InputStreamResource schoolClassAvatar = schoolClassAvatarService.getSchoolClassAvatar(schoolClassId);
@@ -108,8 +108,11 @@ public class SchoolClassReportService {
         }
 
         List<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId);
-        List<ChildWithParentInfoResponseDto> schoolClassChildrenWithParentInfo = schoolClassChildren.stream().map(childMapper::toWithParentInfoDto).toList();
+        List<ChildWithParentInfoResponseDto> schoolClassChildrenWithParentInfo = schoolClassChildren.stream()
+                .map(childMapper::toWithParentInfoDto)
+                .toList();
 
+        log.debug("Exit prepareSchoolClassReportData(schoolClassId={})", schoolClass.getSchoolClassId());
         return SchoolClassReportData.builder()
                 .schoolClass(schoolClass)
                 .schoolClassAvatar(schoolClassAvatar)

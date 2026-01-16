@@ -2,7 +2,6 @@ package com.example.schoolmoney.domain.fund.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +18,6 @@ import lombok.NoArgsConstructor;
 })
 public class UpdateFundRequestDto {
 
-    @NotBlank
     @Size(min = 3, max = 80)
     @JsonProperty("title")
     private String title;

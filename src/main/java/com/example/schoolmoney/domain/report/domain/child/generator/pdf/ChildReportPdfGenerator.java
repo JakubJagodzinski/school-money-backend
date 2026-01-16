@@ -44,8 +44,9 @@ public class ChildReportPdfGenerator implements ReportPdfGenerator {
 
             document.add(createTitle("Child general information"));
 
-            Image childAvatarImage = createImage(childAvatar, 400, 200);
+            Image childAvatarImage = createCircularImage(pdfWriter, childAvatar, 150);
             if (childAvatarImage != null) {
+                childAvatarImage.setAlignment(Image.ALIGN_CENTER);
                 document.add(childAvatarImage);
             }
 

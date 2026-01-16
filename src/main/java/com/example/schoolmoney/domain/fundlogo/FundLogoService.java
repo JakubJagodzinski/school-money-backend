@@ -7,14 +7,12 @@ import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundFinder;
 import com.example.schoolmoney.domain.fund.FundRepository;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +21,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class FundLogoService {
 
@@ -37,23 +34,23 @@ public class FundLogoService {
 
     private final FundAccessService fundAccessService;
 
-    private final ParentRepository parentRepository;
-
     private final FundFinder fundFinder;
 
+    private final ParentFinder parentFinder;
+
     @Transactional
-    public void updateFundLogo(UUID fundId, MultipartFile logoFile) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void updateFundLogo(UUID fundId, MultipartFile logoFile) {
         log.debug("Enter updateFundLogo(fundId={})", fundId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsActive(fund);
+        fundAccessService.assertFundIsNotFinishedAndNotCancelled(fund);
 
         UUID newLogoId = UUID.fromString(storageService.uploadFile(logoFile, bucketName, FileCategory.AVATAR_OR_LOGO));
 
@@ -69,14 +66,14 @@ public class FundLogoService {
         log.debug("Exit updateFundLogo(fundId={})", fundId);
     }
 
-    public InputStreamResource getFundLogo(UUID fundId) throws EntityNotFoundException {
+    @Transactional(readOnly = true)
+    public InputStreamResource getFundLogo(UUID fundId) {
         log.debug("Enter getFundLogo(fundId={})", fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         fundAccessService.assertCanViewFund(parent, fund);
 
         if (fund.getLogoId() == null) {
@@ -91,14 +88,13 @@ public class FundLogoService {
     }
 
     @Transactional
-    public void deleteFundLogo(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void deleteFundLogo(UUID fundId) {
         log.debug("Enter deleteFundLogo(fundId={})", fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);

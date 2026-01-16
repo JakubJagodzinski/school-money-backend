@@ -17,7 +17,7 @@ import com.example.schoolmoney.domain.fundoperation.dto.request.DepositToFundReq
 import com.example.schoolmoney.domain.fundoperation.dto.request.WithdrawFromFundRequestDto;
 import com.example.schoolmoney.domain.fundoperation.dto.response.FundOperationResponseDto;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
@@ -35,7 +35,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class FundOperationService {
 
@@ -51,8 +50,6 @@ public class FundOperationService {
 
     private final FundAccessService fundAccessService;
 
-    private final ParentRepository parentRepository;
-
     private final ChildAccessService childAccessService;
 
     private final ChildFinder childFinder;
@@ -63,19 +60,19 @@ public class FundOperationService {
 
     private final FundOperationFinder fundOperationFinder;
 
+    private final ParentFinder parentFinder;
+
     @Transactional
-    public void performPayment(UUID fundId, UUID childId) throws EntityNotFoundException, IllegalStateException {
+    public void performPayment(UUID fundId, UUID childId) throws IllegalStateException {
         log.debug("Enter performPayment(fundId={}, childId={})", fundId, childId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
 
         Child child = childFinder.getByIdOrThrow(childId);
-
         childAccessService.assertCanAccessChild(parent, child);
 
         fundAccessService.assertFundIsNotBlocked(fund);
@@ -106,18 +103,17 @@ public class FundOperationService {
 
         childIgnoredFundService.unignoreFundForChild(childId, fundId, userId);
 
-        log.debug("Exit performPayment");
+        log.debug("Exit performPayment(fundId={}, childId={})", fundId, childId);
     }
 
     @Transactional
     public void depositToFund(UUID fundId, DepositToFundRequestDto requestDto) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
         log.debug("Enter depositToFund(fundId={}, requestDto={})", fundId, requestDto);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
@@ -148,35 +144,35 @@ public class FundOperationService {
         walletRepository.save(treasurerWallet);
         log.info("Wallet updated {}", treasurerWallet);
 
-        FundOperation fundDepositOperation = FundOperation.builder().parent(fund.getSchoolClass().getTreasurer()).fund(fund).wallet(treasurerWallet).amountInCents(amountInCents).currency(fund.getCurrency()).operationType(FundOperationType.FUND_DEPOSIT).operationStatus(FinancialOperationStatus.SUCCESS).note(requestDto.getNote()).build();
+        FundOperation fundDepositOperation = FundOperation.builder()
+                .parent(fund.getSchoolClass().getTreasurer())
+                .fund(fund)
+                .wallet(treasurerWallet)
+                .amountInCents(amountInCents)
+                .currency(fund.getCurrency())
+                .operationType(FundOperationType.FUND_DEPOSIT)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
+                .note(requestDto.getNote())
+                .build();
 
         fundOperationRepository.save(fundDepositOperation);
         log.info("Fund operation saved {}", fundDepositOperation);
 
-        log.debug("Exit depositToFund");
+        log.debug("Exit depositToFund(fundId={}, requestDto={})", fundId, requestDto);
     }
 
     @Transactional
-    public void withdrawFromFund(UUID fundId, WithdrawFromFundRequestDto requestDto) throws EntityNotFoundException, IllegalArgumentException, IllegalStateException, AccessDeniedException {
+    public void withdrawFromFund(UUID fundId, WithdrawFromFundRequestDto requestDto) throws IllegalArgumentException, IllegalStateException {
         log.debug("Enter withdrawFromFund(fundId={}, requestDto={})", fundId, requestDto);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
-
-        if (fund.isBlocked()) {
-            log.warn(FundMessages.FUND_IS_BLOCKED);
-            throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
-        }
-
-        if (!fund.isActive()) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
+        fundAccessService.assertFundIsNotBlocked(fund);
+        fundAccessService.assertFundIsActive(fund);
 
         long amountInCents = requestDto.getAmountInCents();
 
@@ -198,12 +194,21 @@ public class FundOperationService {
         walletRepository.save(treasurerWallet);
         log.info("wallet updated {}", treasurerWallet);
 
-        FundOperation fundWithdrawalOperation = FundOperation.builder().parent(fund.getSchoolClass().getTreasurer()).fund(fund).wallet(treasurerWallet).amountInCents(amountInCents).currency(fund.getCurrency()).operationType(FundOperationType.FUND_WITHDRAWAL).operationStatus(FinancialOperationStatus.SUCCESS).note(requestDto.getNote()).build();
+        FundOperation fundWithdrawalOperation = FundOperation.builder()
+                .parent(fund.getSchoolClass().getTreasurer())
+                .fund(fund)
+                .wallet(treasurerWallet)
+                .amountInCents(amountInCents)
+                .currency(fund.getCurrency())
+                .operationType(FundOperationType.FUND_WITHDRAWAL)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
+                .note(requestDto.getNote())
+                .build();
 
         fundOperationRepository.save(fundWithdrawalOperation);
         log.info("Fund operation saved {}", fundWithdrawalOperation);
 
-        log.debug("Exit withdrawFromFund");
+        log.debug("Exit withdrawFromFund(fundId={}, requestDto={})", fundId, requestDto);
     }
 
     private long getFundRemainingDepositLimitInCents(UUID fundId) {
@@ -226,23 +231,25 @@ public class FundOperationService {
         return remainingDepositLimitInCents;
     }
 
-    public Page<FundOperationResponseDto> getFundAllOperations(UUID fundId, Pageable pageable) throws EntityNotFoundException {
+    @Transactional(readOnly = true)
+    public Page<FundOperationResponseDto> getFundAllOperations(UUID fundId, Pageable pageable) {
         log.debug("Enter getFundAllOperations(fundId={}, pageable={})", fundId, pageable);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
 
         Page<FundOperation> fundOperationPage = fundOperationRepository.findAllByFund_FundIdOrderByProcessedAtDesc(fundId, pageable);
 
-        log.debug("Exit getFundAllOperations");
+        log.debug("Exit getFundAllOperations(fundId={}, pageable={})", fundId, pageable);
         return fundOperationPage.map(fundOperationMapper::toDto);
     }
 
     public void processParentRefunds(List<FundOperation> fundOperations) {
+        log.debug("Enter processParentRefunds()");
+
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getOperationType().equals(FundOperationType.FUND_PAYMENT) && fundOperation.getAmountInCents() > 0) {
                 log.debug("Processing refund for fund operation {}", fundOperation);
@@ -282,6 +289,8 @@ public class FundOperationService {
                 );
             }
         }
+
+        log.debug("Exit processParentRefunds()");
     }
 
 }

@@ -1,12 +1,9 @@
 package com.example.schoolmoney.domain.fundmedia;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.FundMediaMessages;
-import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundFinder;
-import com.example.schoolmoney.domain.fund.FundStatus;
 import com.example.schoolmoney.domain.fundmedia.dto.FundMediaMapper;
 import com.example.schoolmoney.domain.fundmedia.dto.internal.FileWithMetadata;
 import com.example.schoolmoney.domain.fundmedia.dto.request.UpdateFundMediaFileMetadataRequestDto;
@@ -14,18 +11,16 @@ import com.example.schoolmoney.domain.fundmedia.dto.response.FundMediaResponseDt
 import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperationService;
 import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperationType;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.files.FileTypeDetector;
 import com.example.schoolmoney.storage.StorageService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +29,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class FundMediaService {
 
@@ -43,8 +37,6 @@ public class FundMediaService {
     private final FundMediaMapper fundMediaMapper;
 
     private final FundMediaRepository fundMediaRepository;
-
-    private final ParentRepository parentRepository;
 
     private final StorageService storageService;
 
@@ -56,15 +48,18 @@ public class FundMediaService {
 
     private final FundFinder fundFinder;
 
+    private final FundMediaFinder fundMediaFinder;
+
+    private final ParentFinder parentFinder;
+
     @Transactional
-    public FundMediaResponseDto uploadFundMediaFile(UUID fundId, MultipartFile file) throws EntityNotFoundException, AccessDeniedException {
+    public FundMediaResponseDto uploadFundMediaFile(UUID fundId, MultipartFile file) {
         log.debug("Enter uploadFundMedia(fundId={})", fundId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
 
@@ -92,45 +87,37 @@ public class FundMediaService {
                 FundMediaOperationType.UPLOAD
         );
 
-        log.debug("Exit uploadFundMedia");
+        log.debug("Exit uploadFundMedia(fundId={})", fundId);
         return fundMediaMapper.toDto(fundMedia);
     }
 
-    public Page<FundMediaResponseDto> getFundMediaMetadataPage(UUID fundId, Pageable pageable) throws EntityNotFoundException {
+    @Transactional(readOnly = true)
+    public Page<FundMediaResponseDto> getFundMediaMetadataPage(UUID fundId, Pageable pageable) {
         log.debug("Enter getFundMediaPage(fundId={}, pageable={})", fundId, pageable);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
 
         Page<FundMedia> fundMediaPage = fundMediaRepository.findAllByFund_FundId(fundId, pageable);
 
+        log.debug("Exit getFundMediaPage(fundId={}, pageable={})", fundId, pageable);
         return fundMediaPage.map(fundMediaMapper::toDto);
     }
 
-    public FileWithMetadata getFundMediaFileWithMetadata(UUID fundId, UUID fundMediaId) throws EntityNotFoundException {
+    @Transactional(readOnly = true)
+    public FileWithMetadata getFundMediaFileWithMetadata(UUID fundId, UUID fundMediaId) {
         log.debug("Enter getFundMediaFileWithMetadata(fundMediaId={})", fundMediaId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
 
-        FundMedia fundMedia = fundMediaRepository.findById(fundMediaId)
-                .orElseThrow(() -> {
-                    log.warn(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-                    return new EntityNotFoundException(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-                });
-
-        if (fundMedia.getFund().getFundId() != fundId) {
-            log.warn(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-            throw new EntityNotFoundException(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-        }
+        FundMedia fundMedia = fundMediaFinder.getByFundIdAndFundMediaIdOrThrow(fund.getFundId(), fundMediaId);
 
         String fileId = fundMedia.getFileId().toString();
 
@@ -148,36 +135,17 @@ public class FundMediaService {
     }
 
     @Transactional
-    public FundMediaResponseDto updateFundMediaFileMetadata(
-            UUID fundId,
-            UUID fundMediaId,
-            UpdateFundMediaFileMetadataRequestDto updateFundMediaFileMetadataRequestDto
-    ) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public FundMediaResponseDto updateFundMediaFileMetadata(UUID fundId, UUID fundMediaId, UpdateFundMediaFileMetadataRequestDto updateFundMediaFileMetadataRequestDto) {
         log.debug("Enter updateFundMediaFileMetadata(fundId={}, fundMediaId={})", fundId, fundMediaId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
 
-        if (fund.getFundStatus() != FundStatus.ACTIVE) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
-
-        FundMedia fundMedia = fundMediaRepository.findById(fundMediaId)
-                .orElseThrow(() -> {
-                    log.warn(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-                    return new EntityNotFoundException(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-                });
-
-        if (fundMedia.getFund().getFundId() != fundId) {
-            log.warn(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-            throw new EntityNotFoundException(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-        }
+        FundMedia fundMedia = fundMediaFinder.getByFundIdAndFundMediaIdOrThrow(fund.getFundId(), fundMediaId);
 
         fundMediaMapper.updateEntityFromDto(updateFundMediaFileMetadataRequestDto, fundMedia);
         fundMediaRepository.save(fundMedia);
@@ -192,47 +160,33 @@ public class FundMediaService {
                 FundMediaOperationType.UPDATE
         );
 
-        log.debug("Exit updateFundMediaFileMetadata");
+        log.debug("Exit updateFundMediaFileMetadata(fundId={}, fundMediaId={})", fundId, fundMediaId);
         return fundMediaMapper.toDto(fundMedia);
     }
 
     @Transactional
-    public void deleteFundMediaFile(UUID fundId, UUID fundMediaId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
-        log.debug("Enter deleteFundMediaFile(fundMediaId={})", fundMediaId);
-
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
+    public void deleteFundMediaFile(UUID fundId, UUID fundMediaId) {
+        log.debug("Enter deleteFundMediaFile(fundId={}, fundMediaId={})", fundId, fundMediaId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertFundIsActive(fund);
 
-        if (fund.getFundStatus() != FundStatus.ACTIVE) {
-            log.warn(FundMessages.FUND_IS_NOT_ACTIVE);
-            throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
-        }
-
-        FundMedia fundMedia = fundMediaRepository.findById(fundMediaId)
-                .orElseThrow(() -> {
-                    log.warn(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-                    return new EntityNotFoundException(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-                });
-
-        if (fundMedia.getFund().getFundId() != fundId) {
-            log.warn(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-            throw new EntityNotFoundException(FundMediaMessages.FUND_MEDIA_NOT_FOUND);
-        }
+        FundMedia fundMedia = fundMediaFinder.getByFundIdAndFundMediaIdOrThrow(fund.getFundId(), fundMediaId);
 
         String fileId = fundMedia.getFileId().toString();
 
         storageService.deleteFile(fileId, bucketName);
 
         fundMediaRepository.deleteById(fundMediaId);
-        log.info("Fund media deleted {}", fundMedia);
+        log.info("Fund media with id={} deleted", fundMedia.getFundMediaId());
 
         fundMediaOperationService.saveFundMediaOperation(
-                parentRepository.getReferenceById(userId),
+                parent,
                 fundMedia.getFundMediaId(),
                 fundMedia.getFilename(),
                 fundMedia.getMediaType(),
@@ -240,7 +194,7 @@ public class FundMediaService {
                 FundMediaOperationType.DELETE
         );
 
-        log.debug("Exit deleteFundMediaFile");
+        log.debug("Exit deleteFundMediaFile(fundId={}, fundMediaId={})", fundId, fundMediaId);
     }
 
 }

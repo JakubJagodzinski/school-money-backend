@@ -114,17 +114,25 @@ public class Fund {
         return fundStatus.equals(FundStatus.ACTIVE);
     }
 
+    public boolean isFinished() {
+        return fundStatus.equals(FundStatus.FINISHED);
+    }
+
+    public boolean isCancelled() {
+        return fundStatus.equals(FundStatus.CANCELLED);
+    }
+
     public boolean isBlocked() {
         return fundStatus.equals(FundStatus.BLOCKED);
     }
 
-    public void cancel() {
-        fundStatus = FundStatus.CANCELLED;
+    public void finish() {
+        fundStatus = FundStatus.FINISHED;
         endedAt = Instant.now();
     }
 
-    public void finish() {
-        fundStatus = FundStatus.FINISHED;
+    public void cancel() {
+        fundStatus = FundStatus.CANCELLED;
         endedAt = Instant.now();
     }
 

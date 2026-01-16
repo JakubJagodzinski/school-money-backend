@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.childignoredfund;
 
 import com.example.schoolmoney.auth.access.CheckPermission;
+import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.dto.MessageResponseDto;
 import com.example.schoolmoney.user.Permission;
@@ -18,9 +19,14 @@ public class ChildIgnoredFundController {
 
     private final ChildIgnoredFundService childIgnoredFundService;
 
+    private final SecurityUtils securityUtils;
+
     @CheckPermission(Permission.CHILD_FUND_IGNORE)
     @PostMapping("/children/{childId}/funds/ignored")
-    public ResponseEntity<MessageResponseDto> ignoreFundForChild(@PathVariable UUID childId, @RequestParam UUID fundId) {
+    public ResponseEntity<MessageResponseDto> ignoreFundForChild(
+            @PathVariable UUID childId,
+            @RequestParam UUID fundId
+    ) {
         childIgnoredFundService.ignoreFundForChild(childId, fundId);
 
         return ResponseEntity
@@ -30,8 +36,12 @@ public class ChildIgnoredFundController {
 
     @CheckPermission(Permission.CHILD_FUND_UNIGNORE)
     @DeleteMapping("/children/{childId}/funds/{fundId}/ignored")
-    public ResponseEntity<MessageResponseDto> unignoreFundForChild(@PathVariable UUID childId, @PathVariable UUID fundId) {
-        childIgnoredFundService.unignoreFundForChild(childId, fundId);
+    public ResponseEntity<MessageResponseDto> unignoreFundForChild(
+            @PathVariable UUID childId,
+            @PathVariable UUID fundId
+    ) {
+        UUID userId = securityUtils.getCurrentUserId();
+        childIgnoredFundService.unignoreFundForChild(childId, fundId, userId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

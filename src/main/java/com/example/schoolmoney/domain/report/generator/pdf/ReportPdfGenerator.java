@@ -4,8 +4,7 @@ import com.example.schoolmoney.domain.report.dto.ReportData;
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
 import com.lowagie.text.Image;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.*;
 import org.springframework.core.io.InputStreamResource;
 
 import java.awt.*;
@@ -59,13 +58,34 @@ public interface ReportPdfGenerator {
         table.addCell(cell);
     }
 
-    default Image createImage(InputStreamResource imageResource, float width, float height) {
+    default Image createCircularImage(PdfWriter writer, InputStreamResource imageResource, float diameter) {
         try {
             Image image = Image.getInstance(imageResource.getInputStream().readAllBytes());
-            image.scaleToFit(width, height);
-            image.setAlignment(Element.ALIGN_CENTER);
 
-            return image;
+            image.scaleAbsolute(diameter, diameter);
+
+            PdfContentByte cb = writer.getDirectContent();
+            PdfTemplate template = cb.createTemplate(diameter, diameter);
+
+            template.circle(
+                    diameter / 2,
+                    diameter / 2,
+                    diameter / 2
+            );
+            template.clip();
+            template.newPath();
+
+            template.addImage(
+                    image,
+                    diameter,
+                    0,
+                    0,
+                    diameter,
+                    0,
+                    0
+            );
+
+            return Image.getInstance(template);
         } catch (Exception e) {
             return null;
         }

@@ -13,7 +13,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class ParentService {
 
@@ -23,13 +22,16 @@ public class ParentService {
 
     private final SecurityUtils securityUtils;
 
+    private final ParentFinder parentFinder;
+
+    @Transactional(readOnly = true)
     public ParentResponseDto getParent() {
-        log.debug("Enter getParent");
+        log.debug("Enter getParent()");
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
-        log.debug("Exit getParent");
+        log.debug("Exit getParent()");
         return parentMapper.toDto(parent);
     }
 
@@ -38,13 +40,13 @@ public class ParentService {
         log.debug("Enter updateParent(updateParentRequestDto={})", updateParentRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         parentMapper.updateEntityFromDto(updateParentRequestDto, parent);
         parentRepository.save(parent);
         log.info("Parent with userId={} updated", userId);
 
-        log.debug("Exit updateParent");
+        log.debug("Exit updateParent(updateParentRequestDto={})", updateParentRequestDto);
         return parentMapper.toDto(parent);
     }
 

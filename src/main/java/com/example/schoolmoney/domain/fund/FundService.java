@@ -13,7 +13,7 @@ import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationFinder;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.schoolclass.SchoolClass;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassAccessService;
 import com.example.schoolmoney.domain.schoolclass.SchoolClassFinder;
@@ -45,8 +45,6 @@ public class FundService {
 
     private final FundRepository fundRepository;
 
-    private final ParentRepository parentRepository;
-
     private final FundOperationRepository fundOperationRepository;
 
     private final ChildRepository childRepository;
@@ -71,12 +69,14 @@ public class FundService {
 
     private final FundOperationFinder fundOperationFinder;
 
+    private final ParentFinder parentFinder;
+
     @Transactional
     public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) {
         log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(createFundRequestDto.getSchoolClassId());
 
@@ -145,7 +145,7 @@ public class FundService {
         log.debug("Enter getFundById(fundId={})", fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
 
@@ -164,6 +164,7 @@ public class FundService {
         log.debug("Enter getParentCreatedFunds(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Page<Fund> fundPage = fundRepository.findAllByAuthor_UserId(userId, pageable);
 
@@ -183,7 +184,7 @@ public class FundService {
         log.debug("Enter updateFund(fundId={}, updateFundRequestDto={})", fundId, updateFundRequestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
 
@@ -205,10 +206,9 @@ public class FundService {
         log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         Page<Fund> fundPage = fundRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
@@ -231,6 +231,7 @@ public class FundService {
         log.debug("Enter getParentChildrenAllFunds(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
+        parentFinder.assertParentExists(userId);
 
         Page<Fund> parentChildrenFundPage = fundRepository.findAllByParentId(userId, pageable);
 
@@ -313,11 +314,10 @@ public class FundService {
     public Page<FundChildStatusResponseDto> getFundChildrenStatuses(UUID fundId, Pageable pageable) {
         log.debug("Enter getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
 
         Page<Child> childrenPage = childRepository.findAllBySchoolClass_SchoolClassId(fund.getSchoolClass().getSchoolClassId(), pageable);
@@ -334,7 +334,7 @@ public class FundService {
                 })
                 .toList();
 
-        log.debug("Exit getFundChildrenStatuses");
+        log.debug("Exit getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
         return new PageImpl<>(fundChildStatusResponseDtoList, pageable, childrenPage.getTotalElements());
     }
 

@@ -5,11 +5,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface FundMediaRepository extends JpaRepository<FundMedia, UUID> {
 
     Page<FundMedia> findAllByFund_FundId(UUID fundId, Pageable pageable);
+
+    Optional<FundMedia> findByFund_FundIdAndFundMediaId(UUID fundId, UUID fundMediaId);
 
 }

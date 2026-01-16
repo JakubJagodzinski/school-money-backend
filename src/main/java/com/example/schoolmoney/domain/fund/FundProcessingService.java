@@ -8,12 +8,10 @@ import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.fundoperation.FundOperationService;
 import com.example.schoolmoney.domain.fundoperation.FundOperationType;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.email.EmailService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -39,11 +37,11 @@ public class FundProcessingService {
 
     private final SecurityUtils securityUtils;
 
-    private final ParentRepository parentRepository;
-
     private final FundFinder fundFinder;
 
     private final FundOperationRepository fundOperationRepository;
+
+    private final ParentFinder parentFinder;
 
     @Transactional
     public void markFundAsFinished(Fund fund) {
@@ -85,18 +83,17 @@ public class FundProcessingService {
     }
 
     @Transactional
-    public void cancelFund(UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void cancelFund(UUID fundId) throws IllegalStateException {
         log.debug("Enter cancelFund(fundId={})", fundId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsActive(fund);
+        fundAccessService.assertFundIsNotFinishedAndNotCancelled(fund);
 
         List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
 

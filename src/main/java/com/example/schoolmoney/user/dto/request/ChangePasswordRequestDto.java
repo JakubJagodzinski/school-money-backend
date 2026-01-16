@@ -14,8 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @JsonPropertyOrder({
         "current_password",
-        "new_password",
-        "confirmation_password"
+        "new_password"
 })
 public class ChangePasswordRequestDto {
 
@@ -38,15 +37,5 @@ public class ChangePasswordRequestDto {
     @Size(max = 128)
     @JsonProperty("new_password")
     private String newPassword;
-
-    @Schema(
-            description = "Confirmation of the new password, must match exactly with new_password value",
-            example = "newPassword12345",
-            maxLength = 128
-    )
-    @NotBlank
-    @Size(max = 128)
-    @JsonProperty("confirmation_password")
-    private String confirmationPassword;
 
 }

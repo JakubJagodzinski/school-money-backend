@@ -52,8 +52,9 @@ public class FundReportPdfGenerator implements ReportPdfGenerator {
 
             document.add(createTitle("General information"));
 
-            Image fundLogoImage = createImage(fundLogo, 400, 200);
+            Image fundLogoImage = createCircularImage(pdfWriter, fundLogo, 150);
             if (fundLogoImage != null) {
+                fundLogoImage.setAlignment(Image.ALIGN_CENTER);
                 document.add(fundLogoImage);
             }
 

@@ -44,17 +44,13 @@ public class UserService {
     private final EmailDomainProperties emailDomainProperties;
 
     @Transactional
-    public void changePassword(ChangePasswordRequestDto changePasswordRequestDto) throws BadCredentialsException, IllegalArgumentException {
+    public void changePassword(ChangePasswordRequestDto changePasswordRequestDto) throws BadCredentialsException {
         log.debug("Enter changePassword");
 
         User user = securityUtils.getCurrentUser();
 
         if (!passwordEncoder.matches(changePasswordRequestDto.getCurrentPassword(), user.getPassword())) {
             throw new BadCredentialsException(PasswordMessages.WRONG_PASSWORD);
-        }
-
-        if (!changePasswordRequestDto.getNewPassword().equals(changePasswordRequestDto.getConfirmationPassword())) {
-            throw new IllegalArgumentException(PasswordMessages.PASSWORDS_DONT_MATCH);
         }
 
         user.setPassword(passwordEncoder.encode(changePasswordRequestDto.getNewPassword()));

@@ -2,13 +2,12 @@ package com.example.schoolmoney.domain.childavatar;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
 import com.example.schoolmoney.common.constants.messages.domain.AvatarMessages;
-import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildAccessService;
 import com.example.schoolmoney.domain.child.ChildFinder;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.files.FileCategory;
 import com.example.schoolmoney.storage.StorageService;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +22,6 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class ChildAvatarService {
 
@@ -35,11 +33,11 @@ public class ChildAvatarService {
 
     private final SecurityUtils securityUtils;
 
-    private final ParentRepository parentRepository;
-
     private final ChildAccessService childAccessService;
 
     private final ChildFinder childFinder;
+
+    private final ParentFinder parentFinder;
 
     @Transactional
     public void updateChildAvatar(UUID childId, MultipartFile avatarFile) throws EntityNotFoundException {
@@ -48,7 +46,7 @@ public class ChildAvatarService {
         Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         childAccessService.assertCanAccessChild(parent, child);
 
@@ -66,6 +64,7 @@ public class ChildAvatarService {
         log.debug("Exit uploadChildAvatar");
     }
 
+    @Transactional(readOnly = true)
     public InputStreamResource getChildAvatar(UUID childId) throws EntityNotFoundException {
         log.debug("Enter getChildAvatar(childId={})", childId);
 
@@ -83,13 +82,13 @@ public class ChildAvatarService {
     }
 
     @Transactional
-    public void deleteChildAvatar(UUID childId) throws EntityNotFoundException {
+    public void deleteChildAvatar(UUID childId) {
         log.debug("Enter deleteChildAvatar(childId={})", childId);
 
         Child child = childFinder.getByIdOrThrow(childId);
 
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         childAccessService.assertCanAccessChild(parent, child);
 

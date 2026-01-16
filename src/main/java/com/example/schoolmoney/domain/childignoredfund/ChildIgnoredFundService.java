@@ -1,23 +1,20 @@
 package com.example.schoolmoney.domain.childignoredfund;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.ChildMessages;
-import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.common.constants.messages.domain.FundOperationMessages;
 import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildAccessService;
 import com.example.schoolmoney.domain.child.ChildFinder;
 import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.Fund;
+import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundFinder;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.fundoperation.FundOperationType;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,15 +22,12 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class ChildIgnoredFundService {
 
     private final ChildIgnoredFundRepository childIgnoredFundRepository;
 
     private final SecurityUtils securityUtils;
-
-    private final ParentRepository parentRepository;
 
     private final ChildAccessService childAccessService;
 
@@ -43,23 +37,22 @@ public class ChildIgnoredFundService {
 
     private final FundOperationRepository fundOperationRepository;
 
+    private final FundAccessService fundAccessService;
+
+    private final ParentFinder parentFinder;
+
     @Transactional
-    public void ignoreFundForChild(UUID childId, UUID fundId) throws EntityNotFoundException, IllegalStateException, AccessDeniedException {
+    public void ignoreFundForChild(UUID childId, UUID fundId) throws IllegalStateException {
         log.debug("Enter ignoreFundForChild(childId={}, fundId={}", childId, fundId);
 
-        Child child = childFinder.getByIdOrThrow(childId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Child child = childFinder.getByIdOrThrow(childId);
         childAccessService.assertCanAccessChild(parent, child);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
-
-        if (!fund.getSchoolClass().getSchoolClassId().equals(child.getSchoolClass().getSchoolClassId())) {
-            log.warn(FundMessages.FUND_NOT_FOUND);
-            throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
-        }
+        fundAccessService.assertCanViewFund(parent, fund);
 
         ChildIgnoredFundId id = new ChildIgnoredFundId(childId, fundId);
 
@@ -83,25 +76,18 @@ public class ChildIgnoredFundService {
                 .build();
 
         childIgnoredFundRepository.save(childIgnoredFund);
-        log.info("Child ignored fund saved {}", childIgnoredFund);
+        log.info("Child ignored fund saved with id={}", childIgnoredFund.getId());
 
         log.debug("Exit ignoreFundForChild(childId={}, fundId={}", childId, fundId);
     }
 
-    public void unignoreFundForChild(UUID childId, UUID fundId) {
-        UUID userId = securityUtils.getCurrentUserId();
-
-        unignoreFundForChild(childId, fundId, userId);
-    }
-
     @Transactional
-    public void unignoreFundForChild(UUID childId, UUID fundId, UUID parentId) throws EntityNotFoundException, IllegalStateException {
+    public void unignoreFundForChild(UUID childId, UUID fundId, UUID parentId) {
         log.debug("Enter unignoreFundForChild(childId={}, fundId={}, parentId={})", childId, fundId, parentId);
 
+        Parent parent = parentFinder.getByIdOrThrow(parentId);
+
         Child child = childFinder.getByIdOrThrow(childId);
-
-        Parent parent = parentRepository.getReferenceById(parentId);
-
         childAccessService.assertCanAccessChild(parent, child);
 
         childIgnoredFundRepository.deleteByChild_ChildIdAndFund_FundId(childId, fundId);

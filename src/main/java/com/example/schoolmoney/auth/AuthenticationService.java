@@ -64,7 +64,7 @@ public class AuthenticationService {
 
     @Transactional
     public void register(RegisterRequestDto registerRequestDto, Role role) throws IllegalArgumentException, AccessDeniedException {
-        log.debug("Enter register");
+        log.debug("Enter register()");
 
         if (!emailDomainProperties.isEmailDomainAllowed(registerRequestDto.getEmail())) {
             log.warn(UserMessages.EMAIL_DOMAIN_NOT_ALLOWED);
@@ -80,7 +80,7 @@ public class AuthenticationService {
 
         postRegistrationActions(user);
 
-        log.debug("Exit register");
+        log.debug("Exit register()");
     }
 
     private void populateUserCommonFields(User user, Role role, RegisterRequestDto registerRequestDto) {
@@ -111,18 +111,18 @@ public class AuthenticationService {
     }
 
     public void sendVerificationEmail(String email) {
-        log.debug("Enter sendVerificationEmail for email: {}", email);
+        log.debug("Enter sendVerificationEmail(email={})", email);
 
         User user = userRepository.findByEmail(email)
                 .orElse(null);
 
         if (user == null) {
-            log.debug("User with email {} not found", email);
+            log.debug("User with email={} not found", email);
             return;
         }
 
         if (user.isVerified()) {
-            log.debug("User {} is already verified", email);
+            log.debug("User with email={} is already verified", email);
             return;
         }
 
@@ -135,12 +135,12 @@ public class AuthenticationService {
                 user.isNotificationsEnabled()
         );
 
-        log.debug("Exit sendVerificationEmail");
+        log.debug("Exit sendVerificationEmail(email={})", email);
     }
 
     @Transactional
     public void verifyAccount(String token) {
-        log.debug("Enter verifyAccount(token={})", token);
+        log.debug("Enter verifyAccount()");
 
         VerificationToken verificationToken = verificationTokenService.validateToken(token);
 
@@ -155,9 +155,9 @@ public class AuthenticationService {
         User user = verificationToken.getUser();
         user.setVerified(true);
         userRepository.save(user);
-        log.info("User {} verified", user.getEmail());
+        log.info("User with email={} verified", user.getEmail());
 
-        log.debug("Exit verifyAccount");
+        log.debug("Exit verifyAccount()");
     }
 
     @Transactional

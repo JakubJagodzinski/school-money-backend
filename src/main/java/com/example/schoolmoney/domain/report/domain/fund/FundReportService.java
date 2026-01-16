@@ -1,7 +1,6 @@
 package com.example.schoolmoney.domain.report.domain.fund;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
-import com.example.schoolmoney.common.constants.messages.domain.FundMessages;
 import com.example.schoolmoney.domain.fund.Fund;
 import com.example.schoolmoney.domain.fund.FundAccessService;
 import com.example.schoolmoney.domain.fund.FundFinder;
@@ -13,13 +12,12 @@ import com.example.schoolmoney.domain.fundmediaoperation.FundMediaOperationRepos
 import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.parent.Parent;
-import com.example.schoolmoney.domain.parent.ParentRepository;
+import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.report.ReportFilenameGenerator;
 import com.example.schoolmoney.domain.report.domain.fund.dto.FundReportData;
 import com.example.schoolmoney.domain.report.domain.fund.generator.pdf.FundReportPdfGenerator;
 import com.example.schoolmoney.domain.report.dto.ReportDto;
 import com.example.schoolmoney.email.EmailService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -32,13 +30,10 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 @Service
 public class FundReportService {
 
     private final FundOperationRepository fundOperationRepository;
-
-    private final ParentRepository parentRepository;
 
     private final FundReportPdfGenerator fundReportPdfGenerator;
 
@@ -56,17 +51,20 @@ public class FundReportService {
 
     private final FundFinder fundFinder;
 
-    public ReportDto generateFundReport(UUID fundId) throws EntityNotFoundException {
+    private final ParentFinder parentFinder;
+
+    @Transactional(readOnly = true)
+    public ReportDto generateFundReport(UUID fundId) {
         log.debug("Enter generateFundReport(fundId={})", fundId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentRepository.getReferenceById(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
 
-        byte[] fundReport = fundReportPdfGenerator.generateReportPdf(prepareFundReportData(fund));
+        FundReportData fundReportData = prepareFundReportData(fund);
+        byte[] fundReport = fundReportPdfGenerator.generateReportPdf(fundReportData);
 
         ReportDto reportDto = ReportDto
                 .builder()
@@ -83,11 +81,12 @@ public class FundReportService {
                 parent.isNotificationsEnabled()
         );
 
-        log.debug("Exit generateFundReport()");
+        log.debug("Exit generateFundReport(fundId={})", fundId);
         return reportDto;
     }
 
     private FundReportData prepareFundReportData(Fund fund) {
+        log.debug("Enter prepareFundReportData(fund={})", fund);
         UUID fundId = fund.getFundId();
 
         InputStreamResource fundLogo = fundLogoService.getFundLogo(fundId);
@@ -95,6 +94,7 @@ public class FundReportService {
         List<FundChildStatusResponseDto> fundChildrenStatuses = fundService.getFundChildrenStatuses(fundId, Pageable.unpaged()).getContent();
         List<FundMediaOperation> fundMediaOperations = fundMediaOperationRepository.findAllByFundIdOrderByProcessedAtDesc(fundId);
 
+        log.debug("Exit prepareFundReportData(fund={})", fund);
         return FundReportData.builder()
                 .fund(fund)
                 .fundLogo(fundLogo)

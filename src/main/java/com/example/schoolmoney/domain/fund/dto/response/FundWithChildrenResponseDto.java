@@ -27,6 +27,7 @@ import java.util.UUID;
         "created_at",
         "starts_at",
         "ends_at",
+        "ended_at",
         "amount_per_child_in_cents",
         "iban",
         "fund_status",
@@ -57,6 +58,9 @@ public class FundWithChildrenResponseDto {
 
     @JsonProperty("ends_at")
     private Instant endsAt;
+
+    @JsonProperty("ended_at")
+    private Instant endedAt;
 
     @JsonProperty("amount_per_child_in_cents")
     private long amountPerChildInCents;
