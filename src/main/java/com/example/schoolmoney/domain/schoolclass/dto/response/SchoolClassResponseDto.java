@@ -21,6 +21,7 @@ import java.util.UUID;
         "school_class_name",
         "school_class_year",
         "number_of_children",
+        "number_of_parents",
         "number_of_scheduled_funds",
         "number_of_active_funds",
         "number_of_finished_funds",
@@ -46,6 +47,9 @@ public class SchoolClassResponseDto {
 
     @JsonProperty("number_of_children")
     private long numberOfChildren;
+
+    @JsonProperty("number_of_parents")
+    private long numberOfParents;
 
     @JsonProperty("number_of_scheduled_funds")
     private long numberOfScheduledFunds;

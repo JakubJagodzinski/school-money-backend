@@ -14,52 +14,91 @@ public interface FundLogRepository extends JpaRepository<FundLog, Long> {
 
     @Query(
             value = """
-                    SELECT processed_at AS timestamp,
+                    SELECT fo.processed_at AS timestamp,
                            f.title AS fund_title,
                            NULLIF(CONCAT_WS(' ', u.first_name, u.last_name), '') AS parent_full_name,
                            NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), '') AS child_full_name,
-                           amount_in_cents AS amount_in_cents,
-                           fund_operations.currency AS currency,
-                           operation_type AS operation_type,
-                           operation_status AS operation_status,
-                           note AS note
-                    FROM fund_operations
-                    JOIN funds f on fund_operations.fund_id = f.fund_id
-                    LEFT JOIN children c on fund_operations.child_id = c.child_id
-                    JOIN parents p on fund_operations.parent_id = p.parent_id
-                    JOIN users u on p.parent_id = u.user_id
-                    WHERE fund_operations.fund_id = :fund_id
+                           fo.amount_in_cents AS amount_in_cents,
+                           fo.currency AS currency,
+                           fo.operation_type AS operation_type,
+                           fo.operation_status AS operation_status,
+                           fo.note AS note
+                    FROM fund_operations fo
+                    JOIN funds f ON fo.fund_id = f.fund_id
+                    LEFT JOIN children c ON fo.child_id = c.child_id
+                    JOIN parents p ON fo.parent_id = p.parent_id
+                    JOIN users u ON p.parent_id = u.user_id
+                    WHERE (
+                        :fundId IS NOT NULL
+                        AND f.fund_id = :fundId
+                    ) OR (
+                        :fundId IS NULL
+                        AND f.school_class_id = :schoolClassId
+                        AND f.fund_status = :fundStatus
+                    )
+                    
                     UNION ALL
-                    SELECT ignored_at AS timestamp,
+                    
+                    SELECT cif.ignored_at AS timestamp,
                            f.title AS fund_title,
                            NULLIF(CONCAT_WS(' ', u.first_name, u.last_name), '') AS parent_full_name,
                            NULLIF(CONCAT_WS(' ', c.first_name, c.last_name), '') AS child_full_name,
                            NULL AS amount_in_cents,
                            NULL AS currency,
-                           'FUND_REJECTED' AS operation_type,
+                           'FUND_REJECTION' AS operation_type,
                            'SUCCESS' AS operation_status,
                            NULL AS note
-                    FROM child_ignored_funds
-                    JOIN funds f on child_ignored_funds.fund_id = f.fund_id
-                    JOIN children c on child_ignored_funds.child_id = c.child_id
-                    JOIN parents p on c.parent_id = p.parent_id
-                    JOIN users u on p.parent_id = u.user_id
-                    WHERE child_ignored_funds.fund_id = :fund_id
+                    FROM child_ignored_funds cif
+                    JOIN funds f ON cif.fund_id = f.fund_id
+                    JOIN children c ON cif.child_id = c.child_id
+                    JOIN parents p ON c.parent_id = p.parent_id
+                    JOIN users u ON p.parent_id = u.user_id
+                    WHERE (
+                        :fundId IS NOT NULL
+                        AND f.fund_id = :fundId
+                    ) OR (
+                        :fundId IS NULL
+                        AND f.school_class_id = :schoolClassId
+                        AND f.fund_status = :fundStatus
+                    )
                     """,
             countQuery = """
                     SELECT COUNT(*)
                     FROM (
-                        SELECT fund_operation_id::Text AS id
-                        FROM fund_operations
-                        WHERE fund_id = :fund_id
+                        SELECT fo.fund_operation_id
+                        FROM fund_operations fo
+                        JOIN funds f ON fo.fund_id = f.fund_id
+                        WHERE (
+                            :fundId IS NOT NULL
+                            AND f.fund_id = :fundId
+                        ) OR (
+                            :fundId IS NULL
+                            AND f.school_class_id = :schoolClassId
+                            AND f.fund_status = :fundStatus
+                        )
+                    
                         UNION ALL
-                        SELECT (child_id, fund_id)::Text AS id
-                        FROM child_ignored_funds
-                        WHERE fund_id = :fund_id
-                    ) AS combined
+                    
+                        SELECT cif.child_id
+                        FROM child_ignored_funds cif
+                        JOIN funds f ON cif.fund_id = f.fund_id
+                        WHERE (
+                            :fundId IS NOT NULL
+                            AND f.fund_id = :fundId
+                        ) OR (
+                            :fundId IS NULL
+                            AND f.school_class_id = :schoolClassId
+                            AND f.fund_status = :fundStatus
+                        )
+                    ) combined
                     """,
             nativeQuery = true
     )
-    Page<FundLogView> findFundLogs(@Param("fund_id") UUID fundId, Pageable pageable);
+    Page<FundLogView> findFundLogs(
+            @Param("fundId") UUID fundId,
+            @Param("schoolClassId") UUID schoolClassId,
+            @Param("fundStatus") String fundStatus,
+            Pageable pageable
+    );
 
 }

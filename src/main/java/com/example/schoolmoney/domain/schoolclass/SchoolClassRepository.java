@@ -3,6 +3,8 @@ package com.example.schoolmoney.domain.schoolclass;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,5 +17,12 @@ public interface SchoolClassRepository extends JpaRepository<SchoolClass, UUID> 
     Optional<SchoolClass> findByInvitationCode(String invitationCode);
 
     Page<SchoolClass> findAllByTreasurer_UserIdOrSchoolClassIdIn(UUID treasurerId, List<UUID> schoolClassId, Pageable pageable);
+
+    @Query("""
+            SELECT COUNT(DISTINCT c.parent.userId)
+            FROM Child c
+            WHERE c.schoolClass.schoolClassId = :schoolClassId
+            """)
+    long countSchoolClassParents(@Param("schoolClassId") UUID schoolClassId);
 
 }

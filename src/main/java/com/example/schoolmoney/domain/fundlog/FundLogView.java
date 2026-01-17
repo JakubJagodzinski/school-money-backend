@@ -12,7 +12,7 @@ public interface FundLogView {
 
     String getChild_full_name();
 
-    Double getAmount_in_cents();
+    Long getAmount_in_cents();
 
     String getCurrency();
 

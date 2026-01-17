@@ -70,8 +70,11 @@ public class SchoolClassService {
         schoolClassRepository.save(schoolClass);
         log.info("School class with id={} created", schoolClass.getSchoolClassId());
 
+        SchoolClassResponseDto schoolClassResponseDto = schoolClassMapper.toDto(schoolClass);
+        updateSchoolClassStatistics(schoolClassResponseDto);
+
         log.debug("Exit createSchoolClass(createSchoolClassRequestDto={})", createSchoolClassRequestDto);
-        return schoolClassMapper.toDto(schoolClass);
+        return schoolClassResponseDto;
     }
 
     @Transactional(readOnly = true)
@@ -80,8 +83,11 @@ public class SchoolClassService {
 
         Page<SchoolClass> schoolClassPage = schoolClassRepository.findAll(pageable);
 
+        Page<SchoolClassResponseDto> schoolClassResponseDtoPage = schoolClassPage.map(schoolClassMapper::toDto);
+        schoolClassResponseDtoPage.forEach(this::updateSchoolClassStatistics);
+
         log.debug("Exit getAllSchoolClasses(pageable={})", pageable);
-        return schoolClassPage.map(schoolClassMapper::toDto);
+        return schoolClassResponseDtoPage;
     }
 
     @Transactional(readOnly = true)
@@ -108,11 +114,10 @@ public class SchoolClassService {
     public Page<ChildWithParentInfoResponseDto> getSchoolClassAllChildren(UUID schoolClassId, Pageable pageable) throws EntityNotFoundException {
         log.debug("Enter getSchoolClassAllChildren(schoolClassId={}, pageable={})", schoolClassId, pageable);
 
-        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
         Page<Child> schoolClassChildren = childRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
@@ -129,6 +134,9 @@ public class SchoolClassService {
 
         long numberOfChildren = childRepository.countBySchoolClass_SchoolClassId(schoolClassId);
         schoolClassResponseDto.setNumberOfChildren(numberOfChildren);
+
+        long numberOfParents = schoolClassRepository.countSchoolClassParents(schoolClassId);
+        schoolClassResponseDto.setNumberOfParents(numberOfParents);
 
         long numberOfScheduledFunds = fundRepository.countBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, FundStatus.SCHEDULED);
         schoolClassResponseDto.setNumberOfScheduledFunds(numberOfScheduledFunds);
@@ -180,8 +188,11 @@ public class SchoolClassService {
         SchoolClass updatedSchoolClass = schoolClassRepository.save(schoolClass);
         log.info("School class with id={} updated successfully", updatedSchoolClass.getSchoolClassId());
 
+        SchoolClassResponseDto schoolClassResponseDto = schoolClassMapper.toDto(updatedSchoolClass);
+        updateSchoolClassStatistics(schoolClassResponseDto);
+
         log.debug("Exit updateSchoolClass(schoolClassId={}, updateSchoolClassRequestDto={})", schoolClassId, updateSchoolClassRequestDto);
-        return schoolClassMapper.toDto(updatedSchoolClass);
+        return schoolClassResponseDto;
     }
 
     @Transactional
@@ -196,11 +207,11 @@ public class SchoolClassService {
         schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
         schoolClass.setInvitationCode(InvitationCodeGenerator.generate());
-        schoolClassRepository.save(schoolClass);
-        log.info("Invitation code regenerated for school class with id={}", schoolClass.getSchoolClassId());
+        SchoolClass savedSchoolClass = schoolClassRepository.save(schoolClass);
+        log.info("Invitation code regenerated for school class with id={}", schoolClassId);
 
         log.debug("Exit regenerateInvitationCode(schoolClassId={})", schoolClassId);
-        return schoolClassMapper.toInvitationCodeDto(schoolClass);
+        return schoolClassMapper.toInvitationCodeDto(savedSchoolClass);
     }
 
 }
