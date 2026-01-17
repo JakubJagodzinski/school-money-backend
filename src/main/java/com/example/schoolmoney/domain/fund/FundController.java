@@ -61,12 +61,14 @@ public class FundController {
     })
     @CheckPermission(Permission.FUND_CREATE)
     @PostMapping("/funds")
-    public ResponseEntity<FundResponseDto> createFund(@Valid @RequestBody CreateFundRequestDto createFundRequestDto) {
-        FundResponseDto fundResponseDto = fundService.createFund(createFundRequestDto);
+    public ResponseEntity<FundResponseDto> createFund(
+            @Valid @RequestBody CreateFundRequestDto requestDto
+    ) {
+        FundResponseDto responseDto = fundService.createFund(requestDto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(fundResponseDto);
+                .body(responseDto);
     }
 
     @CheckPermission(Permission.FUND_READ)

@@ -51,23 +51,6 @@ public class Fund {
     @Column(name = "description", length = 1_000)
     private String description;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @NotNull
-    @Column(name = "starts_at", nullable = false, updatable = false)
-    private Instant startsAt;
-
-    @NotNull
-    @Column(name = "ends_at", nullable = false)
-    private Instant endsAt;
-
-    @Column(name = "ended_at")
-    private Instant endedAt;
-
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-
     @NotNull
     @Min(0) // allow "free" funds
     @Column(name = "amount_per_child_in_cents", nullable = false, updatable = false)
@@ -84,25 +67,43 @@ public class Fund {
     private String iban;
 
     @NotNull
+    @Column(name = "starts_at", nullable = false, updatable = false)
+    private Instant startsAt;
+
+    @NotNull
+    @Column(name = "ends_at", nullable = false)
+    private Instant endsAt;
+
+    @Column(name = "ended_at")
+    private Instant endedAt;
+
+    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "fund_status", nullable = false)
     private FundStatus fundStatus;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {
         Instant now = Instant.now();
 
-        this.createdAt = now;
         if (startsAt == null) {
             this.startsAt = now;
         }
-        this.updatedAt = now;
 
-        if (now.isAfter(startsAt)) {
-            fundStatus = FundStatus.ACTIVE;
-        } else {
+        if (now.isBefore(startsAt)) {
             fundStatus = FundStatus.SCHEDULED;
+        } else {
+            fundStatus = FundStatus.ACTIVE;
         }
+
+        this.createdAt = now;
+        this.updatedAt = now;
     }
 
     @PreUpdate

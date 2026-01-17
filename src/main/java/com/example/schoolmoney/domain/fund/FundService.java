@@ -72,36 +72,34 @@ public class FundService {
     private final ParentFinder parentFinder;
 
     @Transactional
-    public FundResponseDto createFund(CreateFundRequestDto createFundRequestDto) {
-        log.debug("Enter createFund(createFundRequestDto={})", createFundRequestDto);
+    public FundResponseDto createFund(CreateFundRequestDto requestDto) {
+        log.debug("Enter createFund(requestDto={})", requestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentFinder.getByIdOrThrow(userId);
 
-        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(createFundRequestDto.getSchoolClassId());
-
+        SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(requestDto.getSchoolClassId());
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
         schoolClassAccessService.assertCanEditSchoolClass(parent, schoolClass);
 
-        Fund fund = Fund
-                .builder()
+        Fund fund = Fund.builder()
                 .author(parent)
                 .schoolClass(schoolClass)
-                .amountPerChildInCents(createFundRequestDto.getAmountPerChildInCents())
+                .amountPerChildInCents(requestDto.getAmountPerChildInCents())
                 .currency(financeConfiguration.getCurrency())
-                .title(createFundRequestDto.getTitle())
-                .description(createFundRequestDto.getDescription())
-                .startsAt(createFundRequestDto.getStartsAt())
-                .endsAt(createFundRequestDto.getEndsAt())
+                .title(requestDto.getTitle())
+                .description(requestDto.getDescription())
+                .startsAt(requestDto.getStartsAt())
+                .endsAt(requestDto.getEndsAt())
                 .iban(IbanUtil.generateRandomPlIban())
                 .build();
 
         Fund savedFund = fundRepository.save(fund);
-        log.info("Fund {} saved", savedFund.getFundId());
+        log.info("Fund saved with id={}", savedFund.getFundId());
 
-        FundResponseDto fundResponseDto = fundMapper.toDto(savedFund);
-        fundResponseDto.setFundProgress(countFundProgress(savedFund.getFundId()));
-        fundResponseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(savedFund.getFundId()));
+        FundResponseDto responseDto = fundMapper.toDto(savedFund);
+        responseDto.setFundProgress(countFundProgress(savedFund.getFundId()));
+        responseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(savedFund.getFundId()));
 
         TransactionSynchronizationManager.registerSynchronization(
                 new TransactionSynchronization() {
@@ -116,8 +114,8 @@ public class FundService {
                 }
         );
 
-        log.debug("Exit createFund");
-        return fundResponseDto;
+        log.debug("Enter createFund(requestDto={})", requestDto);
+        return responseDto;
     }
 
     private void sendFundCreatedEmailsToParents(String authorFullName, String fundTitle, SchoolClass schoolClass) {
