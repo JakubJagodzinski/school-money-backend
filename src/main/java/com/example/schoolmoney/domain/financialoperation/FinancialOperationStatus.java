@@ -4,6 +4,7 @@ public enum FinancialOperationStatus {
 
     PENDING,
     SUCCESS,
-    FAILED
+    FAILED,
+    EXPIRED
 
 }

@@ -262,11 +262,16 @@ public class WalletService {
                 );
                 break;
             case "payment_intent.payment_failed":
-            case "checkout.session.expired":
                 log.warn("Payment failed");
 
                 walletOperation.setProcessedAt(Instant.now());
                 walletOperation.setOperationStatus(FinancialOperationStatus.FAILED);
+                break;
+            case "checkout.session.expired":
+                log.warn("Session expired");
+
+                walletOperation.setProcessedAt(Instant.now());
+                walletOperation.setOperationStatus(FinancialOperationStatus.EXPIRED);
                 break;
             default:
                 log.warn("Unhandled payment event type: {}", paymentNotificationDto.getEventType());
