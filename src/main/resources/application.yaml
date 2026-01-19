@@ -105,3 +105,7 @@ minio:
 joke:
   api:
     url: ${JOKE_API_URL}
+
+springdoc:
+  swagger-ui:
+    persist-authorization: true
