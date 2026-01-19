@@ -28,7 +28,7 @@ public class VerificationLinkService {
     public String buildResetPasswordLink(String verificationToken) {
         String tokenEncoded = URLEncoder.encode(verificationToken, StandardCharsets.UTF_8);
 
-        return serverProperties.getPublicAddress() + "/api/v1/password-reset?token=" + tokenEncoded;
+        return serverProperties.getPublicAddress() + "/api/v1/passwords/reset?token=" + tokenEncoded;
     }
 
 }

@@ -58,7 +58,7 @@ public class SuperAdminController {
             )
     })
     @CheckPermission(Permission.ADMIN_ACCOUNT_CREATE)
-    @PostMapping("/users/admins")
+    @PostMapping("/super-admin/users/admins")
     public ResponseEntity<MessageResponseDto> createAdminAccount(@RequestParam Role role, @Valid @RequestBody RegisterRequestDto registerRequestDto) throws IllegalArgumentException {
         if (!role.isAdminRole()) {
             throw new IllegalArgumentException(UserMessages.USER_ROLE_IS_NOT_ADMIN_ROLE);

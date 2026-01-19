@@ -19,13 +19,13 @@ import java.util.UUID;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/v1")
 public class AdminController {
 
     private final AdminService adminService;
 
     @CheckPermission(Permission.USER_BLOCK)
-    @PostMapping("/users/{userId}/block")
+    @PostMapping("/admin/users/{userId}/block")
     public ResponseEntity<MessageResponseDto> blockUser(@PathVariable UUID userId, @Valid @RequestBody BlockUserRequestDto blockUserRequestDto) {
         adminService.blockUser(userId, blockUserRequestDto);
 
@@ -35,7 +35,7 @@ public class AdminController {
     }
 
     @CheckPermission(Permission.USER_UNBLOCK)
-    @PostMapping("/users/{userId}/unblock")
+    @PostMapping("/admin/users/{userId}/unblock")
     public ResponseEntity<MessageResponseDto> unblockUser(@PathVariable UUID userId, @Valid @RequestBody UnblockUserRequestDto unblockUserRequestDto) {
         adminService.unblockUser(userId, unblockUserRequestDto);
 
@@ -45,7 +45,7 @@ public class AdminController {
     }
 
     @CheckPermission(Permission.FUND_BLOCK)
-    @PostMapping("/funds/{fundId}/block")
+    @PostMapping("/admin/funds/{fundId}/block")
     public ResponseEntity<MessageResponseDto> blockFund(@PathVariable UUID fundId) {
         adminService.blockFund(fundId);
 
@@ -55,7 +55,7 @@ public class AdminController {
     }
 
     @CheckPermission(Permission.FUND_UNBLOCK)
-    @PostMapping("/funds/{fundId}/unblock")
+    @PostMapping("/admin/funds/{fundId}/unblock")
     public ResponseEntity<MessageResponseDto> unblockFund(@PathVariable UUID fundId) {
         adminService.unblockFund(fundId);
 

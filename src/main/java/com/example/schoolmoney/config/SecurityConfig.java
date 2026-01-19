@@ -26,7 +26,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_API_ENDPOINTS = {
             "/api/v1/app/**",
-            "/api/v1/password-reset/**",
+            "/api/v1/passwords/reset/**",
             "/api/v1/payments/webhook/**",
             "/api/v1/payments/status/**",
             "/api/v1/users/email/change/confirm",

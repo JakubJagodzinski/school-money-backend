@@ -24,7 +24,7 @@ public class DailyJokeController {
     private final DailyJokeJob dailyJokeJob;
 
     @CheckPermission(Permission.RANDOM_JOKE_READ)
-    @GetMapping("/joke")
+    @GetMapping("/jokes")
     public ResponseEntity<RandomJokeResponseDto> getRandomJoke() {
         String joke = jokeService.getRandomJoke();
 
@@ -34,7 +34,7 @@ public class DailyJokeController {
     }
 
     @CheckPermission(Permission.DAILY_JOKE_TEST)
-    @PostMapping("/daily-joke/test")
+    @PostMapping("/jokes/test")
     public ResponseEntity<Void> testDailyJokeEvent() {
         dailyJokeJob.run();
 
@@ -44,7 +44,7 @@ public class DailyJokeController {
     }
 
     @CheckPermission(Permission.DAILY_JOKE_TURN_OFF)
-    @PostMapping("/daily-joke/status/off")
+    @PostMapping("/jokes/status/off")
     public ResponseEntity<DailyJokeJobStatusResponseDto> turnOffDailyJokeEvent() {
         JobStatus status = dailyJokeJob.setJobStatus(JobStatus.OFF);
 
@@ -56,7 +56,7 @@ public class DailyJokeController {
     }
 
     @CheckPermission(Permission.DAILY_JOKE_TURN_ON)
-    @PostMapping("/daily-joke/status/on")
+    @PostMapping("/jokes/status/on")
     public ResponseEntity<DailyJokeJobStatusResponseDto> turnOnDailyJokeEvent() {
         JobStatus status = dailyJokeJob.setJobStatus(JobStatus.ON);
 
@@ -67,7 +67,7 @@ public class DailyJokeController {
                         .build());
     }
 
-    @GetMapping("/daily-joke/status")
+    @GetMapping("/jokes/status")
     public ResponseEntity<DailyJokeJobStatusResponseDto> getDailyJokeEventStatus() {
         JobStatus status = dailyJokeJob.getJobStatus();
 

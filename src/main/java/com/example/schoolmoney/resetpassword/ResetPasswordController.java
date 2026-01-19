@@ -22,7 +22,7 @@ public class ResetPasswordController {
 
     private final ResetPasswordService resetPasswordService;
 
-    @PostMapping("/password-reset/request")
+    @PostMapping("/passwords/reset/request")
     public ResponseEntity<MessageResponseDto> requestPasswordReset(@Valid @RequestBody RequestPasswordResetRequestDto requestPasswordResetRequestDto) {
         resetPasswordService.requestPasswordReset(requestPasswordResetRequestDto);
 
@@ -31,7 +31,7 @@ public class ResetPasswordController {
                 .body(new MessageResponseDto(ResetPasswordTokenMessages.PASSWORD_RESET_REQUESTED));
     }
 
-    @PostMapping("/password-reset")
+    @PostMapping("/passwords/reset")
     public ResponseEntity<MessageResponseDto> resetPassword(@Valid @RequestBody ResetPasswordRequestDto resetPasswordRequestDto) {
         resetPasswordService.resetPassword(resetPasswordRequestDto);
 
