@@ -15,24 +15,6 @@ public class AuthTokenService {
 
     private final AuthTokenRepository authTokenRepository;
 
-    public boolean isActiveAccessToken(String authToken) {
-        log.debug("Enter isValidAccessToken");
-
-        AuthToken databaseAuthToken = authTokenRepository.findByAuthToken(authToken).orElse(null);
-
-        if (databaseAuthToken == null) {
-            return false;
-        }
-
-        boolean isAccessToken = databaseAuthToken.getAuthTokenType() == AuthTokenType.ACCESS;
-        boolean isValid = isAccessToken && !databaseAuthToken.isRevoked();
-
-        log.debug("isAccessToken: {}, isValid: {}", isAccessToken, isValid);
-
-        log.debug("Exit isValidAccessToken");
-        return isValid;
-    }
-
     @Transactional
     public void saveAuthToken(User user, String tokenValue, AuthTokenType authTokenType) {
         AuthToken authToken = AuthToken

@@ -180,7 +180,6 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        authTokenService.saveAuthToken(user, jwtToken, AuthTokenType.ACCESS);
         authTokenService.saveAuthToken(user, refreshToken, AuthTokenType.REFRESH);
 
         return AuthenticationResponseDto.builder()
@@ -226,7 +225,6 @@ public class AuthenticationService {
         String newAccessToken = jwtService.generateAccessToken(user);
         String newRefreshToken = jwtService.generateRefreshToken(user);
 
-        authTokenService.saveAuthToken(user, newAccessToken, AuthTokenType.ACCESS);
         authTokenService.saveAuthToken(user, newRefreshToken, AuthTokenType.REFRESH);
 
         return RefreshTokenResponseDto.builder()

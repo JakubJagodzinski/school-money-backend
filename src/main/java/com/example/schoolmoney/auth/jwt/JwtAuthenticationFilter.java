@@ -1,6 +1,5 @@
 package com.example.schoolmoney.auth.jwt;
 
-import com.example.schoolmoney.auth.authtoken.AuthTokenService;
 import com.example.schoolmoney.common.constants.SecurityConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,8 +25,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
 
     private final UserDetailsService userDetailsService;
-
-    private final AuthTokenService authTokenService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -58,10 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
             boolean isJwtValid = jwtService.isJwtValid(jwt, userDetails);
-            boolean isAccessTokenValid = authTokenService.isActiveAccessToken(jwt);
             boolean isAccountNonLocked = userDetails.isAccountNonLocked();
-            boolean isAccountNonExpired = userDetails.isAccountNonExpired(); // always true for now, reserved for future account expiry feature
-            if (isJwtValid && isAccessTokenValid && isAccountNonLocked && isAccountNonExpired) {
+            boolean isAccountNonExpired = userDetails.isAccountNonExpired();
+            if (isJwtValid && isAccountNonLocked && isAccountNonExpired) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
