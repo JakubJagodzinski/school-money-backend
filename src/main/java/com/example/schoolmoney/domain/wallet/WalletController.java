@@ -192,56 +192,58 @@ public class WalletController {
                 .body(paymentSessionDto);
     }
 
-//    @Operation(
-//            summary = "Withdraw funds from the wallet",
-//            description = """
-//                    Withdraws funds from the wallet via payment provider to real account with IBAN set in wallet info.
-//                    """
-//    )
-//    @ApiResponses({
-//            @ApiResponse(
-//                    responseCode = "200",
-//                    description = "Wallet withdrawal operation processed successfully",
-//                    content = @Content(
-//                            mediaType = "application/json",
-//                            schema = @Schema(implementation = MessageResponseDto.class)
-//                    )
-//            ),
-//            @ApiResponse(
-//                    responseCode = "400",
-//                    description = "Bad request - Invalid withdrawal amount",
-//                    content = @Content(
-//                            mediaType = "application/json",
-//                            schema = @Schema(implementation = MessageResponseDto.class)
-//                    )
-//            ),
-//            @ApiResponse(
-//                    responseCode = "401",
-//                    description = "Unauthorized",
-//                    content = @Content()
-//            ),
-//            @ApiResponse(
-//                    responseCode = "409",
-//                    description = "Conflict - Insufficient funds available for withdrawal",
-//                    content = @Content(
-//                            mediaType = "application/json",
-//                            schema = @Schema(implementation = MessageResponseDto.class)
-//                    )
-//            )
-//    })
-//    @CheckPermission(Permission.WALLET_WITHDRAW)
-//    @PostMapping("/wallets/withdraw")
-//    public ResponseEntity<MessageResponseDto> initializeWalletWithdrawal(@RequestParam long amountInCents) {
-//        walletService.initializeWalletWithdrawal(amountInCents);
-//
-//        return ResponseEntity
-//                .status(HttpStatus.OK)
-//                .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_OPERATION_INITIALIZED_SUCCESSFULLY));
-//    }
+    @Operation(
+            summary = "Withdraw funds from the wallet",
+            description = """
+                    Withdraws funds from the wallet via payment provider to real account with IBAN set in wallet info.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Wallet withdrawal operation processed successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Bad request - Invalid withdrawal amount",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized",
+                    content = @Content()
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Conflict - Insufficient funds available for withdrawal",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponseDto.class)
+                    )
+            )
+    })
+    @CheckPermission(Permission.WALLET_WITHDRAWAL_INITIALIZE)
+    @PostMapping("/wallets/withdraw/initialize")
+    public ResponseEntity<MessageResponseDto> initializeWalletWithdrawal(
+            @Valid @RequestBody PerformWalletWithdrawalRequestDto requestDto
+    ) {
+        walletService.initializeWalletWithdrawal(requestDto);
 
-    @CheckPermission(Permission.WALLET_WITHDRAW)
-    @PostMapping("/wallets/withdraw")
-    public ResponseEntity<MessageResponseDto> performWalletWithdrawal(
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new MessageResponseDto(WalletMessages.WITHDRAWAL_OPERATION_INITIALIZED_SUCCESSFULLY));
+    }
+
+    @CheckPermission(Permission.WALLET_WITHDRAWAL_INTERNAL_PERFORM)
+    @PostMapping("/wallets/withdraw/internal")
+    public ResponseEntity<MessageResponseDto> performWalletInternalWithdrawal(
             @Valid @RequestBody PerformWalletWithdrawalRequestDto requestDto
     ) {
         walletService.performWalletWithdrawal(requestDto);

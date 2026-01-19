@@ -302,13 +302,15 @@ public class WalletService {
     }
 
     @Transactional
-    public void initializeWalletWithdrawal(long amountInCents) {
-        log.debug("Enter initializeWalletWithdrawal(amountInCents={})", amountInCents);
+    public void initializeWalletWithdrawal(PerformWalletWithdrawalRequestDto requestDto) {
+        log.debug("Enter initializeWalletWithdrawal(requestDto={})", requestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
         parentFinder.assertParentExists(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
+
+        long amountInCents = requestDto.getAmountInCents();
 
         validateWalletWithdrawal(wallet, amountInCents);
 
@@ -335,7 +337,7 @@ public class WalletService {
         pendingOperation.setExternalOperationId(payoutId);
         walletOperationRepository.save(pendingOperation);
 
-        log.debug("Exit initializeWalletWithdrawal(amountInCents={})", amountInCents);
+        log.debug("Enter initializeWalletWithdrawal(requestDto={})", requestDto);
     }
 
     private PayoutRequestDto buildPayoutRequest(UUID userId, WalletOperation pendingOperation, String iban) {

@@ -102,7 +102,8 @@ public enum Permission {
     FINANCIAL_OPERATION_HISTORY_READ("financial:operation:history:read"),
 
     WALLET_TOP_UP("wallet:top_up"),
-    WALLET_WITHDRAW("wallet:withdraw"),
+    WALLET_WITHDRAWAL_INITIALIZE("wallet:withdrawal:initialize"),
+    WALLET_WITHDRAWAL_INTERNAL_PERFORM("wallet:withdrawal:internal:perform"),
 
     ADMIN_ACCOUNT_CREATE("admin:account:create"),
 
