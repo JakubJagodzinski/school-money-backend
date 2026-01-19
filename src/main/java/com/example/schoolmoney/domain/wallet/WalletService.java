@@ -419,6 +419,7 @@ public class WalletService {
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .providerType(ProviderType.INTERNAL)
                 .iban(IbanUtil.maskIban(wallet.getWithdrawalIban()))
+                .processedAt(Instant.now())
                 .build();
 
         walletOperationRepository.save(walletOperation);
