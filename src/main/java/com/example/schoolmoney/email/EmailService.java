@@ -8,6 +8,7 @@ import com.example.schoolmoney.email.contentproviders.fund.*;
 import com.example.schoolmoney.email.contentproviders.misc.DailyJokeEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.misc.WeekendEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.schoolclass.SchoolClassReportEmailContentProvider;
+import com.example.schoolmoney.email.contentproviders.system.NewApplicationVersionEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.wallet.WalletTopUpEmailContentProvider;
 import com.example.schoolmoney.email.contentproviders.wallet.WalletWithdrawalEmailContentProvider;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Currency;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -228,6 +230,23 @@ public class EmailService {
                 .build();
 
         sendEmail(to, firstName, emailContentProvider, userNotificationsEnabled);
+    }
+
+    public void sendNewApplicationVersionEmail(String to, String firstName, String version, List<String> changelog, boolean userNotificationEnabled) {
+        EmailContentProvider emailContentProvider = NewApplicationVersionEmailContentProvider.builder()
+                .applicationVersion(version)
+                .changelog(changelog)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, userNotificationEnabled);
+    }
+
+    public void sendLongAbsenceEmail(String to, String firstName, Instant lastOnlineAt, boolean userNotificationEnabled) {
+        EmailContentProvider emailContentProvider = LongAbsenceEmailContentProvider.builder()
+                .lastOnlineAt(lastOnlineAt)
+                .build();
+
+        sendEmail(to, firstName, emailContentProvider, userNotificationEnabled);
     }
 
 }

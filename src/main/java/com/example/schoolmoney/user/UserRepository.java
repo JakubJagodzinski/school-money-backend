@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     List<User> findAllByIsBlockedTrueAndBlockedUntilIsNotNullAndBlockedUntilBefore(Instant now);
 
+    List<User> findAllByLastLoggedInBefore(Instant cutoffDate);
+
 }

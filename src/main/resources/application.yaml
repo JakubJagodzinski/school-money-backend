@@ -58,6 +58,9 @@ stripe:
   payoutWebhookSecret: ${STRIPE_PAYOUT_WEBHOOK_SECRET}
 
 app:
+  update:
+    secret-key: ${APP_UPDATE_SECRET_KEY}
+
   super-admin:
     first-name: ${SUPER_ADMIN_FIRST_NAME}
     last-name: ${SUPER_ADMIN_LAST_NAME}
