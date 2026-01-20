@@ -29,6 +29,12 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
+        log.info("CORS configuration initialized: allowedOrigins={}, allowedMethods={}, allowedHeaders={}",
+                corsProperties.getAllowedOriginsList(),
+                corsProperties.getAllowedMethodsList(),
+                corsProperties.getAllowedHeadersList()
+        );
+
         return source;
     }
 
