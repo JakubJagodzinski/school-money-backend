@@ -25,10 +25,10 @@ public class VerificationLinkService {
         return serverProperties.getPublicAddress() + "/api/v1/users/email/change/confirm?token=" + tokenEncoded;
     }
 
-    public String buildResetPasswordLink(String verificationToken) {
+    public String buildResetPasswordLink(String redirectUrl, String verificationToken) {
         String tokenEncoded = URLEncoder.encode(verificationToken, StandardCharsets.UTF_8);
 
-        return serverProperties.getPublicAddress() + "/api/v1/passwords/reset?token=" + tokenEncoded;
+        return redirectUrl + "?token=" + tokenEncoded;
     }
 
 }

@@ -70,6 +70,9 @@ app:
   server:
     public-address: ${SERVER_PUBLIC_ADDRESS}
 
+  password-reset:
+    allowed-redirect-urls: ${PASSWORD_RESET_ALLOWED_URLS}
+
   cors:
     allowed-origins: ${ALLOWED_ORIGINS:*}
     allowed-methods: ${ALLOWED_METHODS:GET,POST,PUT,PATCH,DELETE,OPTIONS}

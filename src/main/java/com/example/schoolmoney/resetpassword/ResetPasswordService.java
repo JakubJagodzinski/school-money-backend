@@ -30,21 +30,30 @@ public class ResetPasswordService {
 
     private final VerificationTokenRepository verificationTokenRepository;
 
-    @Transactional
-    public void requestPasswordReset(RequestPasswordResetRequestDto requestPasswordResetRequestDto) {
-        log.debug("Enter requestPasswordReset for user {}", requestPasswordResetRequestDto.getEmail());
+    private final ResetPasswordProperties resetPasswordProperties;
 
-        User user = userRepository.findByEmail(requestPasswordResetRequestDto.getEmail())
+    @Transactional
+    public void requestPasswordReset(RequestPasswordResetRequestDto requestDto) throws IllegalArgumentException {
+        log.debug("Enter requestPasswordReset(email={}, redirectUrl={})", requestDto.getEmail(), requestDto.getRedirectUrl());
+
+        User user = userRepository.findByEmail(requestDto.getEmail())
                 .orElse(null);
 
         if (user == null) {
-            log.error("User with email {} not found", requestPasswordResetRequestDto.getEmail());
+            log.error("User with email {} not found", requestDto.getEmail());
             return;
+        }
+
+        String redirectUrl = requestDto.getRedirectUrl();
+
+        if (!resetPasswordProperties.isRedirectUrlAllowed(redirectUrl)) {
+            log.warn("Redirect url {} is not allowed", redirectUrl);
+            throw new IllegalArgumentException("Redirect url is not allowed");
         }
 
         String verificationToken = verificationTokenService.createVerificationToken(user, TokenType.PASSWORD_RESET);
 
-        String resetPasswordRedirectUrl = verificationLinkService.buildResetPasswordLink(verificationToken);
+        String resetPasswordRedirectUrl = verificationLinkService.buildResetPasswordLink(redirectUrl, verificationToken);
 
         emailService.sendPasswordResetEmail(
                 user.getEmail(),
@@ -52,7 +61,8 @@ public class ResetPasswordService {
                 resetPasswordRedirectUrl,
                 user.isNotificationsEnabled()
         );
-        log.debug("Exit requestPasswordReset");
+
+        log.debug("Exit requestPasswordReset(email={}, redirectUrl={})", requestDto.getEmail(), requestDto.getRedirectUrl());
     }
 
     @Transactional
