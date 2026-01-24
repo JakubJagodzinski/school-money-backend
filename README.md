@@ -45,6 +45,7 @@ canceled.
 # System architecture
 
 The application follows a modular backend architecture built with Java Spring Boot.
+
 - Each module encapsulates specific business logic.
 - PostgreSQL stores persistent data.
 - MinIO handles file storage.
@@ -178,6 +179,7 @@ From `.env.example` create an `.env` file in the root directory and define the f
 | `JWT_EXPIRATION`                  | JWT token expiration in milliseconds         | `86400000`                                      |
 | `JWT_REFRESH_TOKEN_EXPIRATION`    | JWT refresh token expiration in milliseconds | `604800000`                                     |
 | `SERVER_PUBLIC_ADDRESS`           | Backend public URL                           | `http://localhost:8090`                         |
+| `PASSWORD_RESET_ALLOWED_URLS`     | Urls allwoed as redirect url for links       | `http://localhost:8090`                         |
 | `ALLOWED_ORIGINS`                 | Allowed origins                              | `http://localhost:8090`                         |
 | `ALLOWED_METHODS`                 | Allowed methods                              | `GET,POST,PATCH,DELETE,OPTIONS`                 |
 | `ALLOWED_HEADERS`                 | Allowed headers                              | `*`                                             |
@@ -200,6 +202,7 @@ From `.env.example` create an `.env` file in the root directory and define the f
 | `SUPER_ADMIN_PASSWORD`            | Password for the super admin                 | `supersecurepassword`                           |
 | `FINANCES_CURRENCY`               | Default currency for finances                | `PLN`                                           |
 | `FINANCES_STARTING_BALANCE`       | Default starting balance for new accounts    | `1000000`                                       |
+| `APP_UPDATE_SECRET_KEY`           | Secret to authorize on app update endpoint   | `23ed76a...`                                    |
 
 ---
 
