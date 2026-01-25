@@ -203,6 +203,8 @@ From `.env.example` create an `.env` file in the root directory and define the f
 | `FINANCES_CURRENCY`               | Default currency for finances                | `PLN`                                           |
 | `FINANCES_STARTING_BALANCE`       | Default starting balance for new accounts    | `1000000`                                       |
 | `APP_UPDATE_SECRET_KEY`           | Secret to authorize on app update endpoint   | `23ed76a...`                                    |
+| `PAYMENT_SUCCESS_REDIRECT_URL`    | Default payment success reditect url         | `http://localhost:9000`                         |
+| `PAYMENT_CANCEL_REDIRECT_URL`     | Default payment cancel reditect url          | `http://localhost:9000`                         |
 
 ---
 
