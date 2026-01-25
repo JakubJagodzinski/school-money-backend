@@ -73,11 +73,13 @@ public class ChildReportPdfGenerator implements ReportPdfGenerator {
         table.setWidthPercentage(100);
         table.setSpacingBefore(10);
 
+        String schoolClassName = child.getSchoolClass() != null ? child.getSchoolClass().getSchoolClassName() : "Not assigned";
+
         addRow(table, "First name", child.getFirstName());
         addRow(table, "Last name", child.getLastName());
         addRow(table, "Birth date", child.getBirthDate().toString());
         addRow(table, "Parent", child.getParent().getFullName());
-        addRow(table, "School class", child.getSchoolClass().getFullName());
+        addRow(table, "School class", schoolClassName);
         addRow(table, "Total participated funds", String.valueOf(childTotalParticipatedFunds));
 
         return table;

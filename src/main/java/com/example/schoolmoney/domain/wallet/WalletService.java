@@ -284,11 +284,6 @@ public class WalletService {
     }
 
     private void validateWalletWithdrawal(Wallet wallet, long amountInCents) throws IllegalStateException, IllegalArgumentException {
-        if (wallet.getWithdrawalIban() == null) {
-            log.warn(WalletMessages.WITHDRAWAL_IBAN_NOT_SET);
-            throw new IllegalStateException(WalletMessages.WITHDRAWAL_IBAN_NOT_SET);
-        }
-
         if (amountInCents <= 0) {
             log.warn(WalletOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
             throw new IllegalArgumentException(WalletOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
