@@ -14,19 +14,22 @@ public interface FinancialOperationRepository extends JpaRepository<FinancialOpe
 
     @Query(
             value = """
-                    SELECT processed_at AS processed_at,
-                           amount_in_cents AS amount_in_cents,
-                           operation_type AS operation_type,
-                           operation_status AS operation_status
+                    SELECT started_at AS startedAt,
+                           processed_at AS processedAt,
+                           amount_in_cents AS amountInCents,
+                           operation_type AS operationType,
+                           operation_status AS operationStatus
                     FROM fund_operations
                     WHERE parent_id = :parent_id
                     UNION ALL
-                    SELECT processed_at AS processed_at,
-                           amount_in_cents AS amount_in_cents,
-                           operation_type AS operation_type,
-                           operation_status AS operation_status
+                    SELECT started_at AS startedAt,
+                           processed_at AS processedAt,
+                           amount_in_cents AS amountInCents,
+                           operation_type AS operationType,
+                           operation_status AS operationStatus
                     FROM wallet_operations
                     WHERE wallet_id = :wallet_id
+                    ORDER BY processedAt DESC
                     """,
             countQuery = """
                     SELECT COUNT(*)
@@ -42,6 +45,10 @@ public interface FinancialOperationRepository extends JpaRepository<FinancialOpe
                     """,
             nativeQuery = true
     )
-    Page<FinancialOperationView> findFinancialOperations(@Param("parent_id") UUID parentId, @Param("wallet_id") UUID walletId, Pageable pageable);
+    Page<FinancialOperationView> findFinancialOperations(
+            @Param("parent_id") UUID parentId,
+            @Param("wallet_id") UUID walletId,
+            Pageable pageable
+    );
 
 }

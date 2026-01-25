@@ -25,6 +25,7 @@ import java.util.UUID;
         "iban",
         "amount_in_cents",
         "currency",
+        "started_at",
         "processed_at",
         "operation_type",
         "operation_status"
@@ -44,10 +45,13 @@ public class WalletOperationResponseDto {
     private String iban;
 
     @JsonProperty("amount_in_cents")
-    private long amountInCents;
+    private Long amountInCents;
 
     @JsonProperty("currency")
     private Currency currency;
+
+    @JsonProperty("started_at")
+    private Instant startedAt;
 
     @JsonProperty("processed_at")
     private Instant processedAt;

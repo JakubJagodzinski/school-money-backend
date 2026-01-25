@@ -246,7 +246,7 @@ public class WalletController {
     public ResponseEntity<MessageResponseDto> performWalletInternalWithdrawal(
             @Valid @RequestBody PerformWalletWithdrawalRequestDto requestDto
     ) {
-        walletService.performWalletWithdrawal(requestDto);
+        walletService.performWalletInternalWithdrawal(requestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

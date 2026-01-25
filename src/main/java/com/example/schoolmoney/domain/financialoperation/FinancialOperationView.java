@@ -4,12 +4,14 @@ import java.time.Instant;
 
 public interface FinancialOperationView {
 
-    Instant getProcessed_at();
+    Instant getStartedAt();
 
-    double getAmount_in_cents();
+    Instant getProcessedAt();
 
-    String getOperation_type();
+    long getAmountInCents();
 
-    String getOperation_status();
+    String getOperationType();
+
+    String getOperationStatus();
 
 }

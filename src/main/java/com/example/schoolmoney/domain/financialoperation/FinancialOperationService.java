@@ -1,6 +1,7 @@
 package com.example.schoolmoney.domain.financialoperation;
 
 import com.example.schoolmoney.auth.access.SecurityUtils;
+import com.example.schoolmoney.domain.financialoperation.dto.response.FinancialOperationResponseDto;
 import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
@@ -27,7 +28,7 @@ public class FinancialOperationService {
     private final ParentFinder parentFinder;
 
     @Transactional(readOnly = true)
-    public Page<FinancialOperationView> getUserFinancialOperationHistory(Pageable pageable) {
+    public Page<FinancialOperationResponseDto> getUserFinancialOperationHistory(Pageable pageable) {
         log.debug("Enter getUserFinancialOperationHistory(pageable={})", pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -37,8 +38,17 @@ public class FinancialOperationService {
 
         Page<FinancialOperationView> userFinancialOperationPage = financialOperationRepository.findFinancialOperations(userId, wallet.getWalletId(), pageable);
 
+        Page<FinancialOperationResponseDto> financialOperationResponseDtoPage = userFinancialOperationPage.map(view -> FinancialOperationResponseDto.builder()
+                .startedAt(view.getStartedAt())
+                .processedAt(view.getProcessedAt())
+                .amountInCents(view.getAmountInCents())
+                .operationStatus(FinancialOperationStatus.valueOf(view.getOperationStatus()))
+                .operationType(FinancialOperationType.valueOf(view.getOperationType()))
+                .build()
+        );
+
         log.debug("Exit getUserFinancialOperationHistory");
-        return userFinancialOperationPage;
+        return financialOperationResponseDtoPage;
     }
 
 }

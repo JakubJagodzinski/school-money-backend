@@ -90,8 +90,8 @@ app:
     starting-balance: ${FINANCES_STARTING_BALANCE:0}
 
     payment:
-      success-path: "/api/v1/payments/status/success"
-      failed-path: "/api/v1/payments/status/failed"
+      success-redirect-url: ${PAYMENT_SUCCESS_REDIRECT_URL}
+      cancel-redirect-url: ${PAYMENT_CANCEL_REDIRECT_URL}
 
 logging:
   file:

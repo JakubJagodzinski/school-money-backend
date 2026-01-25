@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -84,16 +85,18 @@ public class ChildService {
     }
 
     @Transactional(readOnly = true)
-    public Page<ChildWithSchoolClassInfoResponseDto> getParentAllChildren(Pageable pageable) {
-        log.debug("Enter getParentAllChildren(pageable={}", pageable);
+    public List<ChildWithSchoolClassInfoResponseDto> getParentAllChildren() {
+        log.debug("Enter getParentAllChildren()");
 
         UUID userId = securityUtils.getCurrentUserId();
         parentFinder.assertParentExists(userId);
 
-        Page<Child> childPage = childRepository.findAllByParent_UserId(userId, pageable);
+        List<Child> childList = childRepository.findAllByParent_UserId(userId);
 
-        log.debug("Exit getParentAllChildren");
-        return childPage.map(childMapper::toWithSchoolClassInfoDto);
+        List<ChildWithSchoolClassInfoResponseDto> responseDtoList = childList.stream().map(childMapper::toWithSchoolClassInfoDto).toList();
+
+        log.debug("Exit getParentAllChildren()");
+        return responseDtoList;
     }
 
     @Transactional

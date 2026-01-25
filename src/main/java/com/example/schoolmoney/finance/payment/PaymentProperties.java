@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "app.finances.payment")
 public class PaymentProperties {
 
-    private String successPath;
+    private String successRedirectUrl;
 
-    private String failedPath;
+    private String cancelRedirectUrl;
 
 }

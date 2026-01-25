@@ -11,6 +11,11 @@ import java.util.Currency;
 @RequiredArgsConstructor
 public class WalletWithdrawalEmailContentProvider implements EmailContentProvider {
 
+    @Override
+    public boolean isCritical() {
+        return true;
+    }
+
     private final long amountInCents;
 
     private final Currency currency;

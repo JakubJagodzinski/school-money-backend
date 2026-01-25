@@ -8,6 +8,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChildReportEmailContentProvider implements EmailContentProvider {
 
+    @Override
+    public boolean isCritical() {
+        return true;
+    }
+
     private final String childFullName;
 
     @Override

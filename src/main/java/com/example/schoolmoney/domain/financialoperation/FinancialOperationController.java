@@ -1,12 +1,12 @@
 package com.example.schoolmoney.domain.financialoperation;
 
 import com.example.schoolmoney.auth.access.CheckPermission;
+import com.example.schoolmoney.domain.financialoperation.dto.response.FinancialOperationResponseDto;
 import com.example.schoolmoney.user.Permission;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,15 +23,15 @@ public class FinancialOperationController {
 
     @CheckPermission(Permission.FINANCIAL_OPERATION_HISTORY_READ)
     @GetMapping("/parents/finances/history")
-    public ResponseEntity<Page<FinancialOperationView>> getUserFinancialOperationHistory(
+    public ResponseEntity<Page<FinancialOperationResponseDto>> getUserFinancialOperationHistory(
             @ParameterObject
-            @PageableDefault(size = 20, sort = "processed_at", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault Pageable pageable
     ) {
-        Page<FinancialOperationView> financialOperationViewPage = financialOperationService.getUserFinancialOperationHistory(pageable);
+        Page<FinancialOperationResponseDto> responseDto = financialOperationService.getUserFinancialOperationHistory(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(financialOperationViewPage);
+                .body(responseDto);
     }
 
 }

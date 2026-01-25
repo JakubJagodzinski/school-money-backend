@@ -27,7 +27,6 @@ import com.example.schoolmoney.finance.payment.dto.PaymentSessionDto;
 import com.example.schoolmoney.finance.payout.PayoutService;
 import com.example.schoolmoney.finance.payout.dto.PayoutNotificationDto;
 import com.example.schoolmoney.finance.payout.dto.PayoutRequestDto;
-import com.example.schoolmoney.properties.ServerProperties;
 import com.example.schoolmoney.utils.IbanUtil;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -35,6 +34,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.Currency;
@@ -64,8 +65,6 @@ public class WalletService {
     private final PayoutService payoutService;
 
     private final FinanceConfiguration financeConfiguration;
-
-    private final ServerProperties serverProperties;
 
     private final PaymentProperties paymentProperties;
 
@@ -204,10 +203,10 @@ public class WalletService {
 
         String successRedirectUrl = requestDto.getSuccessRedirectUrl() != null ?
                 requestDto.getSuccessRedirectUrl() :
-                serverProperties.getPublicAddress() + paymentProperties.getSuccessPath();
+                paymentProperties.getSuccessRedirectUrl();
         String cancelRedirectUrl = requestDto.getCancelRedirectUrl() != null ?
                 requestDto.getCancelRedirectUrl() :
-                serverProperties.getPublicAddress() + paymentProperties.getFailedPath();
+                paymentProperties.getCancelRedirectUrl();
 
         PaymentRequestDto paymentRequestDto = PaymentRequestDto.builder()
                 .providerType(requestDto.getProviderType())
@@ -399,11 +398,11 @@ public class WalletService {
     }
 
     @Transactional
-    public void performWalletWithdrawal(PerformWalletWithdrawalRequestDto requestDto) {
-        log.debug("Enter performWalletWithdrawal(requestDto={})", requestDto);
+    public void performWalletInternalWithdrawal(PerformWalletWithdrawalRequestDto requestDto) throws IllegalStateException {
+        log.debug("Enter performWalletInternalWithdrawal(requestDto={})", requestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
-        parentFinder.assertParentExists(userId);
+        Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Wallet wallet = walletRepository.findByParent_UserId(userId);
 
@@ -413,6 +412,13 @@ public class WalletService {
         walletRepository.save(wallet);
         log.info("Wallet balance updated for wallet with id={}", wallet.getWalletId());
 
+        String withdrawalIban = requestDto.getIban() != null ? requestDto.getIban() : wallet.getWithdrawalIban();
+
+        if (withdrawalIban == null) {
+            log.warn(WalletMessages.WITHDRAWAL_IBAN_NOT_SET);
+            throw new IllegalStateException(WalletMessages.WITHDRAWAL_IBAN_NOT_SET);
+        }
+
         WalletOperation walletOperation = WalletOperation.builder()
                 .wallet(wallet)
                 .amountInCents(requestDto.getAmountInCents())
@@ -420,14 +426,29 @@ public class WalletService {
                 .operationType(WalletOperationType.WALLET_WITHDRAWAL)
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .providerType(ProviderType.INTERNAL)
-                .iban(IbanUtil.maskIban(wallet.getWithdrawalIban()))
+                .iban(IbanUtil.maskIban(withdrawalIban))
                 .processedAt(Instant.now())
                 .build();
 
         walletOperationRepository.save(walletOperation);
         log.info("Wallet operation saved with id={}", walletOperation.getWalletOperationId());
 
-        log.debug("Exit performWalletWithdrawal(requestDto={})", requestDto);
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        emailService.sendWalletWithdrawalEmail(
+                                parent.getEmail(),
+                                parent.getFirstName(),
+                                walletOperation.getAmountInCents(),
+                                walletOperation.getCurrency(),
+                                parent.isNotificationsEnabled()
+                        );
+                    }
+                }
+        );
+
+        log.debug("Exit performWalletInternalWithdrawal(requestDto={})", requestDto);
     }
 
 }

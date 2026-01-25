@@ -55,6 +55,9 @@ public class WalletOperation {
     @Column(name = "currency", nullable = false, updatable = false)
     private Currency currency;
 
+    @Column(name = "started_at", nullable = false, updatable = false)
+    private Instant startedAt;
+
     @Column(name = "processed_at")
     private Instant processedAt;
 
@@ -67,5 +70,10 @@ public class WalletOperation {
     @Enumerated(EnumType.STRING)
     @Column(name = "operation_status", nullable = false)
     private FinancialOperationStatus operationStatus;
+
+    @PrePersist
+    protected void onCreate() {
+        this.startedAt = Instant.now();
+    }
 
 }

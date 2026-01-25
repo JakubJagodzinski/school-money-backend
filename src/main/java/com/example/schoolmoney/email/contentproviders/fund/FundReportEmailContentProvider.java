@@ -8,6 +8,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FundReportEmailContentProvider implements EmailContentProvider {
 
+    @Override
+    public boolean isCritical() {
+        return true;
+    }
+
     private final String fundTitle;
 
     @Override

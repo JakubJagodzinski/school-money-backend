@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Validated
@@ -55,15 +56,12 @@ public class ChildController {
 
     @CheckPermission(Permission.PARENT_CHILDREN_READ_ALL)
     @GetMapping("/children")
-    public ResponseEntity<Page<ChildWithSchoolClassInfoResponseDto>> getParentAllChildren(
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "birthDate", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
-        Page<ChildWithSchoolClassInfoResponseDto> childShortInfoResponseDtoPage = childService.getParentAllChildren(pageable);
+    public ResponseEntity<List<ChildWithSchoolClassInfoResponseDto>> getParentAllChildren() {
+        List<ChildWithSchoolClassInfoResponseDto> responseDto = childService.getParentAllChildren();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(childShortInfoResponseDtoPage);
+                .body(responseDto);
     }
 
     @CheckPermission(Permission.CHILD_UPDATE)

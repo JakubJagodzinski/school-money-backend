@@ -63,6 +63,9 @@ public class FundOperation {
     @Column(name = "operation_type", nullable = false, updatable = false)
     private FundOperationType operationType;
 
+    @Column(name = "started_at", nullable = false, updatable = false)
+    private Instant startedAt;
+
     @NotNull
     @Column(name = "processed_at", nullable = false, updatable = false)
     private Instant processedAt;
@@ -77,7 +80,10 @@ public class FundOperation {
 
     @PrePersist
     protected void onCreate() {
-        this.processedAt = Instant.now();
+        Instant now = Instant.now();
+
+        this.startedAt = now;
+        this.processedAt = now;
     }
 
 }

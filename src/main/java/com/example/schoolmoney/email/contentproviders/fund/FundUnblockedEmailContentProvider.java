@@ -8,6 +8,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class FundUnblockedEmailContentProvider implements EmailContentProvider {
 
+    @Override
+    public boolean isCritical() {
+        return true;
+    }
+
     private final String fundTitle;
 
     private final String schoolClassFullName;

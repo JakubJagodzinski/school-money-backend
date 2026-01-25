@@ -27,6 +27,7 @@ import java.util.UUID;
         "amount_in_cents",
         "currency",
         "operation_type",
+        "started_at",
         "processed_at",
         "operation_status"
 })
@@ -52,6 +53,9 @@ public class FundOperationResponseDto {
 
     @JsonProperty("operation_type")
     private FundOperationType operationType;
+
+    @JsonProperty("started_at")
+    private Instant startedAt;
 
     @JsonProperty("processed_at")
     private Instant processedAt;
