@@ -84,22 +84,22 @@ public class ChildReportPdfGenerator implements ReportPdfGenerator {
     }
 
     private PdfPTable createChildFundOperationsTable(List<FundOperation> childFundOperationList) {
-        PdfPTable table = new PdfPTable(6);
+        PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
         table.setSpacingBefore(20);
 
-        addHeaderCell(table, "Fund");
-        addHeaderCell(table, "Parent");
-        addHeaderCell(table, "Amount");
-        addHeaderCell(table, "Type");
         addHeaderCell(table, "Processed At");
+        addHeaderCell(table, "Fund");
+        addHeaderCell(table, "Fund status");
+        addHeaderCell(table, "Operation type");
+        addHeaderCell(table, "Amount");
 
         for (FundOperation childFundOperation : childFundOperationList) {
-            addDataCell(table, childFundOperation.getFund().getTitle());
-            addDataCell(table, childFundOperation.getParent().getFullName());
-            addDataCell(table, AmountFormatter.format(childFundOperation.getAmountInCents(), childFundOperation.getCurrency()));
-            addDataCell(table, childFundOperation.getOperationType().getShortName());
             addDataCell(table, DateToStringConverter.fromInstantToLocal(childFundOperation.getProcessedAt()));
+            addDataCell(table, childFundOperation.getFund().getTitle());
+            addDataCell(table, childFundOperation.getFund().getFundStatus().name());
+            addDataCell(table, childFundOperation.getOperationType().getShortName());
+            addDataCell(table, AmountFormatter.format(childFundOperation.getAmountInCents(), childFundOperation.getCurrency()));
         }
 
         return table;
