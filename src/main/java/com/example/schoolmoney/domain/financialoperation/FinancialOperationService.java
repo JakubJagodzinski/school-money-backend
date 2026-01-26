@@ -39,6 +39,7 @@ public class FinancialOperationService {
         Page<FinancialOperationView> userFinancialOperationPage = financialOperationRepository.findFinancialOperations(userId, wallet.getWalletId(), pageable);
 
         Page<FinancialOperationResponseDto> financialOperationResponseDtoPage = userFinancialOperationPage.map(view -> FinancialOperationResponseDto.builder()
+                .operationId(UUID.fromString(view.getOperationId()))
                 .startedAt(view.getStartedAt())
                 .processedAt(view.getProcessedAt())
                 .amountInCents(view.getAmountInCents())

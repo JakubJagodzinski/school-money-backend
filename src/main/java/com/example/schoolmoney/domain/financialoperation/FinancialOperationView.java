@@ -4,6 +4,8 @@ import java.time.Instant;
 
 public interface FinancialOperationView {
 
+    String getOperationId();
+
     Instant getStartedAt();
 
     Instant getProcessedAt();

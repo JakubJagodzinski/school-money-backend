@@ -10,12 +10,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonPropertyOrder({
+        "operation_id",
         "started_at",
         "processed_at",
         "amount_in_cents",
@@ -23,6 +25,9 @@ import java.time.Instant;
         "operation_type"
 })
 public class FinancialOperationResponseDto {
+
+    @JsonProperty("operation_id")
+    private UUID operationId;
 
     @JsonProperty("started_at")
     private Instant startedAt;

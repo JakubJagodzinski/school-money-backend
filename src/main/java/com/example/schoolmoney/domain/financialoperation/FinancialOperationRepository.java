@@ -14,22 +14,29 @@ public interface FinancialOperationRepository extends JpaRepository<FinancialOpe
 
     @Query(
             value = """
-                    SELECT started_at AS startedAt,
+                    SELECT *
+                    FROM (
+                        SELECT fund_operation_id AS operationId,
+                           started_at AS startedAt,
                            processed_at AS processedAt,
                            amount_in_cents AS amountInCents,
                            operation_type AS operationType,
                            operation_status AS operationStatus
-                    FROM fund_operations
-                    WHERE parent_id = :parent_id
-                    UNION ALL
-                    SELECT started_at AS startedAt,
+                        FROM fund_operations fo
+                        WHERE parent_id = :parent_id
+                    
+                        UNION ALL
+                    
+                        SELECT wallet_operation_id AS operationId,
+                           started_at AS startedAt,
                            processed_at AS processedAt,
                            amount_in_cents AS amountInCents,
                            operation_type AS operationType,
                            operation_status AS operationStatus
-                    FROM wallet_operations
-                    WHERE wallet_id = :wallet_id
-                    ORDER BY processedAt DESC
+                        FROM wallet_operations
+                        WHERE wallet_id = :wallet_id
+                    ) AS combined
+                    ORDER BY COALESCE(processedAt, startedAt) DESC
                     """,
             countQuery = """
                     SELECT COUNT(*)
@@ -37,7 +44,9 @@ public interface FinancialOperationRepository extends JpaRepository<FinancialOpe
                         SELECT fund_operation_id AS id
                         FROM fund_operations
                         WHERE parent_id = :parent_id
+                    
                         UNION ALL
+                    
                         SELECT wallet_operation_id AS id
                         FROM wallet_operations
                         WHERE wallet_id = :wallet_id
