@@ -200,8 +200,8 @@ public class FundService {
     }
 
     @Transactional(readOnly = true)
-    public Page<FundWithChildrenResponseDto> getSchoolClassAllFunds(UUID schoolClassId, Pageable pageable) {
-        log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
+    public Page<FundWithChildrenResponseDto> getSchoolClassAllFunds(UUID schoolClassId, FundStatus status, Pageable pageable) {
+        log.debug("Enter getSchoolClassAllFunds(schoolClassId={}, status={}, pageable={})", schoolClassId, status, pageable);
 
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentFinder.getByIdOrThrow(userId);
@@ -209,7 +209,13 @@ public class FundService {
         SchoolClass schoolClass = schoolClassFinder.getByIdOrThrow(schoolClassId);
         schoolClassAccessService.assertCanViewSchoolClass(parent, schoolClass);
 
-        Page<Fund> fundPage = fundRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
+        Page<Fund> fundPage;
+
+        if (status != null) {
+            fundPage = fundRepository.findAllBySchoolClass_SchoolClassIdAndFundStatus(schoolClassId, status, pageable);
+        } else {
+            fundPage = fundRepository.findAllBySchoolClass_SchoolClassId(schoolClassId, pageable);
+        }
 
         Page<FundWithChildrenResponseDto> fundWithChildrenResponseDtoPage = fundPage.map(fundMapper::toDtoWithChildren);
 
@@ -218,9 +224,10 @@ public class FundService {
         for (FundWithChildrenResponseDto fundWithChildrenResponseDto : fundWithChildrenResponseDtoPage.getContent()) {
             List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
             fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
+            fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundWithChildrenResponseDto.getFundId()));
         }
 
-        log.debug("Exit getSchoolClassAllFunds(schoolClassId={}, pageable={})", schoolClassId, pageable);
+        log.debug("Exit getSchoolClassAllFunds(schoolClassId={}, status={}, pageable={})", schoolClassId, status, pageable);
         return fundWithChildrenResponseDtoPage;
     }
 
@@ -240,6 +247,7 @@ public class FundService {
         for (FundWithChildrenResponseDto fundWithChildrenResponseDto : fundWithChildrenResponseDtoPage.getContent()) {
             List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
             fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
+            fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundWithChildrenResponseDto.getFundId()));
         }
 
         log.debug("Exit getParentChildrenAllFunds");

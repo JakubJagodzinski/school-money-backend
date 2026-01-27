@@ -272,10 +272,11 @@ public class FundController {
     @GetMapping("/school-classes/{schoolClassId}/funds")
     public ResponseEntity<Page<FundWithChildrenResponseDto>> getSchoolClassAllFunds(
             @PathVariable UUID schoolClassId,
+            @RequestParam(required = false) FundStatus status,
             @ParameterObject
             @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundWithChildrenResponseDto> fundResponseDtoPage = fundService.getSchoolClassAllFunds(schoolClassId, pageable);
+        Page<FundWithChildrenResponseDto> fundResponseDtoPage = fundService.getSchoolClassAllFunds(schoolClassId, status, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
