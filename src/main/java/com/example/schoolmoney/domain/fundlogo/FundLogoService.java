@@ -42,15 +42,13 @@ public class FundLogoService {
     public void updateFundLogo(UUID fundId, MultipartFile logoFile) {
         log.debug("Enter updateFundLogo(fundId={})", fundId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentFinder.getByIdOrThrow(userId);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsNotFinishedAndNotCancelled(fund);
 
         UUID newLogoId = UUID.fromString(storageService.uploadFile(logoFile, bucketName, FileCategory.AVATAR_OR_LOGO));
 
@@ -98,7 +96,6 @@ public class FundLogoService {
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsActive(fund);
 
         if (fund.getLogoId() == null) {
             log.warn(FundLogoMessages.FUND_LOGO_NOT_SET);

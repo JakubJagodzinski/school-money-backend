@@ -133,7 +133,9 @@ public class FundController {
     })
     @CheckPermission(Permission.FUND_CANCEL)
     @PostMapping("/funds/{fundId}/cancel")
-    public ResponseEntity<MessageResponseDto> cancelFund(@PathVariable UUID fundId) {
+    public ResponseEntity<MessageResponseDto> cancelFund(
+            @PathVariable UUID fundId
+    ) {
         fundProcessingService.cancelFund(fundId);
 
         return ResponseEntity
@@ -165,14 +167,13 @@ public class FundController {
     @CheckPermission(Permission.FUND_CREATED_READ_ALL)
     @GetMapping("/parents/funds/created")
     public ResponseEntity<Page<FundResponseDto>> getParentCreatedFunds(
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundResponseDto> fundResponseDtoPage = fundService.getParentCreatedFunds(pageable);
+        Page<FundResponseDto> responseDto = fundService.getParentCreatedFunds(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(fundResponseDtoPage);
+                .body(responseDto);
     }
 
     @Operation(
@@ -223,12 +224,15 @@ public class FundController {
     })
     @CheckPermission(Permission.FUND_UPDATE)
     @PatchMapping("/funds/{fundId}")
-    public ResponseEntity<FundResponseDto> updateFund(@PathVariable UUID fundId, @Valid @RequestBody UpdateFundRequestDto updateFundRequestDto) {
-        FundResponseDto fundResponseDto = fundService.updateFund(fundId, updateFundRequestDto);
+    public ResponseEntity<FundResponseDto> updateFund(
+            @PathVariable UUID fundId,
+            @Valid @RequestBody UpdateFundRequestDto requestDto
+    ) {
+        FundResponseDto responseDto = fundService.updateFund(fundId, requestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(fundResponseDto);
+                .body(responseDto);
     }
 
     @Operation(
@@ -273,14 +277,13 @@ public class FundController {
     public ResponseEntity<Page<FundWithChildrenResponseDto>> getSchoolClassAllFunds(
             @PathVariable UUID schoolClassId,
             @RequestParam(required = false) FundStatus status,
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundWithChildrenResponseDto> fundResponseDtoPage = fundService.getSchoolClassAllFunds(schoolClassId, status, pageable);
+        Page<FundWithChildrenResponseDto> responseDto = fundService.getSchoolClassAllFunds(schoolClassId, status, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(fundResponseDtoPage);
+                .body(responseDto);
     }
 
     @Operation(
@@ -307,28 +310,26 @@ public class FundController {
     @CheckPermission(Permission.PARENT_CHILDREN_FUND_READ_ALL)
     @GetMapping("/parents/children/funds")
     public ResponseEntity<Page<FundWithChildrenResponseDto>> getParentChildrenAllFunds(
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20, sort = "startsAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundWithChildrenResponseDto> fundResponseDtoPage = fundService.getParentChildrenAllFunds(pageable);
+        Page<FundWithChildrenResponseDto> responseDto = fundService.getParentChildrenAllFunds(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(fundResponseDtoPage);
+                .body(responseDto);
     }
 
     @CheckPermission(Permission.FUND_CHILDREN_STATUSES_READ_ALL)
     @GetMapping("/funds/{fundId}/children/statuses")
     public ResponseEntity<Page<FundChildStatusResponseDto>> getFundChildrenStatuses(
             @PathVariable UUID fundId,
-            @ParameterObject
-            @PageableDefault(size = 20, sort = "childId", direction = Sort.Direction.DESC) Pageable pageable
+            @ParameterObject @PageableDefault(size = 20, sort = "childId", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<FundChildStatusResponseDto> fundChildStatusResponseDtoPage = fundService.getFundChildrenStatuses(fundId, pageable);
+        Page<FundChildStatusResponseDto> responseDto = fundService.getFundChildrenStatuses(fundId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(fundChildStatusResponseDtoPage);
+                .body(responseDto);
     }
 
 }

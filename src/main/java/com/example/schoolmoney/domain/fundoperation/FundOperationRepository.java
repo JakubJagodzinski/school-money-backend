@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -42,11 +43,39 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
     List<FundOperation> findAllByChild_ChildIdOrderByProcessedAtAsc(UUID childId);
 
     @Query("""
+                SELECT DISTINCT fo.child.childId
+                FROM FundOperation fo
+                WHERE fo.fund.fundId = :fundId
+                  AND fo.child IS NOT NULL
+                  AND fo.operationStatus = :operationStatusSuccess
+            """)
+    Set<UUID> findFundAllPaidChildrenIds(
+            @Param("fundId") UUID fundId,
+            @Param("operationStatusSuccess") FinancialOperationStatus operationStatusSuccess
+    );
+
+    @Query("""
+                SELECT DISTINCT fo.child.childId
+                FROM FundOperation fo
+                WHERE fo.fund.fundId = :fundId
+                  AND fo.child IS NOT NULL
+                  AND fo.child.parent.userId = :parentId
+                  AND fo.operationStatus = :operationStatusSuccess
+            """)
+    Set<UUID> findFundParentPaidChildrenIds(
+            @Param("fundId") UUID fundId,
+            @Param("parentId") UUID parentId,
+            @Param("operationStatusSuccess") FinancialOperationStatus operationStatusSuccess
+    );
+
+    @Query("""
             SELECT COUNT(DISTINCT f.fund.fundId)
             FROM FundOperation f
             WHERE f.child.childId = :childId
             """)
-    long countDistinctFundsByChildId(@Param("childId") UUID childId);
+    long countDistinctFundsByChildId(
+            @Param("childId") UUID childId
+    );
 
     @Query("""
                 SELECT COALESCE(SUM(
@@ -92,6 +121,27 @@ public interface FundOperationRepository extends JpaRepository<FundOperation, UU
             @Param("refund") FundOperationType refund,
             @Param("withdrawal") FundOperationType withdrawal,
             @Param("operationStatusSuccess") FinancialOperationStatus operationStatusSuccess
+    );
+
+    @Query("""
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN fo.operationType = :fundDepositType
+                            THEN -fo.amountInCents
+                        WHEN fo.operationType = :fundWithdrawalType
+                            THEN fo.amountInCents
+                        ELSE 0
+                    END
+                ), 0)
+                FROM FundOperation fo
+                WHERE fo.fund.fundId = :fundId
+                  AND fo.operationStatus = :fundOperationStatusSuccess
+            """)
+    long getRemainingDepositLimitInCents(
+            @Param("fundId") UUID fundId,
+            @Param("fundDepositType") FundOperationType fundDepositType,
+            @Param("fundWithdrawalType") FundOperationType fundWithdrawalType,
+            @Param("fundOperationStatusSuccess") FinancialOperationStatus fundOperationStatusSuccess
     );
 
 }

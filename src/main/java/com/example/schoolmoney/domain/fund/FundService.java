@@ -5,11 +5,11 @@ import com.example.schoolmoney.domain.child.Child;
 import com.example.schoolmoney.domain.child.ChildRepository;
 import com.example.schoolmoney.domain.child.dto.ChildMapper;
 import com.example.schoolmoney.domain.childignoredfund.ChildIgnoredFundRepository;
+import com.example.schoolmoney.domain.financialoperation.FinancialOperationStatus;
 import com.example.schoolmoney.domain.fund.dto.FundMapper;
 import com.example.schoolmoney.domain.fund.dto.request.CreateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.request.UpdateFundRequestDto;
 import com.example.schoolmoney.domain.fund.dto.response.*;
-import com.example.schoolmoney.domain.fundoperation.FundOperation;
 import com.example.schoolmoney.domain.fundoperation.FundOperationFinder;
 import com.example.schoolmoney.domain.fundoperation.FundOperationRepository;
 import com.example.schoolmoney.domain.parent.Parent;
@@ -31,10 +31,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -119,23 +117,22 @@ public class FundService {
     }
 
     private void sendFundCreatedEmailsToParents(String authorFullName, String fundTitle, SchoolClass schoolClass) {
-        List<Parent> schoolClassParentsList = childRepository.findSchoolClassDistinctParents(schoolClass.getSchoolClassId());
-        log.debug("Number of parents in school class {}", schoolClassParentsList.size());
+        log.debug("Enter sendFundCreatedEmailsToParents(authorFullName={}, fundTitle={}, schoolClass={})", authorFullName, fundTitle, schoolClass);
 
-        if (!schoolClassParentsList.isEmpty()) {
-            log.debug("Sending emails to parents in school class");
-            for (Parent schoolClassParent : schoolClassParentsList) {
-                emailService.sendFundCreatedEmail(
-                        schoolClassParent.getEmail(),
-                        schoolClassParent.getFirstName(),
-                        authorFullName,
-                        fundTitle,
-                        schoolClass.getFullName(),
-                        schoolClassParent.isNotificationsEnabled()
-                );
-            }
-            log.debug("Emails sent");
+        List<Parent> schoolClassParentsList = childRepository.findSchoolClassDistinctParents(schoolClass.getSchoolClassId());
+
+        for (Parent schoolClassParent : schoolClassParentsList) {
+            emailService.sendFundCreatedEmail(
+                    schoolClassParent.getEmail(),
+                    schoolClassParent.getFirstName(),
+                    authorFullName,
+                    fundTitle,
+                    schoolClass.getFullName(),
+                    schoolClassParent.isNotificationsEnabled()
+            );
         }
+
+        log.debug("Exit sendFundCreatedEmailsToParents(authorFullName={}, fundTitle={}, schoolClass={})", authorFullName, fundTitle, schoolClass);
     }
 
     @Transactional(readOnly = true)
@@ -187,7 +184,6 @@ public class FundService {
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsActive(fund);
 
         fundMapper.updateEntityFromDto(updateFundRequestDto, fund);
         Fund savedFund = fundRepository.save(fund);
@@ -248,11 +244,15 @@ public class FundService {
         return fundWithChildrenResponseDtoPage;
     }
 
-    private void updateFundInformation(UUID userId, List<Child> parentChildren, FundWithChildrenResponseDto fundWithChildrenResponseDto) {
-        List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
+    private void updateFundInformation(UUID parentId, List<Child> parentChildren, FundWithChildrenResponseDto fundWithChildrenResponseDto) {
+        log.debug("Enter updateFundInformation(parentId={}, fundId={})", parentId, fundWithChildrenResponseDto.getFundId());
+
+        UUID fundId = fundWithChildrenResponseDto.getFundId();
+
+        List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundId, parentId, parentChildren);
         fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
-        fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundWithChildrenResponseDto.getFundId()));
-        fundWithChildrenResponseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(fundWithChildrenResponseDto.getFundId()));
+        fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundId));
+        fundWithChildrenResponseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(fundId));
     }
 
     public FundProgressResponseDto countFundProgress(UUID fundId) {
@@ -299,17 +299,15 @@ public class FundService {
                 .build();
     }
 
-    public List<FundChildStatusWithoutParentResponseDto> getFundParentChildrenStatuses(UUID fundId, List<Child> parentChildren, UUID parentId) {
+    public List<FundChildStatusWithoutParentResponseDto> getFundParentChildrenStatuses(UUID fundId, UUID parentId, List<Child> parentChildren) {
         log.debug("Enter getFundParentChildrenStatuses(fundId={}, parentId={})", fundId, parentId);
 
-        Set<UUID> ignoredChildrenIds = getParentIgnoredChildIds(fundId, parentId);
-        log.debug("Ignored children ids count: {}", ignoredChildrenIds.size());
-        Set<UUID> paidChildrenIds = getParentPaidChildIds(fundId, parentId);
-        log.debug("Paid children ids count: {}", paidChildrenIds.size());
+        Set<UUID> fundParentIgnoredChildrenIds = childIgnoredFundRepository.findParentFundIgnoredChildrenIds(fundId, parentId);
+        Set<UUID> fundParentPaidChildrenIds = fundOperationRepository.findFundParentPaidChildrenIds(fundId, parentId, FinancialOperationStatus.SUCCESS);
 
         List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = parentChildren.stream()
                 .map(child -> {
-                    FundChildStatus fundChildStatus = resolveChildStatus(child.getChildId(), ignoredChildrenIds, paidChildrenIds);
+                    FundChildStatus fundChildStatus = resolveChildStatus(child.getChildId(), fundParentIgnoredChildrenIds, fundParentPaidChildrenIds);
                     return toStatusWithoutParentResponseDto(child, fundChildStatus);
                 })
                 .toList();
@@ -329,48 +327,18 @@ public class FundService {
 
         Page<Child> childrenPage = childRepository.findAllBySchoolClass_SchoolClassId(fund.getSchoolClass().getSchoolClassId(), pageable);
 
-        Set<UUID> ignoredChildrenIds = getIgnoredChildIds(fundId);
-        log.debug("Ignored children ids count: {}", ignoredChildrenIds.size());
-        Set<UUID> paidChildrenIds = getPaidChildIds(fundId);
-        log.debug("Paid children ids count: {}", paidChildrenIds.size());
+        Set<UUID> fundAllIgnoredChildrenIds = childIgnoredFundRepository.findFundAllIgnoredChildrenIds(fundId);
+        Set<UUID> fundAllPaidChildrenIds = fundOperationRepository.findFundAllPaidChildrenIds(fundId, FinancialOperationStatus.SUCCESS);
 
         List<FundChildStatusResponseDto> fundChildStatusResponseDtoList = childrenPage.getContent().stream()
                 .map(child -> {
-                    FundChildStatus fundChildStatus = resolveChildStatus(child.getChildId(), ignoredChildrenIds, paidChildrenIds);
+                    FundChildStatus fundChildStatus = resolveChildStatus(child.getChildId(), fundAllIgnoredChildrenIds, fundAllPaidChildrenIds);
                     return toStatusResponseDto(child, fundChildStatus);
                 })
                 .toList();
 
         log.debug("Exit getFundChildrenStatuses(fundId={}, pageable={})", fundId, pageable);
         return new PageImpl<>(fundChildStatusResponseDtoList, pageable, childrenPage.getTotalElements());
-    }
-
-    private Set<UUID> getParentIgnoredChildIds(UUID fundId, UUID parentId) {
-        return childIgnoredFundRepository.findAllByFund_FundIdAndChild_Parent_UserId(fundId, parentId).stream()
-                .map(c -> c.getChild().getChildId())
-                .collect(Collectors.toSet());
-    }
-
-    private Set<UUID> getParentPaidChildIds(UUID fundId, UUID parentId) {
-        return fundOperationRepository.findAllByFund_FundIdAndChild_Parent_UserId(fundId, parentId).stream()
-                .map(FundOperation::getChild)
-                .filter(Objects::nonNull)
-                .map(Child::getChildId)
-                .collect(Collectors.toSet());
-    }
-
-    private Set<UUID> getIgnoredChildIds(UUID fundId) {
-        return childIgnoredFundRepository.findAllByFund_FundId(fundId).stream()
-                .map(c -> c.getChild().getChildId())
-                .collect(Collectors.toSet());
-    }
-
-    private Set<UUID> getPaidChildIds(UUID fundId) {
-        return fundOperationRepository.findAllByFund_FundId(fundId).stream()
-                .map(FundOperation::getChild)
-                .filter(Objects::nonNull)
-                .map(Child::getChildId)
-                .collect(Collectors.toSet());
     }
 
     private FundChildStatus resolveChildStatus(UUID childId, Set<UUID> ignoredIds, Set<UUID> paidIds) {

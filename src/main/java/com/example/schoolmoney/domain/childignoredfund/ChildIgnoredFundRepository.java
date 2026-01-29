@@ -1,9 +1,11 @@
 package com.example.schoolmoney.domain.childignoredfund;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
@@ -11,8 +13,24 @@ public interface ChildIgnoredFundRepository extends JpaRepository<ChildIgnoredFu
 
     void deleteByChild_ChildIdAndFund_FundId(UUID childId, UUID fundId);
 
-    List<ChildIgnoredFund> findAllByFund_FundId(UUID fundId);
+    @Query("""
+                SELECT cif.child.childId
+                FROM ChildIgnoredFund cif
+                WHERE cif.fund.fundId = :fundId
+                  AND cif.child.parent.userId = :parentId
+            """)
+    Set<UUID> findParentFundIgnoredChildrenIds(
+            @Param("fundId") UUID fundId,
+            @Param("parentId") UUID parentId
+    );
 
-    List<ChildIgnoredFund> findAllByFund_FundIdAndChild_Parent_UserId(UUID fundId, UUID userId);
+    @Query("""
+                SELECT cif.child.childId
+                FROM ChildIgnoredFund cif
+                WHERE cif.fund.fundId = :fundId
+            """)
+    Set<UUID> findFundAllIgnoredChildrenIds(
+            @Param("fundId") UUID fundId
+    );
 
 }

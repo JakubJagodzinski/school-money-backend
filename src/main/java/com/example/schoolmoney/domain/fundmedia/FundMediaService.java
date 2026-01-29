@@ -75,8 +75,8 @@ public class FundMediaService {
                 .mediaType(FileTypeDetector.determineFileType(file.getContentType()))
                 .build();
 
-        fundMediaRepository.save(fundMedia);
-        log.info("Fund media saved {}", fundMedia);
+        FundMedia savedFundMedia = fundMediaRepository.save(fundMedia);
+        log.info("Fund media saved with id={}", savedFundMedia.getFundMediaId());
 
         fundMediaOperationService.saveFundMediaOperation(
                 parent,
@@ -149,7 +149,7 @@ public class FundMediaService {
 
         fundMediaMapper.updateEntityFromDto(updateFundMediaFileMetadataRequestDto, fundMedia);
         fundMediaRepository.save(fundMedia);
-        log.info("Fund media updated {}", fundMedia);
+        log.info("Fund media with id={} updated successfully", fundMedia.getFundMediaId());
 
         fundMediaOperationService.saveFundMediaOperation(
                 parent,
@@ -174,7 +174,6 @@ public class FundMediaService {
         Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
-        fundAccessService.assertFundIsActive(fund);
 
         FundMedia fundMedia = fundMediaFinder.getByFundIdAndFundMediaIdOrThrow(fund.getFundId(), fundMediaId);
 

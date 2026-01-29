@@ -44,6 +44,66 @@ public class FundProcessingService {
     private final ParentFinder parentFinder;
 
     @Transactional
+    public void cancelFund(UUID fundId) throws IllegalStateException {
+        log.debug("Enter cancelFund(fundId={})", fundId);
+
+        UUID userId = securityUtils.getCurrentUserId();
+        Parent parent = parentFinder.getByIdOrThrow(userId);
+
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
+        fundAccessService.assertCanViewFund(parent, fund);
+        fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertFundIsNotBlocked(fund);
+        fundAccessService.assertFundIsNotFinishedAndNotCancelled(fund);
+
+        List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
+
+        if (!fundOperations.isEmpty()) {
+            long fundTreasurerBalance = calculateFundTreasurerBalance(fundOperations);
+
+            if (fundTreasurerBalance < 0) {
+                log.warn(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
+                throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
+            }
+            if (fundTreasurerBalance > 0) {
+                log.warn(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
+                throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
+            }
+        }
+
+        fund.cancel();
+        fundRepository.save(fund);
+        log.info("Fund with id={} cancelled successfully", fund.getFundId());
+
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        sendFundCancelledEmailsToParents(fund);
+                        fundOperationService.processParentRefunds(fundOperations);
+                    }
+                }
+        );
+
+        log.debug("Exit cancelFund(fundId={})", fundId);
+    }
+
+    private long calculateFundTreasurerBalance(List<FundOperation> fundOperations) {
+        long fundTreasurerBalance = 0;
+
+        for (FundOperation fundOperation : fundOperations) {
+            FundOperationType fundOperationType = fundOperation.getOperationType();
+            if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
+                fundTreasurerBalance += fundOperation.getAmountInCents();
+            } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
+                fundTreasurerBalance -= fundOperation.getAmountInCents();
+            }
+        }
+
+        return fundTreasurerBalance;
+    }
+
+    @Transactional
     public void markFundAsFinished(Fund fund) {
         log.debug("Enter markFundAsFinished(fundId={})", fund.getFundId());
 
@@ -82,69 +142,11 @@ public class FundProcessingService {
         log.debug("Exit markFundAsActive(fundId={})", fund.getFundId());
     }
 
-    @Transactional
-    public void cancelFund(UUID fundId) throws IllegalStateException {
-        log.debug("Enter cancelFund(fundId={})", fundId);
-
-        UUID userId = securityUtils.getCurrentUserId();
-        Parent parent = parentFinder.getByIdOrThrow(userId);
-
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-        fundAccessService.assertCanViewFund(parent, fund);
-        fundAccessService.assertCanEditFund(parent, fund);
-        fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsNotFinishedAndNotCancelled(fund);
-
-        List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
-
-        if (!fundOperations.isEmpty()) {
-            long fundTreasurerBalance = calculateFundTreasurerBalance(fundOperations);
-
-            if (fundTreasurerBalance < 0) {
-                log.warn(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
-                throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_MISSING_FUNDS);
-            } else if (fundTreasurerBalance > 0) {
-                log.warn(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
-                throw new IllegalStateException(FundMessages.CANNOT_CANCEL_FUND_BECAUSE_OF_REMAINING_TREASURER_DEPOSITS);
-            }
-        }
-
-        fund.cancel();
-        fundRepository.save(fund);
-        log.info("Fund cancelled {}", fund);
-
-        TransactionSynchronizationManager.registerSynchronization(
-                new TransactionSynchronization() {
-                    @Override
-                    public void afterCommit() {
-                        sendFundCancelledEmailsToParents(fund);
-                        fundOperationService.processParentRefunds(fundOperations);
-                    }
-                }
-        );
-
-        log.debug("Exit cancelFund(fundId={})", fundId);
-    }
-
-    private long calculateFundTreasurerBalance(List<FundOperation> fundOperations) {
-        long fundTreasurerBalance = 0;
-
-        for (FundOperation fundOperation : fundOperations) {
-            FundOperationType fundOperationType = fundOperation.getOperationType();
-            if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
-                fundTreasurerBalance += fundOperation.getAmountInCents();
-            } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
-                fundTreasurerBalance -= fundOperation.getAmountInCents();
-            }
-        }
-
-        return fundTreasurerBalance;
-    }
-
     private void sendFundCancelledEmailsToParents(Fund fund) {
+        log.debug("Enter sendFundCancelledEmailsToParents(fundId={})", fund.getFundId());
+
         List<Parent> participatinsParentsList = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
 
-        log.debug("Sending emails about cancelled fund to participating parents in school class");
         for (Parent participatingParent : participatinsParentsList) {
             emailService.sendFundCancelledEmail(
                     participatingParent.getEmail(),
@@ -154,7 +156,8 @@ public class FundProcessingService {
                     participatingParent.isNotificationsEnabled()
             );
         }
-        log.debug("Fund cancelled emails sent");
+
+        log.debug("Exit sendFundCancelledEmailsToParents(fundId={})", fund.getFundId());
     }
 
     private void sendFundFinishedEmailsToParents(Fund fund) {
@@ -162,7 +165,6 @@ public class FundProcessingService {
 
         List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
 
-        log.debug("Sending emails about finished fund to parents in school class");
         for (Parent parent : parents) {
             emailService.sendFundFinishedEmail(
                     parent.getEmail(),
@@ -172,7 +174,6 @@ public class FundProcessingService {
                     parent.isNotificationsEnabled()
             );
         }
-        log.debug("{} emails sent", parents.size());
 
         log.debug("Exit sendFundFinishedEmailsToParents(fundId={})", fund.getFundId());
     }
@@ -182,7 +183,6 @@ public class FundProcessingService {
 
         List<Parent> parents = childRepository.findSchoolClassDistinctParents(fund.getSchoolClass().getSchoolClassId());
 
-        log.debug("Sending emails about started fund to parents in school class");
         for (Parent parent : parents) {
             emailService.sendFundStartedEmail(
                     parent.getEmail(),
@@ -192,7 +192,6 @@ public class FundProcessingService {
                     parent.isNotificationsEnabled()
             );
         }
-        log.debug("{} emails sent", parents.size());
 
         log.debug("Exit sendFundStartedEmailsToParents(fundId={})", fund.getFundId());
     }

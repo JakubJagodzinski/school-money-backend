@@ -73,8 +73,11 @@ public class FundOperationController {
     })
     @CheckPermission(Permission.FUND_PAY)
     @PostMapping("/funds/{fundId}/pay")
-    public ResponseEntity<MessageResponseDto> performPayment(@PathVariable UUID fundId, @RequestParam UUID childId) {
-        fundOperationService.performPayment(fundId, childId);
+    public ResponseEntity<MessageResponseDto> payForChild(
+            @PathVariable UUID fundId,
+            @RequestParam UUID childId
+    ) {
+        fundOperationService.payForChild(fundId, childId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

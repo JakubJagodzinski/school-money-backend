@@ -27,6 +27,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.UUID;
@@ -61,7 +63,7 @@ public class FundOperationService {
     private final ParentFinder parentFinder;
 
     @Transactional
-    public void performPayment(UUID fundId, UUID childId) throws IllegalStateException {
+    public void payForChild(UUID fundId, UUID childId) throws IllegalStateException {
         log.debug("Enter performPayment(fundId={}, childId={})", fundId, childId);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -87,6 +89,8 @@ public class FundOperationService {
             throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
         }
 
+        childIgnoredFundService.unignoreFundForChild(childId, fundId, userId);
+
         parentWallet.decreaseBalanceInCents(fund.getAmountPerChildInCents());
         walletRepository.save(parentWallet);
         log.info("Wallet with id={} updated", parentWallet.getWalletId());
@@ -102,12 +106,26 @@ public class FundOperationService {
                 .operationStatus(FinancialOperationStatus.SUCCESS)
                 .build();
 
-        fundOperationRepository.save(fundOperation);
-        log.info("Fund operation saved with id={}", fundOperation.getFundOperationId());
+        FundOperation savedFundOperation = fundOperationRepository.save(fundOperation);
+        log.info("Fund operation saved with id={}", savedFundOperation.getFundOperationId());
 
-        emailService.sendFundPaymentEmail(parent.getEmail(), parent.getFirstName(), fund.getTitle(), fund.getSchoolClass().getFullName(), child.getFullName(), fund.getAmountPerChildInCents(), fund.getCurrency(), parent.isNotificationsEnabled());
-
-        childIgnoredFundService.unignoreFundForChild(childId, fundId, userId);
+        TransactionSynchronizationManager.registerSynchronization(
+                new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        emailService.sendFundPaymentEmail(
+                                parent.getEmail(),
+                                parent.getFirstName(),
+                                fund.getTitle(),
+                                fund.getSchoolClass().getFullName(),
+                                child.getFullName(),
+                                fund.getAmountPerChildInCents(),
+                                fund.getCurrency(),
+                                parent.isNotificationsEnabled()
+                        );
+                    }
+                }
+        );
 
         log.debug("Exit performPayment(fundId={}, childId={})", fundId, childId);
     }
@@ -126,7 +144,14 @@ public class FundOperationService {
 
         long amountInCents = requestDto.getAmountInCents();
 
-        if (amountInCents > getFundRemainingDepositLimitInCents(fundId)) {
+        long fundRemainingDepositLimitInCents = fundOperationRepository.getRemainingDepositLimitInCents(
+                fundId,
+                FundOperationType.FUND_DEPOSIT,
+                FundOperationType.FUND_WITHDRAWAL,
+                FinancialOperationStatus.SUCCESS
+        );
+
+        if (amountInCents > fundRemainingDepositLimitInCents) {
             log.warn(FundMessages.CANNOT_DEPOSIT_MORE_THAN_WITHDRAWN_AMOUNT);
             throw new IllegalStateException(FundMessages.CANNOT_DEPOSIT_MORE_THAN_WITHDRAWN_AMOUNT);
         }
@@ -142,7 +167,7 @@ public class FundOperationService {
         walletRepository.save(treasurerWallet);
         log.info("Wallet with id={} updated successfully", treasurerWallet.getWalletId());
 
-        FundOperation fundDepositOperation = FundOperation.builder()
+        FundOperation fundOperation = FundOperation.builder()
                 .parent(fund.getSchoolClass().getTreasurer())
                 .fund(fund)
                 .wallet(treasurerWallet)
@@ -153,8 +178,8 @@ public class FundOperationService {
                 .note(requestDto.getNote())
                 .build();
 
-        fundOperationRepository.save(fundDepositOperation);
-        log.info("Fund operation saved with id={}", fundDepositOperation.getFundOperationId());
+        FundOperation savedFundOperation = fundOperationRepository.save(fundOperation);
+        log.info("Fund operation saved with id={}", savedFundOperation.getFundOperationId());
 
         log.debug("Exit depositToFund(fundId={}, requestDto={})", fundId, requestDto);
     }
@@ -184,7 +209,7 @@ public class FundOperationService {
         walletRepository.save(treasurerWallet);
         log.info("Wallet with id={} updated successfully", treasurerWallet.getWalletId());
 
-        FundOperation fundWithdrawalOperation = FundOperation.builder()
+        FundOperation fundOperation = FundOperation.builder()
                 .parent(fund.getSchoolClass().getTreasurer())
                 .fund(fund)
                 .wallet(treasurerWallet)
@@ -195,30 +220,10 @@ public class FundOperationService {
                 .note(requestDto.getNote())
                 .build();
 
-        FundOperation savedFundOperation = fundOperationRepository.save(fundWithdrawalOperation);
+        FundOperation savedFundOperation = fundOperationRepository.save(fundOperation);
         log.info("Fund operation saved with id={}", savedFundOperation.getFundOperationId());
 
         log.debug("Exit withdrawFromFund(fundId={}, requestDto={})", fundId, requestDto);
-    }
-
-    private long getFundRemainingDepositLimitInCents(UUID fundId) {
-        List<FundOperation> fundOperations = fundOperationRepository.findAllByFund_FundId(fundId);
-
-        long remainingDepositLimitInCents = 0;
-
-        for (FundOperation fundOperation : fundOperations) {
-            if (fundOperation.getOperationStatus().equals(FinancialOperationStatus.SUCCESS)) {
-                FundOperationType fundOperationType = fundOperation.getOperationType();
-
-                if (fundOperationType.equals(FundOperationType.FUND_DEPOSIT)) {
-                    remainingDepositLimitInCents -= fundOperation.getAmountInCents();
-                } else if (fundOperationType.equals(FundOperationType.FUND_WITHDRAWAL)) {
-                    remainingDepositLimitInCents += fundOperation.getAmountInCents();
-                }
-            }
-        }
-
-        return remainingDepositLimitInCents;
     }
 
     @Transactional(readOnly = true)
