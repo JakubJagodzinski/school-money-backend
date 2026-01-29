@@ -97,8 +97,8 @@ logging:
   file:
     name: logs/school-money.log
   level:
-    root: INFO
-    com.example.schoolmoney: DEBUG
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    com.example.schoolmoney: ${LOGGING_LEVEL_APP:ERROR}
 
 minio:
   url: ${MINIO_URL}
