@@ -21,12 +21,10 @@ import com.example.schoolmoney.domain.parent.ParentFinder;
 import com.example.schoolmoney.domain.wallet.Wallet;
 import com.example.schoolmoney.domain.wallet.WalletRepository;
 import com.example.schoolmoney.email.EmailService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,12 +67,11 @@ public class FundOperationService {
         UUID userId = securityUtils.getCurrentUserId();
         Parent parent = parentFinder.getByIdOrThrow(userId);
 
-        Fund fund = fundFinder.getByIdOrThrow(fundId);
-        fundAccessService.assertCanViewFund(parent, fund);
-
         Child child = childFinder.getByIdOrThrow(childId);
         childAccessService.assertCanAccessChild(parent, child);
 
+        Fund fund = fundFinder.getByIdOrThrow(fundId);
+        fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
         fundAccessService.assertFundIsActive(fund);
 
@@ -92,12 +89,21 @@ public class FundOperationService {
 
         parentWallet.decreaseBalanceInCents(fund.getAmountPerChildInCents());
         walletRepository.save(parentWallet);
-        log.info("Wallet updated {}", parentWallet);
+        log.info("Wallet with id={} updated", parentWallet.getWalletId());
 
-        FundOperation fundOperation = FundOperation.builder().parent(child.getParent()).child(child).fund(fund).wallet(parentWallet).amountInCents(fund.getAmountPerChildInCents()).currency(fund.getCurrency()).operationType(FundOperationType.FUND_PAYMENT).operationStatus(FinancialOperationStatus.SUCCESS).build();
+        FundOperation fundOperation = FundOperation.builder()
+                .parent(parent)
+                .child(child)
+                .fund(fund)
+                .wallet(parentWallet)
+                .amountInCents(fund.getAmountPerChildInCents())
+                .currency(fund.getCurrency())
+                .operationType(FundOperationType.FUND_PAYMENT)
+                .operationStatus(FinancialOperationStatus.SUCCESS)
+                .build();
 
         fundOperationRepository.save(fundOperation);
-        log.info("Fund operation saved {}", fundOperation);
+        log.info("Fund operation saved with id={}", fundOperation.getFundOperationId());
 
         emailService.sendFundPaymentEmail(parent.getEmail(), parent.getFirstName(), fund.getTitle(), fund.getSchoolClass().getFullName(), child.getFullName(), fund.getAmountPerChildInCents(), fund.getCurrency(), parent.isNotificationsEnabled());
 
@@ -107,7 +113,7 @@ public class FundOperationService {
     }
 
     @Transactional
-    public void depositToFund(UUID fundId, DepositToFundRequestDto requestDto) throws EntityNotFoundException, IllegalStateException, IllegalArgumentException, AccessDeniedException {
+    public void depositToFund(UUID fundId, DepositToFundRequestDto requestDto) throws IllegalStateException {
         log.debug("Enter depositToFund(fundId={}, requestDto={})", fundId, requestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -115,34 +121,26 @@ public class FundOperationService {
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
-        fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertIsTreasurer(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsActive(fund);
 
         long amountInCents = requestDto.getAmountInCents();
 
-        if (amountInCents < 0) {
-            log.warn(FundOperationMessages.DEPOSIT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
-            throw new IllegalArgumentException(FundOperationMessages.DEPOSIT_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
-        }
-
-        long remainingDepositLimitInCents = getFundRemainingDepositLimitInCents(fundId);
-
-        if (amountInCents > remainingDepositLimitInCents) {
+        if (amountInCents > getFundRemainingDepositLimitInCents(fundId)) {
             log.warn(FundMessages.CANNOT_DEPOSIT_MORE_THAN_WITHDRAWN_AMOUNT);
             throw new IllegalStateException(FundMessages.CANNOT_DEPOSIT_MORE_THAN_WITHDRAWN_AMOUNT);
         }
 
         Wallet treasurerWallet = walletRepository.findByParent_UserId(userId);
 
-        if (treasurerWallet.getAvailableBalanceInCents() < amountInCents) {
+        if (amountInCents > treasurerWallet.getAvailableBalanceInCents()) {
             log.warn(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
             throw new IllegalStateException(WalletMessages.INSUFFICIENT_WALLET_BALANCE);
         }
 
         treasurerWallet.decreaseBalanceInCents(amountInCents);
         walletRepository.save(treasurerWallet);
-        log.info("Wallet updated {}", treasurerWallet);
+        log.info("Wallet with id={} updated successfully", treasurerWallet.getWalletId());
 
         FundOperation fundDepositOperation = FundOperation.builder()
                 .parent(fund.getSchoolClass().getTreasurer())
@@ -156,13 +154,13 @@ public class FundOperationService {
                 .build();
 
         fundOperationRepository.save(fundDepositOperation);
-        log.info("Fund operation saved {}", fundDepositOperation);
+        log.info("Fund operation saved with id={}", fundDepositOperation.getFundOperationId());
 
         log.debug("Exit depositToFund(fundId={}, requestDto={})", fundId, requestDto);
     }
 
     @Transactional
-    public void withdrawFromFund(UUID fundId, WithdrawFromFundRequestDto requestDto) throws IllegalArgumentException, IllegalStateException {
+    public void withdrawFromFund(UUID fundId, WithdrawFromFundRequestDto requestDto) throws IllegalStateException {
         log.debug("Enter withdrawFromFund(fundId={}, requestDto={})", fundId, requestDto);
 
         UUID userId = securityUtils.getCurrentUserId();
@@ -170,20 +168,12 @@ public class FundOperationService {
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
         fundAccessService.assertCanViewFund(parent, fund);
-        fundAccessService.assertCanEditFund(parent, fund);
+        fundAccessService.assertIsTreasurer(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
-        fundAccessService.assertFundIsActive(fund);
 
         long amountInCents = requestDto.getAmountInCents();
 
-        if (amountInCents < 0) {
-            log.warn(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
-            throw new IllegalArgumentException(FundOperationMessages.WITHDRAWAL_AMOUNT_MUST_BE_GREATER_THAN_ZERO);
-        }
-
-        long fundCurrentBalanceInCents = fundOperationFinder.getFundCurrentBalanceInCents(fundId);
-
-        if (fundCurrentBalanceInCents < amountInCents) {
+        if (fundOperationFinder.getFundCurrentBalanceInCents(fundId) < amountInCents) {
             log.warn(FundMessages.NOT_ENOUGH_BALANCE_IN_FUND);
             throw new IllegalStateException(FundMessages.NOT_ENOUGH_BALANCE_IN_FUND);
         }
@@ -192,7 +182,7 @@ public class FundOperationService {
 
         treasurerWallet.increaseBalanceInCents(amountInCents);
         walletRepository.save(treasurerWallet);
-        log.info("wallet updated {}", treasurerWallet);
+        log.info("Wallet with id={} updated successfully", treasurerWallet.getWalletId());
 
         FundOperation fundWithdrawalOperation = FundOperation.builder()
                 .parent(fund.getSchoolClass().getTreasurer())
@@ -205,8 +195,8 @@ public class FundOperationService {
                 .note(requestDto.getNote())
                 .build();
 
-        fundOperationRepository.save(fundWithdrawalOperation);
-        log.info("Fund operation saved {}", fundWithdrawalOperation);
+        FundOperation savedFundOperation = fundOperationRepository.save(fundWithdrawalOperation);
+        log.info("Fund operation saved with id={}", savedFundOperation.getFundOperationId());
 
         log.debug("Exit withdrawFromFund(fundId={}, requestDto={})", fundId, requestDto);
     }
@@ -252,13 +242,13 @@ public class FundOperationService {
 
         for (FundOperation fundOperation : fundOperations) {
             if (fundOperation.getOperationType().equals(FundOperationType.FUND_PAYMENT) && fundOperation.getAmountInCents() > 0) {
-                log.debug("Processing refund for fund operation {}", fundOperation);
+                log.debug("Processing refund for fund operation with id={}", fundOperation.getFundOperationId());
 
                 Wallet parentWallet = fundOperation.getWallet();
 
                 parentWallet.increaseBalanceInCents(fundOperation.getAmountInCents());
                 walletRepository.save(parentWallet);
-                log.info("Parent wallet balance updated {}", parentWallet);
+                log.info("Wallet with id={} balance updated successfully", parentWallet.getWalletId());
 
                 FundOperation parentRefundOperation = FundOperation
                         .builder()
@@ -273,7 +263,7 @@ public class FundOperationService {
                         .build();
 
                 fundOperationRepository.save(parentRefundOperation);
-                log.info("Parent refund operation saved {}", parentRefundOperation);
+                log.info("Parent refund operation saved with id={}", parentRefundOperation.getFundOperationId());
 
                 Parent parent = parentWallet.getParent();
 

@@ -16,5 +16,6 @@ public class FundMessages {
     public static final String FUND_UNBLOCKED_SUCCESSFULLY = "Fund unblocked successfully";
     public static final String FUND_IS_BLOCKED = "Fund is blocked";
     public static final String NO_PERMISSION_TO_EDIT_THIS_FUND = "No permission to edit this fund";
+    public static final String PARENT_IS_NOT_FUND_TREASURER = "Parent is not a treasurer of the fund's school class";
 
 }

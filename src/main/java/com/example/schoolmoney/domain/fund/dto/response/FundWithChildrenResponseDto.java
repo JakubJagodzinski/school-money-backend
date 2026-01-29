@@ -31,6 +31,7 @@ import java.util.UUID;
         "amount_per_child_in_cents",
         "iban",
         "fund_status",
+        "fund_current_balance_in_cents",
         "fund_progress",
         "children"
 })
@@ -71,6 +72,9 @@ public class FundWithChildrenResponseDto {
 
     @JsonProperty("fund_status")
     private FundStatus fundStatus;
+
+    @JsonProperty("fund_current_balance_in_cents")
+    private Long fundCurrentBalanceInCents;
 
     @JsonProperty("fund_progress")
     private FundProgressResponseDto fundProgress;

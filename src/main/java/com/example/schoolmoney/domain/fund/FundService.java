@@ -146,7 +146,6 @@ public class FundService {
         Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         fundAccessService.assertCanViewFund(parent, fund);
 
         FundResponseDto fundResponseDto = fundMapper.toDto(fund);
@@ -185,7 +184,6 @@ public class FundService {
         Parent parent = parentFinder.getByIdOrThrow(userId);
 
         Fund fund = fundFinder.getByIdOrThrow(fundId);
-
         fundAccessService.assertCanViewFund(parent, fund);
         fundAccessService.assertCanEditFund(parent, fund);
         fundAccessService.assertFundIsNotBlocked(fund);
@@ -193,7 +191,7 @@ public class FundService {
 
         fundMapper.updateEntityFromDto(updateFundRequestDto, fund);
         Fund savedFund = fundRepository.save(fund);
-        log.info("Fund saved {}", fund);
+        log.info("Fund with id={} updated successfully", savedFund.getFundId());
 
         log.debug("Exit updateFund(fundId={}, updateFundRequestDto={})", fundId, updateFundRequestDto);
         return fundMapper.toDto(savedFund);
@@ -222,9 +220,7 @@ public class FundService {
         List<Child> parentChildren = childRepository.findAllBySchoolClass_SchoolClassIdAndParent_UserId(schoolClassId, userId);
 
         for (FundWithChildrenResponseDto fundWithChildrenResponseDto : fundWithChildrenResponseDtoPage.getContent()) {
-            List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
-            fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
-            fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundWithChildrenResponseDto.getFundId()));
+            updateFundInformation(userId, parentChildren, fundWithChildrenResponseDto);
         }
 
         log.debug("Exit getSchoolClassAllFunds(schoolClassId={}, status={}, pageable={})", schoolClassId, status, pageable);
@@ -245,13 +241,18 @@ public class FundService {
         List<Child> parentChildren = childRepository.findAllByParent_UserId(userId);
 
         for (FundWithChildrenResponseDto fundWithChildrenResponseDto : fundWithChildrenResponseDtoPage.getContent()) {
-            List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
-            fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
-            fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundWithChildrenResponseDto.getFundId()));
+            updateFundInformation(userId, parentChildren, fundWithChildrenResponseDto);
         }
 
-        log.debug("Exit getParentChildrenAllFunds");
+        log.debug("Exit getParentChildrenAllFunds(pageable={})", pageable);
         return fundWithChildrenResponseDtoPage;
+    }
+
+    private void updateFundInformation(UUID userId, List<Child> parentChildren, FundWithChildrenResponseDto fundWithChildrenResponseDto) {
+        List<FundChildStatusWithoutParentResponseDto> fundChildStatusWithoutParentResponseDtoList = getFundParentChildrenStatuses(fundWithChildrenResponseDto.getFundId(), parentChildren, userId);
+        fundWithChildrenResponseDto.setChildren(fundChildStatusWithoutParentResponseDtoList);
+        fundWithChildrenResponseDto.setFundProgress(countFundProgress(fundWithChildrenResponseDto.getFundId()));
+        fundWithChildrenResponseDto.setFundCurrentBalanceInCents(fundOperationFinder.getFundCurrentBalanceInCents(fundWithChildrenResponseDto.getFundId()));
     }
 
     public FundProgressResponseDto countFundProgress(UUID fundId) {

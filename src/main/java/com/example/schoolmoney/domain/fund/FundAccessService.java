@@ -28,8 +28,17 @@ public class FundAccessService {
         boolean canViewFund = isFundAuthor || isTreasurer || hasContribution || hasChildInSchoolClass;
 
         if (!canViewFund) {
-            log.warn("User {} doesn't have access to fund with id {}", parent.getUserId(), fund.getFundId());
+            log.warn("User with id={} doesn't have access to fund with id={}", parent.getUserId(), fund.getFundId());
             throw new EntityNotFoundException(FundMessages.FUND_NOT_FOUND);
+        }
+    }
+
+    public void assertIsTreasurer(Parent parent, Fund fund) {
+        boolean isTreasurer = fund.getSchoolClass().getTreasurer().getUserId().equals(parent.getUserId());
+
+        if (!isTreasurer) {
+            log.warn("User with id={} is not treasurer of fund with id={} school class", parent.getUserId(), fund.getFundId());
+            throw new AccessDeniedException(FundMessages.PARENT_IS_NOT_FUND_TREASURER);
         }
     }
 
@@ -37,28 +46,28 @@ public class FundAccessService {
         boolean canEditFund = fund.getSchoolClass().getTreasurer().getUserId().equals(parent.getUserId());
 
         if (!canEditFund) {
-            log.warn("User {} doesn't have permission to edit fund with id {}", parent.getUserId(), fund.getFundId());
+            log.warn("User with id={} doesn't have permission to edit fund with id={}", parent.getUserId(), fund.getFundId());
             throw new AccessDeniedException(FundMessages.NO_PERMISSION_TO_EDIT_THIS_FUND);
         }
     }
 
     public void assertFundIsNotBlocked(Fund fund) {
         if (fund.isBlocked()) {
-            log.warn("Fund with id {} is blocked", fund.getFundId());
+            log.warn("Fund with id={} is blocked", fund.getFundId());
             throw new IllegalStateException(FundMessages.FUND_IS_BLOCKED);
         }
     }
 
     public void assertFundIsActive(Fund fund) {
         if (!fund.isActive()) {
-            log.warn("Fund with id {} is not active", fund.getFundId());
+            log.warn("Fund with id={} is not active", fund.getFundId());
             throw new IllegalStateException(FundMessages.FUND_IS_NOT_ACTIVE);
         }
     }
 
     public void assertFundIsNotFinishedAndNotCancelled(Fund fund) {
         if (fund.isFinished() && fund.isCancelled()) {
-            log.warn("Fund with id {} is {}", fund.getFundId(), fund.getFundStatus());
+            log.warn("Fund with id={} is {}", fund.getFundId(), fund.getFundStatus());
             throw new IllegalStateException(FundMessages.FUND_IS_FINISHED_OR_CANCELLED);
         }
     }
